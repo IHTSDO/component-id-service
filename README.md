@@ -25,8 +25,10 @@ To Execute login API from Security Controller to connect devIMS authenticate API
 Please fill All the Details of snomed.user in appication.properties file
 
 Now you can run your local and check API:
-•	This API will Authenticate you : http://localhost:port/login
-•	API to logout : http://localhost:port/logout
+
+This API will Authenticate you : http://localhost:port/login
+
+API to logout : http://localhost:port/logout
 
 # Component Identifiers
 The application supports to basic types of component identifiers, SCTIDS and generic Identifier Schemes. SCTIDs are assigned based on namespaces, Namcespaces can be created and managed with the Api. Identifier Schemes represent additional identifiers, like SNOMEDIDs (legacy ids from previous SNOMED Versions) and CTV3IDs (legacy Ids from the UK NHS Read Codes). Other identifiers can be added using code extension points without the need for alterations in the data structure or the Api.
@@ -34,6 +36,7 @@ The application supports to basic types of component identifiers, SCTIDS and gen
 # The Identifier Record
 
 The application stores related metadata for each idenfier generated or registered in the satabase, the model for a SCTID Identifer Record is:
+
 "SCTIDRecord" : {
             "properties": {
                 "sctid": {
