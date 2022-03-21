@@ -428,4 +428,49 @@ public class BulkSctidService {
 
         return able;
     }
+
+
+    public BulkJob reserveSctids(SCTIDBulkReservationRequestDto sctidBulkReservationRequestDto) throws APIException {
+        if (authenticateToken()) {
+            UserDTO userObj = this.getAuthenticatedUser();
+            boolean able = isAbleUser(sctidBulkReservationRequestDto.getNamespace().toString(), userObj);
+            if (able)
+                bulkReserveSctids(sctidBulkReservationRequestDto);
+
+            else
+                throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
+        }
+        return null;
+    }
+
+    private BulkJob bulkReserveSctids(SCTIDBulkReservationRequestDto sctidBulkReservationRequestDto) throws APIException{
+        UserDTO userObj = this.getAuthenticatedUser();
+        if(isAbleUser(sctidBulkReservationRequestDto.getNamespace().toString(),userObj))
+        {
+            if ((sctidBulkReservationRequestDto.getNamespace() ==0 && "0".equalsIgnoreCase(sctidBulkReservationRequestDto.getPartitionId().substring(0,1)))
+                    || (sctidBulkReservationRequestDto.getNamespace()!=0 && ("1".equalsIgnoreCase(sctidBulkReservationRequestDto.getPartitionId().substring(0,1))))){
+                throw new APIException(HttpStatus.UNAUTHORIZED,"Namespace and partitionId parameters are not consistent.");
+            }
+            else if (sctidBulkReservationRequestDto.getQuantity()==null  || sctidBulkReservationRequestDto.getQuantity()<1){
+
+                throw new APIException(HttpStatus.UNAUTHORIZED,"Quantity property cannot be lower to 1.");
+            }
+            {
+                sctidBulkReservationRequestDto.setAuthor(userObj.getLogin());
+                sctidBulkReservationRequestDto.setModel(modelsConstants.SCTID);
+                sctidBulkReservationRequestDto.setType(JobTypeConstants.RESERVE_SCTIDS);
+                BulkJob bulkJob = new BulkJob();
+                bulkJob.setName(JobTypeConstants.RESERVE_SCTIDS);
+                bulkJob.setStatus("0");
+                bulkJob.setRequest(sctidBulkReservationRequestDto.toString());
+                bulkJob = bulkJobRepository.save(bulkJob);
+                return bulkJob;
+
+            }
+        }
+        else{
+            throw new APIException(HttpStatus.FORBIDDEN, "No permission for the selected operation");
+        }
+
+    }
 }

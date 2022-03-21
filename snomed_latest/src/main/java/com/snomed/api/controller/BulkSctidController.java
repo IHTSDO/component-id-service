@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.snomed.api.controller.dto.BulkJobResponseDto;
 import com.snomed.api.controller.dto.RegistrationDataDTO;
 import com.snomed.api.controller.dto.SCTIDBulkGenerationRequestDto;
+import com.snomed.api.controller.dto.SCTIDBulkReservationRequestDto;
 import com.snomed.api.domain.BulkJob;
 import com.snomed.api.domain.Test;
 import com.snomed.api.exception.APIException;
@@ -74,5 +75,11 @@ public class BulkSctidController {
     public ResponseEntity<BulkJobResponseDto> generateSctids(@RequestBody @Valid SCTIDBulkGenerationRequestDto sctidBulkGenerationRequestDto) throws JsonProcessingException, APIException {
         return ResponseEntity.ok(service.generateSctids(sctidBulkGenerationRequestDto));
     }
+
+    @PostMapping("/sct/bulk/reserve")
+    public ResponseEntity<BulkJob> reserveSctids(@RequestBody @Valid SCTIDBulkReservationRequestDto sctidBulkReservationRequestDto) throws APIException {
+        return ResponseEntity.ok(service.reserveSctids(sctidBulkReservationRequestDto));
+    }
+
 
 }
