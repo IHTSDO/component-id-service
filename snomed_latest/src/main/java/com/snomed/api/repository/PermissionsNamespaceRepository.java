@@ -12,4 +12,6 @@ import java.util.List;
 public interface PermissionsNamespaceRepository extends JpaRepository<PermissionsNamespace,Long> {
 
  List<PermissionsNamespace> findByNamespace(Integer namespace);
+
+ List<PermissionsNamespace> findByUsername(String username);
 }

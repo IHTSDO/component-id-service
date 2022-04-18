@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.snomed.api.config.UserProperties;
+import com.snomed.api.controller.dto.LoginCredentialsDto;
+import com.snomed.api.controller.dto.LoginResponseDto;
 import com.snomed.api.controller.dto.UserDTO;
 import com.snomed.api.exception.APIException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,9 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.*;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.*;
@@ -27,6 +27,9 @@ public class SecurityController {
     private HttpServletRequest servReq;
 
     @Autowired
+    private HttpServletResponse servletResponse;
+
+    @Autowired
     private UserProperties userProperties;
 
     @Value("${snomed.devIms.authenticate}")
@@ -38,6 +41,62 @@ public class SecurityController {
     @Value("${snomed.devIms.account}")
     String accountUrl;
 
+    @GetMapping("/stats")
+    @ResponseBody
+    public List getStats(@RequestParam String token,@RequestParam String username) throws APIException {
+        List result = new ArrayList();
+        result.add("lakshmana");
+        result.add("keerthika");
+        return result;
+    }
+
+    @GetMapping("/groups/{groupName}/users")
+    @ResponseBody
+    public List getAllGroups(@RequestParam String token,@PathVariable String groupName) throws APIException {
+        List result = new ArrayList();
+        result.add("component-identifier-service-user");
+        result.add("component-identifier-service-admin");
+        return result;
+    }
+
+    @GetMapping("/groups")
+    @ResponseBody
+    public List getGroupUsers(@RequestParam String token) throws APIException {
+        List result = new ArrayList();
+        result.add("keerthika");
+        result.add("lakshmana");
+        return result;
+    }
+
+    @PostMapping("/authenticate")
+    @ResponseBody
+    public UserDTO getUserFromToken(@RequestBody String token) throws APIException {
+return this.authenticate();
+    }
+
+    @GetMapping("/users/{username}/groups/")
+    @ResponseBody
+    public List<String> getUserGroup(@PathVariable String username,@RequestParam String token) throws APIException {
+        UserDTO user = new UserDTO();
+        List<String> role = new ArrayList<>();
+        ResponseEntity<UserDTO> resp = this.isValidUser(servReq);
+        if(resp.hasBody())
+           user  = resp.getBody();
+        role.add(user.getRoles().get(0).split("_")[1]);
+        return role;
+    }
+
+    public boolean validateUserToken(String userToken)
+    {
+        Cookie[] cookieAr = servReq.getCookies();
+        Cookie cookie= cookieAr[0];
+        System.out.println("Cookie from REQUEST Value:"+cookie.getValue());
+        if(userToken.equals(cookie.getValue()))
+            return true;
+        else
+        return false;
+    }
+
     public UserDTO authenticate() throws APIException {
         ResponseEntity<UserDTO> resp = this.isValidUser(servReq);
         if(resp.hasBody())
@@ -46,10 +105,19 @@ public class SecurityController {
             return null;
     }
 
+    //@PostMapping("/api/login")
+    @RequestMapping(value = "/loginUI", method = RequestMethod.POST,
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = {MediaType.APPLICATION_JSON_VALUE})
+    public @ResponseBody LoginResponseDto loginFromUI(LoginCredentialsDto credentialsDto) throws JsonProcessingException {
+        return this.validateUser(servletResponse);
+    }
+
     @Cacheable(value="token-cache")
     @GetMapping("/login")
-    public String validateUser(HttpServletResponse resp
+    public @ResponseBody LoginResponseDto validateUser(HttpServletResponse resp
     ) throws JsonProcessingException {
+        LoginResponseDto responseDto = new LoginResponseDto();
         String uri = authenticateUrl;
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
@@ -65,7 +133,8 @@ public class SecurityController {
         String[] arr = cookieArr[0].split(";")[0].split("=");
         Cookie cookie= new Cookie(arr[0],arr[1]);
         resp.addCookie(cookie);
-        return response.getHeaders().get("set-cookie").get(0).split(";")[0];
+        responseDto.setToken(response.getHeaders().get("set-cookie").get(0).split(";")[0].split("=")[1]);
+        return responseDto;
     }
 
     @CacheEvict(value="account-cache", key="'AccountCache'+#request.getCookies()[0]",condition = "request.getCookies()[0]==''")
@@ -115,4 +184,5 @@ public class SecurityController {
     logoutResp.addCookie(logoutRespCookie);
     return response.getHeaders().get("set-cookie").get(0);
 }
+
 }

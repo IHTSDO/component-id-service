@@ -15,19 +15,19 @@ public class BulkJob  {
     private String status;
     private String request;
     private Date created_at = new Date();
-    private Date requested_at = new Date();
+    private Date modified_at = new Date();
     private String log;
 
     public BulkJob() {
     }
 
-    public BulkJob(Integer id, String name, String status, String request, Date created_at, Date requested_at, String log) {
+    public BulkJob(Integer id, String name, String status, String request, Date created_at, Date modified_at, String log) {
         this.id = id;
         this.name = name;
         this.status = status;
         this.request = request;
         this.created_at = created_at;
-        this.requested_at = requested_at;
+        this.modified_at = modified_at;
         this.log = log;
     }
 
@@ -77,11 +77,11 @@ public class BulkJob  {
     }
 
     public Date getRequested_at() {
-        return requested_at;
+        return modified_at;
     }
 
-    public BulkJob setRequested_at(Date requested_at) {
-        this.requested_at = requested_at;
+    public BulkJob setRequested_at(Date modified_at) {
+        this.modified_at = modified_at;
         return this;
     }
 

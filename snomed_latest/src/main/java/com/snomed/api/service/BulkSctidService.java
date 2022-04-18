@@ -62,23 +62,24 @@ public class BulkSctidService {
         return repo.getSctidsById(id);
     }
 
-    public List<Test> getAllTest() {
-        return testRepo.getAll();
+    public List<Sctid> getAllTest() {
+        return repo.getAllSctidsUsingQL();
     }
 
-    public List<Sctid> getSctByIds(String ids) throws APIException {
-        if (authenticateToken())
+    public List<Sctid> getSctByIds(String token,String ids) throws APIException {
+        if (authenticateToken(token))
             return this.validScts(ids);
         else
-            throw new APIException(HttpStatus.ACCEPTED, "Invalid Token/User Not authenticated");
+            throw new APIException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
     }
 
-    public boolean authenticateToken() throws APIException {
-        UserDTO obj = this.securityController.authenticate();
+    public boolean authenticateToken(String userToken) throws APIException {
+        /*UserDTO obj = this.securityController.authenticate();
         if (null != obj)
             return true;
         else
-            return false;
+            return false;*/
+        return this.securityController.validateUserToken(userToken);
     }
 
     public UserDTO getAuthenticatedUser() throws APIException {
@@ -157,8 +158,17 @@ public class BulkSctidService {
                 status = (String) it.getValue();
             }
         }
-        repo.insertWithQuery(sctid, sequence, namespace, partitionId, checkDigit, systemId, status);
-        Sctid sct = this.getSctById(sctid);
+        Sctid sctObj = new Sctid();
+        sctObj.setSctid(sctid);
+        sctObj.setSequence(sequence);
+        sctObj.setNamespace(namespace);
+        sctObj.setPartitionId(partitionId);
+        sctObj.setCheckDigit(checkDigit);
+        sctObj.setSystemId(systemId);
+        sctObj.setStatus(status);
+        Sctid sct = repo.save(sctObj);
+        //repo.insertWithQuery(sctid, sequence, namespace, partitionId, checkDigit, systemId, status);
+       // Sctid sct = this.getSctById(sctid);
         return sct;
     }
 
@@ -179,17 +189,18 @@ public class BulkSctidService {
     }
 
 
-    public List<Sctid> getSctidBySystemIds(String systemIdStr, Integer namespaceId) {
+    public List<Sctid> getSctidBySystemIds(String token,String systemIdStr, Integer namespaceId) {
 
         String[] systemIdsArray = systemIdStr.replaceAll("\\s+", "").split(",");
 
         /* fetch the sctid id record with systemId and namespaceId */
         return repo.findSctidBySystemIds(Arrays.asList(systemIdsArray), namespaceId);
+       // return repo.findBySystemIdAndNamespace(systemIdStr, namespaceId);
 
     }
 
-    public BulkJob registerSctids(RegistrationDataDTO request) throws APIException {
-        if (authenticateToken())
+    public BulkJob registerSctids(String token,RegistrationDataDTO request) throws APIException {
+        if (authenticateToken(token))
             return this.registerScts(request);
         else
             throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
@@ -197,6 +208,7 @@ public class BulkSctidService {
 
     public BulkJob registerScts(RegistrationDataDTO registrationData) throws APIException {
         UserDTO userObj = this.getAuthenticatedUser();
+        BulkJob resultJob = new BulkJob();
         if (this.isAbleUser(registrationData.getNamespace().toString(), userObj)) {
             if ((registrationData.getRecords() == null) || (registrationData.getRecords().length == 0)) {
 
@@ -230,21 +242,19 @@ public class BulkSctidService {
                         throw new APIException(HttpStatus.BAD_REQUEST, e.getMessage());
                     }
 
-                    BulkJob resultJob = this.bulkJobRepository.save(bulk);
+                   resultJob = this.bulkJobRepository.save(bulk);
                     System.out.println("result:" + resultJob);
-                    return resultJob;
-
                 }
             }
         } else {
-            throw new APIException(HttpStatus.FORBIDDEN, "No permission for the selected operation");
+            throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
-        return new BulkJob();
+        return resultJob;
     }
 
     public boolean isAbleUser(String namespace, UserDTO user) {
         boolean able = false;
-        List<String> admins = Arrays.asList("a", "b", "c");
+        List<String> admins = Arrays.asList("keerthika", "b", "c");
         for (String admin : admins) {
             if (admin.equalsIgnoreCase(user.getLogin())) {
                 able = true;
@@ -279,8 +289,8 @@ public class BulkSctidService {
             return able;
     }
 
-    public BulkJobResponseDto generateSctids(SCTIDBulkGenerationRequestDto sctidBulkGenerationRequestDto) throws APIException, JsonProcessingException, APIException {
-        if (authenticateToken()) {
+    public BulkJobResponseDto generateSctids(String token,SCTIDBulkGenerationRequestDto sctidBulkGenerationRequestDto) throws APIException, JsonProcessingException, APIException {
+        if (authenticateToken(token)) {
             UserDTO userObj = this.getAuthenticatedUser();
             boolean able = isAbleUser(sctidBulkGenerationRequestDto.getNamespace().toString(), userObj);
             if (!able) {
@@ -394,7 +404,7 @@ public class BulkSctidService {
         }
     }
 
-    private boolean isSchemeAbleUser(String schemeName, UserDTO user) {
+    public boolean isSchemeAbleUser(String schemeName, UserDTO user) {
         boolean able = false;
         List<String> admins = Arrays.asList("a", "b", "c");
         for (String admin : admins) {
@@ -427,5 +437,185 @@ public class BulkSctidService {
         }//if(!able)
 
         return able;
+    }
+
+    //Deprecate API
+    public BulkJob deprecateSctid(String token,BulkSctRequestDTO deprecateBulkSctRequestDTO) throws APIException {
+        BulkJob resultJob = new BulkJob();
+        if (authenticateToken(token)) {
+            UserDTO userObj = this.getAuthenticatedUser();
+            boolean able = isAbleUser(deprecateBulkSctRequestDTO.getNamespace().toString(), userObj);
+            if (!able) {
+                throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
+            }
+            else
+            {
+                if (null==deprecateBulkSctRequestDTO.getSctids() || deprecateBulkSctRequestDTO.getSctids().length<1){
+
+                    throw new APIException(HttpStatus.ACCEPTED,"Sctids property cannot be empty.");
+                }
+                else
+                {
+                    int namespace;
+                    boolean error=false;
+                    for (String sctid : deprecateBulkSctRequestDTO.getSctids())
+                    {
+                        namespace = sctIdHelper.getNamespace(sctid);
+                        if (namespace!=deprecateBulkSctRequestDTO.getNamespace()){
+                            error=true;
+                            throw new APIException(HttpStatus.ACCEPTED,"Namespaces differences between sctid: " + sctid + " and parameter: " + deprecateBulkSctRequestDTO.getNamespace());
+                        }
+                    }
+                    if(!error) {
+                        deprecateBulkSctRequestDTO.setAuthor(userObj.getLogin());
+                        deprecateBulkSctRequestDTO.setModel(modelsConstants.SCTID);
+                        deprecateBulkSctRequestDTO.setType(jobType.DEPRECATE_SCTIDS);
+                        //BulkSctRequestDTO deprecateBulkSctRequestDTO = new RegistrationDataDTO(registrationData.getRecords(), registrationData.getNamespace(),
+                          //      registrationData.getSoftware(), registrationData.getComment(), registrationData.getModel(), registrationData.getAuthor(), registrationData.getType());
+                        BulkJob bulk = new BulkJob();
+                        try {
+                            ObjectMapper objectMapper = new ObjectMapper();
+                            String regString = objectMapper.writeValueAsString(deprecateBulkSctRequestDTO);
+                            bulk.setName(jobType.REGISTER_SCTIDS);
+                            bulk.setStatus("0");
+                            bulk.setRequest(regString);
+                            bulk.setCreated_at(new Date());
+                            bulk.setRequested_at(new Date());
+                        } catch (JsonProcessingException e) {
+                            throw new APIException(HttpStatus.BAD_REQUEST, e.getMessage());
+                        }
+
+                        resultJob = this.bulkJobRepository.save(bulk);
+                        System.out.println("result:" + resultJob);
+                    }
+                }
+
+            }
+
+        }
+        else {
+            throw new APIException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
+        }
+        return resultJob;
+    }
+
+    //Publish API
+    public BulkJob publishSctid(String token,BulkSctRequestDTO publishBulkSctRequestDTO) throws APIException {
+        BulkJob resultJob = new BulkJob();
+        if (authenticateToken(token)) {
+            UserDTO userObj = this.getAuthenticatedUser();
+            boolean able = isAbleUser(publishBulkSctRequestDTO.getNamespace().toString(), userObj);
+            if (!able) {
+                throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
+            }
+            else
+            {
+                if (null==publishBulkSctRequestDTO.getSctids() || publishBulkSctRequestDTO.getSctids().length<1){
+
+                    throw new APIException(HttpStatus.ACCEPTED,"Sctids property cannot be empty.");
+                }
+                else
+                {
+                    int namespace;
+                    boolean error=false;
+                    for (String sctid : publishBulkSctRequestDTO.getSctids())
+                    {
+                        namespace = sctIdHelper.getNamespace(sctid);
+                        if (namespace!=publishBulkSctRequestDTO.getNamespace()){
+                            error=true;
+                            throw new APIException(HttpStatus.ACCEPTED,"Namespaces differences between sctid: " + sctid + " and parameter: " + publishBulkSctRequestDTO.getNamespace());
+                        }
+                    }
+                    if(!error) {
+                        publishBulkSctRequestDTO.setAuthor(userObj.getLogin());
+                        publishBulkSctRequestDTO.setModel(modelsConstants.SCTID);
+                        publishBulkSctRequestDTO.setType(jobType.PUBLISH_SCTIDS);
+                        //BulkSctRequestDTO deprecateBulkSctRequestDTO = new RegistrationDataDTO(registrationData.getRecords(), registrationData.getNamespace(),
+                        //      registrationData.getSoftware(), registrationData.getComment(), registrationData.getModel(), registrationData.getAuthor(), registrationData.getType());
+                        BulkJob bulk = new BulkJob();
+                        try {
+                            ObjectMapper objectMapper = new ObjectMapper();
+                            String regString = objectMapper.writeValueAsString(publishBulkSctRequestDTO);
+                            bulk.setName(jobType.PUBLISH_SCTIDS);
+                            bulk.setStatus("0");
+                            bulk.setRequest(regString);
+                            bulk.setCreated_at(new Date());
+                            bulk.setRequested_at(new Date());
+                        } catch (JsonProcessingException e) {
+                            throw new APIException(HttpStatus.BAD_REQUEST, e.getMessage());
+                        }
+
+                        resultJob = this.bulkJobRepository.save(bulk);
+                        System.out.println("result:" + resultJob);
+                    }
+                }
+
+            }
+
+        }
+        else {
+            throw new APIException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
+        }
+        return resultJob;
+    }
+
+    //Release Sctid API
+    public BulkJob releaseSctid(String token,BulkSctRequestDTO releaseBulkSctRequestDTO) throws APIException {
+        BulkJob resultJob = new BulkJob();
+        if (authenticateToken(token)) {
+            UserDTO userObj = this.getAuthenticatedUser();
+            boolean able = isAbleUser(releaseBulkSctRequestDTO.getNamespace().toString(), userObj);
+            if (!able) {
+                throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
+            }
+            else
+            {
+                if (null==releaseBulkSctRequestDTO.getSctids() || releaseBulkSctRequestDTO.getSctids().length<1){
+
+                    throw new APIException(HttpStatus.ACCEPTED,"Sctids property cannot be empty.");
+                }
+                else
+                {
+                    int namespace;
+                    boolean error=false;
+                    for (String sctid : releaseBulkSctRequestDTO.getSctids())
+                    {
+                        namespace = sctIdHelper.getNamespace(sctid);
+                        if (namespace!=releaseBulkSctRequestDTO.getNamespace()){
+                            error=true;
+                            throw new APIException(HttpStatus.ACCEPTED,"Namespaces differences between sctid: " + sctid + " and parameter: " + releaseBulkSctRequestDTO.getNamespace());
+                        }
+                    }
+                    if(!error) {
+                        releaseBulkSctRequestDTO.setAuthor(userObj.getLogin());
+                        releaseBulkSctRequestDTO.setModel(modelsConstants.SCTID);
+                        releaseBulkSctRequestDTO.setType(jobType.RELEASE_SCTIDS);
+                        //BulkSctRequestDTO deprecateBulkSctRequestDTO = new RegistrationDataDTO(registrationData.getRecords(), registrationData.getNamespace(),
+                        //      registrationData.getSoftware(), registrationData.getComment(), registrationData.getModel(), registrationData.getAuthor(), registrationData.getType());
+                        BulkJob bulk = new BulkJob();
+                        try {
+                            ObjectMapper objectMapper = new ObjectMapper();
+                            String regString = objectMapper.writeValueAsString(releaseBulkSctRequestDTO);
+                            bulk.setName(jobType.RELEASE_SCTIDS);
+                            bulk.setStatus("0");
+                            bulk.setRequest(regString);
+                            bulk.setCreated_at(new Date());
+                            bulk.setRequested_at(new Date());
+                        } catch (JsonProcessingException e) {
+                            throw new APIException(HttpStatus.BAD_REQUEST, e.getMessage());
+                        }
+
+                        resultJob = this.bulkJobRepository.save(bulk);
+                        System.out.println("result:" + resultJob);
+                    }
+                }
+
+            }
+
+        }
+        else {
+            throw new APIException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
+        }
+        return resultJob;
     }
 }

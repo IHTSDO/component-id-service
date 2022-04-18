@@ -19,6 +19,6 @@ import java.util.Map;
 
 
 @Repository
-public interface BulkJobRepository extends JpaRepository<BulkJob,Long>   {
+public interface BulkJobRepository extends JpaRepository<BulkJob,Integer>   {
 
 }

@@ -3,43 +3,37 @@ package com.snomed.api.domain;
 import org.springframework.lang.Nullable;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
-import java.util.*;
+import java.io.Serializable;
 import java.util.Date;
 
 @Entity
-@Table(name="sctid")
-public class Sctid {
+@Table(name="schemeid")
+@IdClass(SchemeIdPK.class)
+public class SchemeId {
     @Id
-    @NotNull
-    private String sctid;
-    private long sequence;
-    private Integer namespace;
-    private String partitionId;
+    private String scheme;
+    @Id
+    private String schemeId;
+    private Long sequence;
     private Integer checkDigit;
-    @NotNull
     private String systemId;
     private String status;
     private String author;
     private String software;
-    @Temporal(TemporalType.DATE)
     private Date expirationDate;
     private String comment;
-    @Nullable
     private Integer jobId;
-    @Temporal(TemporalType.TIMESTAMP)
     private Date created_at;
-    @Temporal(TemporalType.TIMESTAMP)
     private Date modified_at;
 
-    public Sctid(){}
+    public SchemeId() {
+    }
 
-    public Sctid(String sctid, long sequence, Integer namespace, String partitionId, Integer checkDigit, String systemId, String status, String author, String software, Date expirationDate, String comment, Integer jobId, Date created_at, Date modified_at) {
-        this.sctid = sctid;
+    public SchemeId(String scheme, String schemeId, Long sequence, Integer checkDigit, String systemId, String status, String author, String software, Date expirationDate, String comment, Integer jobId, Date created_at, Date modified_at) {
+        this.scheme = scheme;
+        this.schemeId = schemeId;
         this.sequence = sequence;
-        this.namespace = namespace;
-        this.partitionId = partitionId;
         this.checkDigit = checkDigit;
         this.systemId = systemId;
         this.status = status;
@@ -52,36 +46,28 @@ public class Sctid {
         this.modified_at = modified_at;
     }
 
-    public String getSctid() {
-        return sctid;
+    public String getScheme() {
+        return scheme;
     }
 
-    public void setSctid(String sctid) {
-        this.sctid = sctid;
+    public void setScheme(String scheme) {
+        this.scheme = scheme;
     }
 
-    public long getSequence() {
+    public String getSchemeId() {
+        return schemeId;
+    }
+
+    public void setSchemeId(String schemeId) {
+        this.schemeId = schemeId;
+    }
+
+    public Long getSequence() {
         return sequence;
     }
 
-    public void setSequence(long sequence) {
+    public void setSequence(Long sequence) {
         this.sequence = sequence;
-    }
-
-    public int getNamespace() {
-        return namespace;
-    }
-
-    public void setNamespace(Integer namespace) {
-        this.namespace = namespace;
-    }
-
-    public String getPartitionId() {
-        return partitionId;
-    }
-
-    public void setPartitionId(String partitionId) {
-        this.partitionId = partitionId;
     }
 
     public Integer getCheckDigit() {
@@ -162,25 +148,5 @@ public class Sctid {
 
     public void setModified_at(Date modified_at) {
         this.modified_at = modified_at;
-    }
-
-    @Override
-    public String toString() {
-        return "Sctid{" +
-                "sctid='" + sctid + '\'' +
-                ", sequence=" + sequence +
-                ", namespace=" + namespace +
-                ", partitionId='" + partitionId + '\'' +
-                ", checkDigit=" + checkDigit +
-                ", systemId='" + systemId + '\'' +
-                ", status='" + status + '\'' +
-                ", author='" + author + '\'' +
-                ", software='" + software + '\'' +
-                ", expirationDate=" + expirationDate +
-                ", comment='" + comment + '\'' +
-                ", jobId=" + jobId +
-                ", created_at=" + created_at +
-                ", modified_at=" + modified_at +
-                '}';
     }
 }

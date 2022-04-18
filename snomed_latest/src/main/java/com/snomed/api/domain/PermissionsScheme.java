@@ -21,6 +21,9 @@ public class PermissionsScheme implements Serializable {
     private String username;
     private String role;
 
+    public PermissionsScheme() {
+    }
+
     public PermissionsScheme(String scheme, String username, String role) {
         this.scheme = scheme;
         this.username = username;

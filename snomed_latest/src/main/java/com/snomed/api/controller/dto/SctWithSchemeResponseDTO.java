@@ -1,41 +1,28 @@
-package com.snomed.api.domain;
+package com.snomed.api.controller.dto;
 
-import org.springframework.lang.Nullable;
+import com.snomed.api.domain.SchemeId;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Null;
-import java.util.*;
 import java.util.Date;
+import java.util.List;
 
-@Entity
-@Table(name="sctid")
-public class Sctid {
-    @Id
-    @NotNull
+public class SctWithSchemeResponseDTO {
     private String sctid;
     private long sequence;
-    private Integer namespace;
+    private int namespace;
     private String partitionId;
     private Integer checkDigit;
-    @NotNull
     private String systemId;
     private String status;
     private String author;
     private String software;
-    @Temporal(TemporalType.DATE)
     private Date expirationDate;
     private String comment;
-    @Nullable
-    private Integer jobId;
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date created_at;
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date modified_at;
+    private List<SchemeId> additionalIds;
 
-    public Sctid(){}
+    public SctWithSchemeResponseDTO() {
+    }
 
-    public Sctid(String sctid, long sequence, Integer namespace, String partitionId, Integer checkDigit, String systemId, String status, String author, String software, Date expirationDate, String comment, Integer jobId, Date created_at, Date modified_at) {
+    public SctWithSchemeResponseDTO(String sctid, long sequence, int namespace, String partitionId, Integer checkDigit, String systemId, String status, String author, String software, Date expirationDate, String comment, List<SchemeId> additionalIds) {
         this.sctid = sctid;
         this.sequence = sequence;
         this.namespace = namespace;
@@ -47,9 +34,7 @@ public class Sctid {
         this.software = software;
         this.expirationDate = expirationDate;
         this.comment = comment;
-        this.jobId = jobId;
-        this.created_at = created_at;
-        this.modified_at = modified_at;
+        this.additionalIds = additionalIds;
     }
 
     public String getSctid() {
@@ -72,7 +57,7 @@ public class Sctid {
         return namespace;
     }
 
-    public void setNamespace(Integer namespace) {
+    public void setNamespace(int namespace) {
         this.namespace = namespace;
     }
 
@@ -140,47 +125,11 @@ public class Sctid {
         this.comment = comment;
     }
 
-    public Integer getJobId() {
-        return jobId;
+    public List<SchemeId> getAdditionalIds() {
+        return additionalIds;
     }
 
-    public void setJobId(Integer jobId) {
-        this.jobId = jobId;
-    }
-
-    public Date getCreated_at() {
-        return created_at;
-    }
-
-    public void setCreated_at(Date created_at) {
-        this.created_at = created_at;
-    }
-
-    public Date getModified_at() {
-        return modified_at;
-    }
-
-    public void setModified_at(Date modified_at) {
-        this.modified_at = modified_at;
-    }
-
-    @Override
-    public String toString() {
-        return "Sctid{" +
-                "sctid='" + sctid + '\'' +
-                ", sequence=" + sequence +
-                ", namespace=" + namespace +
-                ", partitionId='" + partitionId + '\'' +
-                ", checkDigit=" + checkDigit +
-                ", systemId='" + systemId + '\'' +
-                ", status='" + status + '\'' +
-                ", author='" + author + '\'' +
-                ", software='" + software + '\'' +
-                ", expirationDate=" + expirationDate +
-                ", comment='" + comment + '\'' +
-                ", jobId=" + jobId +
-                ", created_at=" + created_at +
-                ", modified_at=" + modified_at +
-                '}';
+    public void setAdditionalIds(List<SchemeId> additionalIds) {
+        this.additionalIds = additionalIds;
     }
 }

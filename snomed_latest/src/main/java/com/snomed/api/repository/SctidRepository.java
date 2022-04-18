@@ -19,10 +19,12 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 @Repository
-public interface SctidRepository extends JpaRepository<Sctid, Long> {
+public interface SctidRepository extends JpaRepository<Sctid, String> {
+
+    List<Sctid> findBySystemIdAndNamespace(String systemId,Integer namespace);
 
     @Query(
-            value = "SELECT * FROM sctid u",
+            value = "SELECT * FROM sctid LIMIT 0,100",
             nativeQuery = true)
     List<Sctid> getAllSctidsUsingQL();
 
@@ -54,5 +56,7 @@ public interface SctidRepository extends JpaRepository<Sctid, Long> {
     //find scidrecord by systemId
     @Query(value="SELECT * FROM sctId s WHERE s.systemId IN (:systemIds) and s.namespace = (:namespace)",nativeQuery=true)
     List<Sctid> findSctidBySystemIds(@Param("systemIds") List<String> systemIds, @Param("namespace")Integer namespace);
+
+//List<Sctid> findBySystemIdInAndNamespace(List<String> systemIds,Integer namespace);
 
 }

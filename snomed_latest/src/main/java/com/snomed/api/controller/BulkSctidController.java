@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.snomed.api.controller.dto.BulkJobResponseDto;
+import com.snomed.api.controller.dto.BulkSctRequestDTO;
 import com.snomed.api.controller.dto.RegistrationDataDTO;
 import com.snomed.api.controller.dto.SCTIDBulkGenerationRequestDto;
 import com.snomed.api.domain.BulkJob;
@@ -40,10 +41,17 @@ public class BulkSctidController {
     @Autowired
     HttpServletRequest httpRequest;
 
-    @GetMapping("/getSctByIds")
+
+    @GetMapping("/sct/bulk/ids")
     @ResponseBody
-    public List<Sctid> getSctidsByQL(@RequestParam String ids) throws APIException {
-        return service.getSctByIds(ids);
+    public List<Sctid> getSctidsByQL(@RequestParam String token,@RequestParam String ids) throws APIException {
+        return service.getSctByIds(token,ids);
+    }
+
+    @PostMapping("/sct/bulk/ids")
+    @ResponseBody
+    public List<Sctid> getSctidsByQLPost(@RequestParam String token,@RequestBody String sctids) throws APIException {
+        return service.getSctByIds(token,sctids);
     }
 
     @GetMapping("/test")
@@ -54,25 +62,42 @@ public class BulkSctidController {
     }
 
     @GetMapping("/getAllTest")
-    public List<Test> getAllTestLst() {
+    public List<Sctid> getAllTestLst() {
         return service.getAllTest();
     }
 
     @GetMapping("sct/namespace/{namespaceId}/systemIds")
-    public ResponseEntity<List<Sctid>> getSctidBySystemIds(@PathVariable Integer namespaceId, @RequestParam("systemIds") String systemIdStr)
+    public ResponseEntity<List<Sctid>> getSctidBySystemIds(@RequestParam String token,@PathVariable Integer namespaceId, @RequestParam("systemIds") String systemIdStr)
     {
-        return ResponseEntity.ok(service.getSctidBySystemIds(systemIdStr,namespaceId));
+        return ResponseEntity.ok(service.getSctidBySystemIds(token,systemIdStr,namespaceId));
     }
 
     //API call for POST /sct/bulk/register
     @PostMapping("/sct/bulk/register")
-    public BulkJob registerScts(@RequestBody RegistrationDataDTO registrationData) throws APIException {
-        return service.registerSctids(registrationData);
+    public BulkJob registerScts(@RequestParam String token,@RequestBody RegistrationDataDTO registrationData) throws APIException {
+        return service.registerSctids(token,registrationData);
     }
 
     @PostMapping("/sct/bulk/generate")
-    public ResponseEntity<BulkJobResponseDto> generateSctids(@RequestBody @Valid SCTIDBulkGenerationRequestDto sctidBulkGenerationRequestDto) throws JsonProcessingException, APIException {
-        return ResponseEntity.ok(service.generateSctids(sctidBulkGenerationRequestDto));
+    public ResponseEntity<BulkJobResponseDto> generateSctids(@RequestParam String token,@RequestBody @Valid SCTIDBulkGenerationRequestDto sctidBulkGenerationRequestDto) throws JsonProcessingException, APIException {
+        return ResponseEntity.ok(service.generateSctids(token,sctidBulkGenerationRequestDto));
+    }
+
+    @PutMapping("/sct/bulk/deprecate")
+    public BulkJob deprecateSctid (@RequestParam String token,@RequestBody
+    BulkSctRequestDTO deprecationData) throws APIException {
+        return service.deprecateSctid(token,deprecationData);
+    }
+
+    @PutMapping("/sct/bulk/publish")
+    public BulkJob publishSctid (@RequestParam String token,@RequestBody
+            BulkSctRequestDTO publishData) throws APIException {
+        return service.publishSctid(token,publishData);
+    }
+    @PutMapping("/sct/bulk/release")
+    public BulkJob releaseSctid (@RequestParam String token,@RequestBody
+            BulkSctRequestDTO publishData) throws APIException {
+        return service.releaseSctid(token,publishData);
     }
 
 }
