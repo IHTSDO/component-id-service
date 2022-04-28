@@ -1,9 +1,8 @@
 package com.snomed.api.service.DM;
 
-import com.snomed.api.controller.dto.SCTIDRegistrationRequest;
-import com.snomed.api.controller.dto.SCTIDReservationRequest;
-import com.snomed.api.controller.dto.SctidsGenerateRequestDto;
+import com.snomed.api.controller.dto.*;
 import com.snomed.api.domain.Partitions;
+import com.snomed.api.domain.PartitionsPk;
 import com.snomed.api.domain.Sctid;
 import com.snomed.api.exception.APIException;
 import com.snomed.api.helper.ModelsConstants;
@@ -12,8 +11,6 @@ import com.snomed.api.helper.StateMachine;
 import com.snomed.api.repository.PartitionsRepository;
 import com.snomed.api.repository.SctidRepository;
 import com.snomed.api.service.BulkSctidService;
-import com.snomed.api.service.SctidService;
-import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -42,24 +39,25 @@ public class SCTIdDM {
 
     public Sctid registerSctid(Object request, String requestDto) throws APIException {
         Sctid resultSct = null;
-        SCTIDRegistrationRequest sctidRegistrationRequest = null;
-        if (requestDto.equalsIgnoreCase("SCTIDRegistrationRequest"))
-            sctidRegistrationRequest = (SCTIDRegistrationRequest) request;
-        if (!(sctidRegistrationRequest.isAutoSysId())) {
-            List<Sctid> result = sctidRepository.findBySystemIdAndNamespace(sctidRegistrationRequest.getSystemId(), sctidRegistrationRequest.getNamespace());
+      //  SCTIDRegistrationRequest sctidRegistrationRequest = null;
+        SCTIDRegisterRequest sctidRegisterRequest=null;
+        if (requestDto.equalsIgnoreCase("SCTIDRegisterRequest"))
+            sctidRegisterRequest = (SCTIDRegisterRequest) request;
+        if (!(sctidRegisterRequest.isAutoSysId())) {
+            List<Sctid> result = sctidRepository.findBySystemIdAndNamespace(sctidRegisterRequest.getSystemId(), sctidRegisterRequest.getNamespace());
             Sctid sct = result.get(0);
-            if (!(sct.getSctid().equalsIgnoreCase(sctidRegistrationRequest.getSctid()))) {
-                throw new APIException(HttpStatus.ACCEPTED, "SystemId:" + sctidRegistrationRequest.getSystemId() + " already exists with SctId:" + sct.getSctid());
+            if (!(sct.getSctid().equalsIgnoreCase(sctidRegisterRequest.getSctid()))) {
+                throw new APIException(HttpStatus.ACCEPTED, "SystemId:" + sctidRegisterRequest.getSystemId() + " already exists with SctId:" + sct.getSctid());
             }
             if (sct.getStatus().equalsIgnoreCase(stateMachine.statuses.get("assigned"))) {
                 resultSct = sct;
             } else {
-                Sctid sctid = this.registerNewSctId(sctidRegistrationRequest);
+                Sctid sctid = this.registerNewSctId(sctidRegisterRequest);
                 if (null != sctid)
                     resultSct = sctid;
             }
         } else {
-            Sctid sctid = this.registerNewSctId(sctidRegistrationRequest);
+            Sctid sctid = this.registerNewSctId(sctidRegisterRequest);
             if (null != sctid)
                 resultSct = sctid;
         }
@@ -67,7 +65,7 @@ public class SCTIdDM {
         return resultSct;
     }
 
-    public Sctid registerNewSctId(SCTIDRegistrationRequest sctidRegistrationRequest) throws APIException {
+    public Sctid registerNewSctId(SCTIDRegisterRequest sctidRegistrationRequest) throws APIException {
         Sctid result = null;
         Sctid sctIdRecord = this.getSctid(sctidRegistrationRequest.getSctid());
         if (null != sctIdRecord) {
@@ -123,8 +121,9 @@ public class SCTIdDM {
         sctIdRecord.put("systemId", sctIdHelper.guid());
         return sctIdRecord;
     }
-
-    public Sctid counterMode(SCTIDReservationRequest operation,String action) throws APIException {
+    //request body change
+    // first parameter type chnage
+    public Sctid counterMode(SCTIDReserveRequest operation, String action) throws APIException {
         Sctid result = new Sctid();
        /* if (requestDto.equalsIgnoreCase("SCTIDRegistrationRequest"))
             operation = (SCTIDRegistrationRequest) operation;
@@ -154,13 +153,15 @@ public class SCTIdDM {
         return result;
     }
 
-    public Integer getNextNumber(SCTIDReservationRequest operation) throws APIException {
-       List<Partitions> partitionsList = partitionsRepository.findByNamespaceAndPartitionId(operation.getNamespace(),operation.getPartitionId());
-        Integer nextNumber = ((partitionsList.get(0).getSequence()) +1);
+    public Integer getNextNumber(SCTIDReserveRequest operation) throws APIException {
+       Optional<Partitions> partitionsList = partitionsRepository.findById(new PartitionsPk(operation.getNamespace(),operation.getPartitionId()));
+        Integer nextNumber = ((partitionsList.get().getSequence()) +1);
         return nextNumber;
     }
+//requestbody change
+    //first parmeter type change
 
-    public String computeSCTID(SCTIDReservationRequest operation,Integer sequence){
+    public String computeSCTID(SCTIDReserveRequest operation,Integer sequence){
 
         var tmpNsp=operation.getNamespace().toString();
         if (tmpNsp=="0"){
@@ -203,8 +204,8 @@ public class SCTIdDM {
     }
 
     public Integer getNextNumber(SctidsGenerateRequestDto operation) throws APIException {
-        List<Partitions> partitionsList = partitionsRepository.findByNamespaceAndPartitionId(operation.getNamespace(),operation.getPartitionId());
-        Integer nextNumber = ((partitionsList.get(0).getSequence()) +1);
+        Optional<Partitions> partitionsList =partitionsRepository.findById(new PartitionsPk(operation.getNamespace(),operation.getPartitionId()));
+        Integer nextNumber = ((partitionsList.get().getSequence()) +1);
         return nextNumber;
     }
 

@@ -18,12 +18,14 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @EnableCaching
 //add extends SpringBootServletInitializer before taking war file and remove comments on override
 //and tomcat in pom.xml
-public class SnomedApplication {
+public class SnomedApplication
+        extends SpringBootServletInitializer
+{
     public static void main(String[] args) {
         SpringApplication.run(SnomedApplication.class, args);
     }
-   /* @Override
+    @Override
     protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
         return builder.sources(SnomedApplication.class);
-    }*/
+    }
 }

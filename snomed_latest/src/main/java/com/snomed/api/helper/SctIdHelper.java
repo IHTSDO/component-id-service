@@ -148,11 +148,11 @@ public class SctIdHelper {
             }
             String tmp=sctid.toString();
             String partition=getPartition(tmp);
-            if (partition.substring(0,1)=="1" ){
+            if (partition.substring(0,1).equalsIgnoreCase("1") ){
                 if ( tmp.length()<11){
                     return null;
                 }else{
-                    return parseInt(tmp.substring(tmp.length()-10,7));
+                    return parseInt(tmp.substring(tmp.length()-10,((tmp.length()-10)+7)));
                 }
             }
             return 0;
@@ -183,7 +183,8 @@ public class SctIdHelper {
         String isValid = "true";
         String comment = "";
 
-        if (sctid == null) {
+        //if (sctid == null) {
+        if(sctid.equals(null)) {
             err = "SctId is not a number.";
             isValid = "false";
 
@@ -199,7 +200,8 @@ public class SctIdHelper {
         isValid = "false";
     }
 
-        if (isValid == "true") {
+       // if (isValid == "true") {
+        if(isValid.equals("true")) {
             if (!validSCTId(sctid)) {
                 err = "SctId is not valid.";
                 isValid = "false";
@@ -212,7 +214,8 @@ public class SctIdHelper {
             }
 
             var partitionCtrl = true;
-            if (partitionId != "") {
+            //if (partitionId != "") {
+            if(!partitionId.equals("")){
                 if (!partitionId.equalsIgnoreCase("00")
                         && !partitionId.equalsIgnoreCase("01")
                         && !partitionId.equalsIgnoreCase( "02")
@@ -283,17 +286,19 @@ public class SctIdHelper {
                 err += " Namespace error:" + e.getMessage();
             }
             if (null!=namespaceId && partitionCtrl) {
-                if (partitionId.substring(0, 1) == "1" && namespaceId == 0) {
+                //if (partitionId.substring(0, 1) == "1" && namespaceId == 0) {
+                if(partitionId.substring(0,1) == "1" && (namespaceId.equals(0))) {
                     isValid = "false";
                     err += " PartitionId first digit is '1', it identifies an extension SCTID, " +
                             "but no namespace could be identified";
                 }
             }
-            if (sequence == null
-                    || namespaceId == null
-                    || checkDigit == null
-                    || partitionId == null
-                    || partitionId == "") {
+          //  if (sequence == null
+            if(sequence.equals(null)
+                    || namespaceId.equals(null)
+                    || checkDigit.equals(null)
+                    || partitionId.equals(null)
+                    || partitionId.equals("")) {
                 isValid = "false";
 
             }

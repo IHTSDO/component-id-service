@@ -5,16 +5,17 @@ import java.util.List;
 import java.util.Optional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.snomed.api.controller.dto.BulkJobResponseDto;
-import com.snomed.api.controller.dto.BulkSctRequestDTO;
-import com.snomed.api.controller.dto.RegistrationDataDTO;
-import com.snomed.api.controller.dto.SCTIDBulkGenerationRequestDto;
-import com.snomed.api.controller.dto.SCTIDBulkReservationRequestDto;
+import com.snomed.api.controller.dto.*;
 import com.snomed.api.domain.BulkJob;
 import com.snomed.api.domain.Test;
 import com.snomed.api.exception.APIException;
 import com.snomed.api.repository.SctidRepository;
 import com.sun.istack.NotNull;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -27,7 +28,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-
+@Api(tags = "SCTIDS - Bulk Operations", value = "SCTIDS - Bulk Operations")
 @RestController
 public class BulkSctidController {
     @Autowired
@@ -42,6 +43,17 @@ public class BulkSctidController {
     @Autowired
     HttpServletRequest httpRequest;
 
+    @ApiOperation(
+            value="Bulk Sct ID",
+            notes="Returns a list Sct ID"
+                    + "<p>The following properties can be expanded:"
+                    + "<p>"
+                    + "&bull; BulkSctidService &ndash; the list of descendants of the concept<br>",tags = { "Bulk Sct ID" })
+    @ApiResponses({
+            // @ApiResponse(code = 200, message = "OK", response = PageableCollectionResource.class),
+            // @ApiResponse(code = 400, message = "Invalid filter config", response = RestApiError.class),
+            // @ApiResponse(code = 404, message = "Branch not found", response = RestApiError.class)
+    })
 
     @GetMapping("/sct/bulk/ids")
     @ResponseBody
@@ -51,8 +63,8 @@ public class BulkSctidController {
 
     @PostMapping("/sct/bulk/ids")
     @ResponseBody
-    public List<Sctid> getSctidsByQLPost(@RequestParam String token,@RequestBody String sctids) throws APIException {
-        return service.getSctByIds(token,sctids);
+    public List<Sctid> getSctidsByQLPost(@RequestParam String token,@RequestBody SctIdRequest sctids) throws APIException {
+        return service.postSctByIds(token,sctids);
     }
 
     @GetMapping("/test")
@@ -102,8 +114,8 @@ public class BulkSctidController {
     }
 
     @PostMapping("/sct/bulk/reserve")
-    public ResponseEntity<BulkJob> reserveSctids(@RequestBody @Valid SCTIDBulkReservationRequestDto sctidBulkReservationRequestDto) throws APIException {
-        return ResponseEntity.ok(service.reserveSctids(sctidBulkReservationRequestDto));
+    public ResponseEntity<BulkJob> reserveSctids(@RequestParam String token,@RequestBody @Valid SCTIDBulkReservationRequestDto sctidBulkReservationRequestDto) throws APIException {
+        return ResponseEntity.ok(service.reserveSctids(token,sctidBulkReservationRequestDto));
     }
 
 

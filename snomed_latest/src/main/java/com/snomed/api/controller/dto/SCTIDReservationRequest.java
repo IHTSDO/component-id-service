@@ -3,6 +3,18 @@ package com.snomed.api.controller.dto;
 import javax.validation.constraints.NotNull;
 
 public class SCTIDReservationRequest {
+
+       /*
+        *
+        * {
+  "namespace": 0,
+  "partitionId": "string",
+  "expirationDate": "string",
+  "software": "string",
+  "comment": "string"
+}*/
+
+    //requestbody change
     @NotNull
     private Integer namespace;
     @NotNull
@@ -10,15 +22,6 @@ public class SCTIDReservationRequest {
     private String expirationDate;
     private String software;
     private String comment;
-    private String author;
-
-    public String getAuthor() {
-        return author;
-    }
-
-    public void setAuthor(String author) {
-        this.author = author;
-    }
 
     public Integer getNamespace() {
         return namespace;

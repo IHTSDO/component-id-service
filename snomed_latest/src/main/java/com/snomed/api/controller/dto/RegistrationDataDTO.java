@@ -3,6 +3,21 @@ package com.snomed.api.controller.dto;
 import javax.validation.constraints.NotNull;
 
 public class RegistrationDataDTO {
+
+    /*
+    * {
+  "records": [
+    {
+      "sctid": "string",
+      "systemId": "string"
+    }
+  ],
+  "namespace": 0,
+  "software": "string",
+  "comment": "string"
+}
+* */
+    //requestbody change
     @NotNull
     private RegistrationRecordsDTO[] records;
     @NotNull
@@ -10,18 +25,14 @@ public class RegistrationDataDTO {
     @NotNull
     private  String software;
     private String comment;
-    private String model;
-    private String author;
-    private String type;
 
-    public RegistrationDataDTO(@NotNull RegistrationRecordsDTO[] records, Integer namespace, String software, String comment,String model,String author,String type) {
+
+    public RegistrationDataDTO(@NotNull RegistrationRecordsDTO[] records, Integer namespace, String software, String comment) {
         this.records = records;
         this.namespace = namespace;
         this.software = software;
         this.comment = comment;
-        this.model = model;
-        this.author = author;
-        this.type = type;
+
     }
 
     public RegistrationRecordsDTO[] getRecords() {
@@ -56,27 +67,5 @@ public class RegistrationDataDTO {
         this.comment = comment;
     }
 
-    public String getModel() {
-        return model;
-    }
 
-    public void setModel(String model) {
-        this.model = model;
-    }
-
-    public String getAuthor() {
-        return author;
-    }
-
-    public void setAuthor(String author) {
-        this.author = author;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
 }

@@ -11,11 +11,14 @@ import com.snomed.api.domain.SchemeName;
 import javax.transaction.Transactional;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface BulkSchemeIdRepository extends JpaRepository<SchemeId, Integer> {
 
-    public List<SchemeId> findBySchemeAndSchemeIdIn(String schemeName, String[] schemeId);
+    public List<SchemeId> findBySchemeAndSchemeIdIn(String scheme, List<String> schemeId);
+
+    public Optional<SchemeId> findBySchemeAndSchemeId(String scheme, String schemeId);
 
 
     @Modifying
@@ -24,8 +27,8 @@ public interface BulkSchemeIdRepository extends JpaRepository<SchemeId, Integer>
             "values(:scheme,:schemeId, :sequence,:checkDigit,:systemId,:status,:author,:software,:expirationDate,:jobId,:created_at,:modified_at)",
             nativeQuery = true)
     public void insertWithQuery(
-            @Param("scheme") String scheme,
-            @Param("schemeId") String[] schemeId,
+            @Param("scheme") SchemeName scheme,
+            @Param("schemeId") String schemeId,
             @Param("sequence") Integer sequence,
             @Param("checkDigit") Integer checkDigit,
             @Param("systemId") String systemId,
@@ -40,7 +43,5 @@ public interface BulkSchemeIdRepository extends JpaRepository<SchemeId, Integer>
     @Query(value="Select * from schemeid order by schemeId",nativeQuery = true)
     public List<SchemeId> findBySchemeid();
 
-    List<SchemeId> findBySchemeAndSchemeId(SchemeName schemeName, String schemeid);
-
-    List<SchemeId> findBySchemeAndSystemId(SchemeName schemeName, String systemid);
+    List<SchemeId> findBySchemeAndSystemId(String schemeName, String systemid);
 }

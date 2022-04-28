@@ -3,7 +3,17 @@ package com.snomed.api.controller.dto;
 import javax.validation.constraints.NotNull;
 
 public class SCTIDBulkReservationRequestDto {
-
+    /*
+           * {
+     "namespace": 0,
+     "partitionId": "string",
+     "expirationDate": "string",
+     "quantity": 0,
+     "software": "string",
+     "comment": "string"
+   }
+           * */
+    //requestbody chNGE
     @NotNull
     private Integer namespace;
     @NotNull
@@ -13,9 +23,7 @@ public class SCTIDBulkReservationRequestDto {
     private Integer quantity;
     private String software;
     private String comment;
-    private String model;
-    private String author;
-    public String type;
+
 
     public SCTIDBulkReservationRequestDto() {
     }
@@ -29,87 +37,52 @@ public class SCTIDBulkReservationRequestDto {
         this.comment = comment;
     }
 
-
-
     public Integer getNamespace() {
         return namespace;
     }
 
-    public SCTIDBulkReservationRequestDto setNamespace(Integer namespace) {
+    public void setNamespace(Integer namespace) {
         this.namespace = namespace;
-        return this;
-    }
-
-    public String getModel() {
-        return model;
-    }
-
-    public SCTIDBulkReservationRequestDto setModel(String model) {
-        this.model = model;
-        return this;
-    }
-
-    public String getAuthor() {
-        return author;
-    }
-
-    public SCTIDBulkReservationRequestDto setAuthor(String author) {
-        this.author = author;
-        return this;
     }
 
     public String getPartitionId() {
         return partitionId;
     }
 
-    public SCTIDBulkReservationRequestDto setPartitionId(String partitionId) {
+    public void setPartitionId(String partitionId) {
         this.partitionId = partitionId;
-        return this;
     }
 
     public String getExpirationDate() {
         return expirationDate;
     }
 
-    public SCTIDBulkReservationRequestDto setExpirationDate(String expirationDate) {
+    public void setExpirationDate(String expirationDate) {
         this.expirationDate = expirationDate;
-        return this;
     }
 
     public Integer getQuantity() {
         return quantity;
     }
 
-    public SCTIDBulkReservationRequestDto setQuantity(Integer quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
-        return this;
     }
 
     public String getSoftware() {
         return software;
     }
 
-    public SCTIDBulkReservationRequestDto setSoftware(String software) {
+    public void setSoftware(String software) {
         this.software = software;
-        return this;
     }
 
     public String getComment() {
         return comment;
     }
 
-    public SCTIDBulkReservationRequestDto setComment(String comment) {
+    public void setComment(String comment) {
         this.comment = comment;
-        return this;
-    }
-
-    public String getType(){
-        return type;
-    }
-
-    public void setType(String type)
-    {
-        this.type=type;
     }
 
     @Override
@@ -121,8 +94,6 @@ public class SCTIDBulkReservationRequestDto {
                 ", quantity=" + quantity +
                 ", software='" + software + '\'' +
                 ", comment='" + comment + '\'' +
-                ", model='" + model + '\'' +
-                ", author='" + author + '\'' +
                 '}';
     }
 }

@@ -3,26 +3,29 @@ package com.snomed.api.controller.dto;
 import javax.validation.constraints.NotNull;
 
 public class SchemeIdBulkReserveRequestDto {
+/*
+* {
+  "quantity": 0,
+  "software": "string",
+  "expirationDate": "string",
+  "comment": "string"
+}
+* */
 
+    //request body change
     @NotNull
     private Integer quantity;
     private String software;
     private String expirationDate;
     private String comment;
-    private String author;
-    private String model;
-    private String scheme;
-    private String type;
 
-    public SchemeIdBulkReserveRequestDto(Integer quantity, String software, String expirationDate, String comment, String author, String model, String scheme, String type) {
+
+    public SchemeIdBulkReserveRequestDto(Integer quantity, String software, String expirationDate) {
         this.quantity = quantity;
         this.software = software;
         this.expirationDate = expirationDate;
         this.comment = comment;
-        this.author = author;
-        this.model = model;
-        this.scheme = scheme;
-        this.type = type;
+
     }
 
     public SchemeIdBulkReserveRequestDto() {
@@ -61,36 +64,6 @@ public class SchemeIdBulkReserveRequestDto {
         this.comment = comment;
     }
 
-    public String getAuthor() {
-        return author;
-    }
 
-    public void setAuthor(String author) {
-        this.author = author;
-    }
-
-    public String getModel() {
-        return model;
-    }
-
-    public void setModel(String model) {
-        this.model = model;
-    }
-
-    public String getScheme() {
-        return scheme;
-    }
-
-    public void setScheme(String scheme) {
-        this.scheme = scheme;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
 }
 

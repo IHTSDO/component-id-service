@@ -5,17 +5,33 @@ import com.snomed.api.controller.dto.*;
 import com.snomed.api.domain.Sctid;
 import com.snomed.api.exception.APIException;
 import com.snomed.api.service.SctidService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Api(tags = "SCTIDS", value = "SCTIDS")
 @Controller
 public class SctidController {
 //Test Comment
     @Autowired
     private SctidService sctidService;
+
+    @ApiOperation(
+            value="SCTIDS",
+            notes="Returns a list of sct IDs"
+                    + "<p>The following properties can be expanded:"
+                    + "<p>"
+                    + "&bull; sctidService &ndash; the list of descendants of the concept<br>",tags = { "SCTIDS" })
+    @ApiResponses({
+            // @ApiResponse(code = 200, message = "OK", response = PageableCollectionResource.class),
+            // @ApiResponse(code = 400, message = "Invalid filter config", response = RestApiError.class),
+            // @ApiResponse(code = 404, message = "Branch not found", response = RestApiError.class)
+    })
 
     @GetMapping("/test/getsct")
     @ResponseBody
@@ -26,13 +42,13 @@ public class SctidController {
 
     @GetMapping("/sct/ids")
     @ResponseBody
-public List<Sctid> getSct(@RequestParam String token,@RequestParam String limit,@RequestParam String skip,@RequestParam String namespace) throws APIException, JsonProcessingException {
+public List<Sctid> getSct(@RequestParam String token,@RequestParam(name="limit",required = false) String limit,@RequestParam(name="skip",required = false) String skip,@RequestParam(name="namespace",required = false) String namespace) throws APIException, JsonProcessingException {
         return sctidService.getSct(token,limit,skip,namespace);
     }
 
     @GetMapping("/sct/ids/{sctid}")
     @ResponseBody
-    public SctWithSchemeResponseDTO getSctWithId(@RequestParam String token, @PathVariable String sctid, @RequestParam String includeAdditionalIds) throws APIException {
+    public SctWithSchemeResponseDTO getSctWithId(@RequestParam String token, @PathVariable String sctid, @RequestParam(name="includeAdditionalIds",required = false) String includeAdditionalIds) throws APIException {
         return sctidService.getSctWithId(token,sctid,includeAdditionalIds);
     }
 

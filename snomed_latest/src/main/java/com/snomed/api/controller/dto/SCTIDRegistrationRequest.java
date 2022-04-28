@@ -3,6 +3,18 @@ package com.snomed.api.controller.dto;
 import javax.validation.constraints.NotNull;
 
 public class SCTIDRegistrationRequest {
+
+
+    /*
+    *
+    * {
+  "sctid": "string",
+  "namespace": 0,
+  "systemId": "string",
+  "software": "string",
+  "comment": "string"
+}*/
+    //requestbody change
     @NotNull
     private String sctid;
     @NotNull
@@ -10,16 +22,8 @@ public class SCTIDRegistrationRequest {
     private String systemId;
     private String software;
     private String comment;
-    private boolean autoSysId = false;
-    private String author;
 
-    public String getAuthor() {
-        return author;
-    }
 
-    public void setAuthor(String author) {
-        this.author = author;
-    }
     public String getSctid() {
         return sctid;
     }
@@ -60,11 +64,4 @@ public class SCTIDRegistrationRequest {
         this.comment = comment;
     }
 
-    public boolean isAutoSysId() {
-        return autoSysId;
-    }
-
-    public void setAutoSysId(boolean autoSysId) {
-        this.autoSysId = autoSysId;
-    }
-}
+   }

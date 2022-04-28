@@ -16,8 +16,11 @@ public class Namespace {
     private Date dateIssued;
     private String email;
     private String notes;
+    //fix
+    @OneToMany(mappedBy = "namespace", cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    private List<Partitions> partitions;
 
-    //private String idPregenerate ;
+    private String idPregenerate ;
 
     //@OneToMany(mappedBy = "namespace")
     //private List<Partitions> partitionsList;
@@ -26,8 +29,8 @@ public class Namespace {
 
     }
 
-    public Namespace(Integer namespace, String organizationName, String organizationAndContactDetails, Date dateIssued, String email, String notes
-                     //String idPregenerate
+    public Namespace(Integer namespace, String organizationName, String organizationAndContactDetails, Date dateIssued, String email, String notes,List<Partitions> partitions,
+                     String idPregenerate
     ) {
         this.namespace = namespace;
         this.organizationName = organizationName;
@@ -35,7 +38,11 @@ public class Namespace {
         this.dateIssued = dateIssued;
         this.email = email;
         this.notes = notes;
-        //this.idPregenerate = idPregenerate;
+        this.partitions=partitions;
+        this.idPregenerate = idPregenerate;
+    }
+
+    public Namespace(Integer namespace) {
     }
 
     public Integer getNamespace() {
@@ -86,12 +93,20 @@ public class Namespace {
         this.notes = notes;
     }
 
-    /*public String getIdPregenerate() {
+    public List<Partitions> getPartitions() {
+        return partitions;
+    }
+
+    public void setPartitions(List<Partitions> partitions) {
+        this.partitions = partitions;
+    }
+
+    public String getIdPregenerate() {
         return idPregenerate;
     }
 
     public void setIdPregenerate(String idPregenerate) {
         this.idPregenerate = idPregenerate;
-    }*/
+    }
 
 }

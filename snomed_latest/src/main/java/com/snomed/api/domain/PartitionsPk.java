@@ -10,8 +10,24 @@ public class PartitionsPk implements Serializable {
     public PartitionsPk() {
     }
 
+    public Integer getNamespace() {
+        return namespace;
+    }
+
+    public void setNamespace(Integer namespace) {
+        this.namespace = namespace;
+    }
+
+    public String getPartitionId() {
+        return partitionId;
+    }
+
+    public void setPartitionId(String partitionId) {
+        this.partitionId = partitionId;
+    }
+
     public PartitionsPk(Integer namespace, String partitionId
-            //,Integer sequence
+                        //,Integer sequence
     ) {
         this.namespace = namespace;
         this.partitionId = partitionId;

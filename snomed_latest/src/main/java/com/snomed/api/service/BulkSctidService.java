@@ -28,6 +28,9 @@ public class BulkSctidService {
     private SctidRepository repo;
 
     @Autowired
+    AuthenticateToken authenticateToken;
+
+    @Autowired
     private BulkJobRepository bulkJobRepository;
 
     @Autowired
@@ -66,6 +69,13 @@ public class BulkSctidService {
         return repo.getAllSctidsUsingQL();
     }
 
+    public List<Sctid> postSctByIds(String token,SctIdRequest ids) throws APIException {
+        if (authenticateToken(token))
+            return this.postValidScts(ids);
+        else
+            throw new APIException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
+    }
+
     public List<Sctid> getSctByIds(String token,String ids) throws APIException {
         if (authenticateToken(token))
             return this.validScts(ids);
@@ -86,8 +96,8 @@ public class BulkSctidService {
         return this.securityController.authenticate();
     }
 
-    public List<Sctid> getByIds(String ids) {
-        return repo.getSctidsByIds(ids);
+    public List<Sctid> getByIds(List<String> ids) {
+        return repo.findBySctidIn(ids);
     }
 
     public List<Sctid> validScts(String ids) throws APIException {
@@ -96,7 +106,33 @@ public class BulkSctidService {
         String[] sctidsArray = idsWthtSpace.split(",");
         ArrayList<String> sctidsReqArray = new ArrayList<String>(Arrays.asList(sctidsArray));
         this.validSctidCheck(sctidsReqArray);
-        List<Sctid> resArr = this.getByIds(ids);
+        List<Sctid> resArr = this.getByIds(sctidsReqArray);
+        List<String> respSctArr = new ArrayList<>();
+        for (int i = 0; i < resArr.size(); i++) {
+            Sctid sctObj = resArr.get(i);
+            respSctArr.add(sctObj.getSctid());
+        }
+        Set<String> rqSet = new HashSet<>(respSctArr);
+        Set<String> respSet = new HashSet<>(sctidsReqArray);
+        Set<String> resultDiff = new HashSet<>(rqSet);
+        resultDiff.removeAll(respSet);
+        if (resultDiff.size() > 0) {
+            for (String diffSctid :
+                    resultDiff) {
+                Sctid sctidObj = this.getFreeRecord(diffSctid, null);
+                resArr.add(sctidObj);
+            }
+        }
+        return resArr;
+    }
+
+    public List<Sctid> postValidScts(SctIdRequest ids) throws APIException {
+
+        String idsWthtSpace = ids.getSctids().replaceAll("\\s+", "");
+        String[] sctidsArray = idsWthtSpace.split(",");
+        ArrayList<String> sctidsReqArray = new ArrayList<String>(Arrays.asList(sctidsArray));
+        this.validSctidCheck(sctidsReqArray);
+        List<Sctid> resArr = this.getByIds(sctidsReqArray);
         List<String> respSctArr = new ArrayList<>();
         for (int i = 0; i < resArr.size(); i++) {
             Sctid sctObj = resArr.get(i);
@@ -168,7 +204,7 @@ public class BulkSctidService {
         sctObj.setStatus(status);
         Sctid sct = repo.save(sctObj);
         //repo.insertWithQuery(sctid, sequence, namespace, partitionId, checkDigit, systemId, status);
-       // Sctid sct = this.getSctById(sctid);
+        // Sctid sct = this.getSctById(sctid);
         return sct;
     }
 
@@ -195,7 +231,7 @@ public class BulkSctidService {
 
         /* fetch the sctid id record with systemId and namespaceId */
         return repo.findSctidBySystemIds(Arrays.asList(systemIdsArray), namespaceId);
-       // return repo.findBySystemIdAndNamespace(systemIdStr, namespaceId);
+        // return repo.findBySystemIdAndNamespace(systemIdStr, namespaceId);
 
     }
 
@@ -207,9 +243,29 @@ public class BulkSctidService {
     }
 
     public BulkJob registerScts(RegistrationDataDTO registrationData) throws APIException {
+         /*
+    * {
+  "records": [
+    {
+      "sctid": "string",
+      "systemId": "string"
+    }
+  ],
+  "namespace": 0,
+  "software": "string",
+  "comment": "string"
+}
+* */
+        //requestbody change
         UserDTO userObj = this.getAuthenticatedUser();
         BulkJob resultJob = new BulkJob();
         if (this.isAbleUser(registrationData.getNamespace().toString(), userObj)) {
+            SctidBulkRegister sctidBulkRegister= new SctidBulkRegister();
+            sctidBulkRegister.setRecords(registrationData.getRecords());
+            sctidBulkRegister.setNamespace(registrationData.getNamespace());
+            sctidBulkRegister.setSoftware(registrationData.getSoftware());
+            sctidBulkRegister.setComment(registrationData.getComment());
+
             if ((registrationData.getRecords() == null) || (registrationData.getRecords().length == 0)) {
 
                 throw new APIException(HttpStatus.ACCEPTED, "Records property cannot be empty.");
@@ -224,15 +280,15 @@ public class BulkSctidService {
                     }
                 }
                 if (!error) {
-                    registrationData.setAuthor(userObj.getLogin());
-                    registrationData.setModel(modelsConstants.SCTID);
-                    registrationData.setType(jobType.REGISTER_SCTIDS);
-                    RegistrationDataDTO registrationDataDTO = new RegistrationDataDTO(registrationData.getRecords(), registrationData.getNamespace(),
+                    sctidBulkRegister.setAuthor(userObj.getLogin());
+                    sctidBulkRegister.setModel(modelsConstants.SCTID);
+                    sctidBulkRegister.setType(jobType.REGISTER_SCTIDS);
+                    /*RegistrationDataDTO registrationDataDTO = new RegistrationDataDTO(registrationData.getRecords(), registrationData.getNamespace(),
                             registrationData.getSoftware(), registrationData.getComment(), registrationData.getModel(), registrationData.getAuthor(), registrationData.getType());
-                    BulkJob bulk = new BulkJob();
+                  */  BulkJob bulk = new BulkJob();
                     try {
                         ObjectMapper objectMapper = new ObjectMapper();
-                        String regString = objectMapper.writeValueAsString(registrationDataDTO);
+                        String regString = objectMapper.writeValueAsString(sctidBulkRegister);
                         bulk.setName(jobType.REGISTER_SCTIDS);
                         bulk.setStatus("0");
                         bulk.setRequest(regString);
@@ -242,7 +298,7 @@ public class BulkSctidService {
                         throw new APIException(HttpStatus.BAD_REQUEST, e.getMessage());
                     }
 
-                   resultJob = this.bulkJobRepository.save(bulk);
+                    resultJob = this.bulkJobRepository.save(bulk);
                     System.out.println("result:" + resultJob);
                 }
             }
@@ -252,14 +308,22 @@ public class BulkSctidService {
         return resultJob;
     }
 
-    public boolean isAbleUser(String namespace, UserDTO user) {
+    public boolean isAbleUser(String namespace, UserDTO user) throws APIException {
+        List<String> groups = authenticateToken.getGroupsList();
         boolean able = false;
-        List<String> admins = Arrays.asList("keerthika", "b", "c");
+        for(String group:groups)
+        {
+            if(group.equalsIgnoreCase("component-identifier-service-admin"))
+            {
+                able = true;
+            }
+        }
+        /*List<String> admins = Arrays.asList("keerthika", "b", "c");
         for (String admin : admins) {
             if (admin.equalsIgnoreCase(user.getLogin())) {
                 able = true;
             }
-        }
+        }*/
         if (!able) {
             if (!"false".equalsIgnoreCase(namespace)) {
                 List<PermissionsNamespace> permissionsNamespaceList = permissionsNamespaceRepository.findByNamespace(Integer.valueOf(namespace));
@@ -290,12 +354,36 @@ public class BulkSctidService {
     }
 
     public BulkJobResponseDto generateSctids(String token,SCTIDBulkGenerationRequestDto sctidBulkGenerationRequestDto) throws APIException, JsonProcessingException, APIException {
+/*
+* @NotNull
+    private Integer namespace;
+    @NotNull
+    private String partitionId;
+    @NotNull
+    private Integer quantity;
+    private List<String> systemIds;
+    private String software;
+    private String comment;
+    private boolean generateLegacyIds;
+* */
+        //requestbody change
+        SctidBulkGenerate bulkGenerate= new SctidBulkGenerate();
+        bulkGenerate.setNamespace(sctidBulkGenerationRequestDto.getNamespace());
+        bulkGenerate.setPartitionId(sctidBulkGenerationRequestDto.getPartitionId());
+        bulkGenerate.setQuantity(sctidBulkGenerationRequestDto.getQuantity());
+        bulkGenerate.setSystemIds(sctidBulkGenerationRequestDto.getSystemIds());
+        bulkGenerate.setSoftware(sctidBulkGenerationRequestDto.getSoftware());
+        bulkGenerate.setComment(sctidBulkGenerationRequestDto.getComment());
+        bulkGenerate.setGenerateLegacyIds(sctidBulkGenerationRequestDto.getGenerateLegacyIds());
+
+
         if (authenticateToken(token)) {
             UserDTO userObj = this.getAuthenticatedUser();
             boolean able = isAbleUser(sctidBulkGenerationRequestDto.getNamespace().toString(), userObj);
             if (!able) {
                 throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
+
 
             // if (able) {
             if (((sctidBulkGenerationRequestDto.getNamespace() == 0) && (!"0".equalsIgnoreCase(sctidBulkGenerationRequestDto.getPartitionId().substring(0, 1))))
@@ -306,53 +394,60 @@ public class BulkSctidService {
                 throw new APIException(HttpStatus.BAD_REQUEST, "SystemIds quantity is not equal to quantity requirement");
             }
 
-            sctidBulkGenerationRequestDto.setAuthor("a");
-            sctidBulkGenerationRequestDto.model = modelsConstants.SCTID;
+            bulkGenerate.setAuthor(userObj.getLogin());
+            bulkGenerate.model = modelsConstants.SCTID;
 
             if ((sctidBulkGenerationRequestDto.getSystemIds() != null || sctidBulkGenerationRequestDto.getSystemIds().size() == 0) &&
-                    ("TRUE".equalsIgnoreCase(sctidBulkGenerationRequestDto.getGenerateLegacyIds().toUpperCase()) && ("0".equalsIgnoreCase(sctidBulkGenerationRequestDto.getPartitionId().substring(1, 1))))) {
+                    ("TRUE".equalsIgnoreCase((sctidBulkGenerationRequestDto.getGenerateLegacyIds())) && ("0".equalsIgnoreCase(sctidBulkGenerationRequestDto.getPartitionId().substring(1, 1))))) {
                 List<String> arrayUid = new ArrayList<>();
                 for (int i = 0; i < sctidBulkGenerationRequestDto.getQuantity(); i++) {
                     arrayUid.add(SctIdHelper.guid());
                 }
-                sctidBulkGenerationRequestDto.setSystemIds(arrayUid);
-                sctidBulkGenerationRequestDto.setAutoSysId(true);
+                bulkGenerate.setSystemIds(arrayUid);
+                bulkGenerate.setAutoSysId(true);
 
             }
             List<String> additionalJob = new ArrayList<>();
             ObjectMapper objectMapper = new ObjectMapper();
-            String reqAsString = objectMapper.writeValueAsString(sctidBulkGenerationRequestDto);
+            String reqAsString = objectMapper.writeValueAsString(bulkGenerate);
+            String jsonFormattedString = reqAsString.replaceAll("\\\\", "");
+
             BulkJob bulkJob = new BulkJob();
-            sctidBulkGenerationRequestDto.setType(jobType.GENERATE_SCTIDS);
+
+            bulkGenerate.setType(jobType.GENERATE_SCTIDS);
             bulkJob.setName(jobType.GENERATE_SCTIDS);
             bulkJob.setStatus("0");
-            bulkJob.setRequest(reqAsString);
+            bulkJob.setRequest(jsonFormattedString);
             bulkJob = bulkJobRepository.save(bulkJob);
 
-            if (sctidBulkGenerationRequestDto.getGenerateLegacyIds() != null && ("true".equalsIgnoreCase(sctidBulkGenerationRequestDto.getGenerateLegacyIds().toUpperCase()) && ("0".equalsIgnoreCase(sctidBulkGenerationRequestDto.getPartitionId().substring(1, 1))))) {
-                SCTIDBulkGenerationRequestDto generationMetaData = sctidBulkGenerationRequestDto.copy();
-                generationMetaData.model = modelsConstants.SCHEME_ID;
+            if (/*bulkGenerate.isAutoSysId() != null*/  ("true".equalsIgnoreCase(bulkGenerate.getGenerateLegacyIds()) && ("0".equalsIgnoreCase(bulkGenerate.getPartitionId().substring(1, 1))))) {
+               // SCTIDBulkGenerationRequestDto generationMetaData = sctidBulkGenerationRequestDto.copy();
+                SctidBulkGenerate bulkGenerate1= bulkGenerate.copy();
+                bulkGenerate.model = modelsConstants.SCHEME_ID;
 
                 if (isSchemeAbleUser("SNOMEDID", userObj)) {
                     if (able) {
-                        generationMetaData.setScheme("SNOMEDID");
-                        generationMetaData.setType(jobType.GENERATE_SCHEMEIDS);
+                        bulkGenerate1.setScheme("SNOMEDID");
+                        bulkGenerate1.setType(jobType.GENERATE_SCHEMEIDS);
                         BulkJob bulkJobScheme = new BulkJob();
                         bulkJobScheme.setName(jobType.GENERATE_SCHEMEIDS);
                         bulkJobScheme.setStatus("0");
-                        String genAsString = objectMapper.writeValueAsString(generationMetaData);
-                        bulkJobScheme.setRequest(genAsString);
+                        String genAsString = objectMapper.writeValueAsString(bulkGenerate1);
+                        String genAsStringFormat = reqAsString.replaceAll("\\\\", "");
+                        bulkJobScheme.setRequest(genAsStringFormat);
                         bulkJobScheme = bulkJobRepository.save(bulkJobScheme);
                         additionalJob.add(bulkJob.toString());
                         if (isSchemeAbleUser("CTV3ID", userObj)) {
                             if (able) {
-                                SCTIDBulkGenerationRequestDto generationCTV3IDMetadata = generationMetaData.copy();
+                             //   SCTIDBulkGenerationRequestDto generationCTV3IDMetadata = generationMetaData.copy();
+                                SctidBulkGenerate generationCTV3IDMetadata = bulkGenerate1.copy();
                                 generationCTV3IDMetadata.setScheme("CTV3ID");
                                 generationCTV3IDMetadata.setType(jobType.GENERATE_SCHEMEIDS);
                                 BulkJob bulkJobSchemeCTV = new BulkJob();
                                 bulkJobSchemeCTV.setStatus("0");
                                 String genMetaAsStr = objectMapper.writeValueAsString(generationCTV3IDMetadata);
-                                bulkJobSchemeCTV.setRequest(genMetaAsStr);
+                                String genMetaAsStrFormat = reqAsString.replaceAll("\\\\", "");
+                                bulkJobSchemeCTV.setRequest(genMetaAsStrFormat);
                                 bulkJobSchemeCTV = bulkJobRepository.save(bulkJobSchemeCTV);
                                 additionalJob.add(bulkJobSchemeCTV.toString());
                                 BulkJobResponseDto bulkJobResponseDto = new BulkJobResponseDto(bulkJob);
@@ -370,14 +465,15 @@ public class BulkSctidService {
                     } else {
                         if (isSchemeAbleUser("CTV3ID", userObj)) {
                             if (able) {
-                                SCTIDBulkGenerationRequestDto generationCTV3IDMetadata = generationMetaData.copy();
+                                SctidBulkGenerate generationCTV3IDMetadata = bulkGenerate1.copy();
                                 generationCTV3IDMetadata.setScheme("CTV3ID");
                                 generationCTV3IDMetadata.setType(jobType.GENERATE_SCHEMEIDS);
                                 BulkJob bulkJobCtvMetaData = new BulkJob();
                                 bulkJobCtvMetaData.setName(jobType.GENERATE_SCHEMEIDS);
                                 bulkJobCtvMetaData.setStatus("0");
                                 String genCTVAsStr = objectMapper.writeValueAsString(generationCTV3IDMetadata);
-                                bulkJobCtvMetaData.setRequest(genCTVAsStr);
+                                String genCTVAsStrFormat = reqAsString.replaceAll("\\\\", "");
+                                bulkJobCtvMetaData.setRequest(genCTVAsStrFormat);
                                 bulkJobCtvMetaData = bulkJobRepository.save(bulkJobCtvMetaData);
                                 additionalJob.add(bulkJobCtvMetaData.toString());
                                 BulkJobResponseDto bulkJobResponseDto = new BulkJobResponseDto(bulkJob);
@@ -404,15 +500,23 @@ public class BulkSctidService {
         }
     }
 
-    public boolean isSchemeAbleUser(String schemeName, UserDTO user) {
+    public boolean isSchemeAbleUser(String schemeName, UserDTO user) throws APIException {
+        List<String> groups = authenticateToken.getGroupsList();
         boolean able = false;
-        List<String> admins = Arrays.asList("a", "b", "c");
+        for(String group:groups)
+        {
+            if(group.equalsIgnoreCase("component-identifier-service-admin"))
+            {
+                able = true;
+            }
+        }
+       /* List<String> admins = Arrays.asList("a", "b", "c");
         for (String admin : admins) {
             if (admin.equalsIgnoreCase(user.getLogin())) {
                 able = true;
                 break;
             }
-        }
+        }*/
         if (!able) {
             if (!"false".equalsIgnoreCase(schemeName)) {
                 List<PermissionsScheme> permissionsSchemesList = permissionsSchemeRepository.findByScheme(schemeName);
@@ -442,8 +546,36 @@ public class BulkSctidService {
     //Deprecate API
     public BulkJob deprecateSctid(String token,BulkSctRequestDTO deprecateBulkSctRequestDTO) throws APIException {
         BulkJob resultJob = new BulkJob();
+
+    /*
+    * {
+  "sctids": [
+    "string"
+  ],
+  "namespace": 0,
+  "software": "string",
+  "comment": "string"
+  *
+  * //test data
+  * {
+  "sctids": [
+    "123005000"
+  ],
+  "namespace": 0,
+  "software": "string",
+  "comment": "string"
+}
+}*/
+        //requestbody change
+
         if (authenticateToken(token)) {
             UserDTO userObj = this.getAuthenticatedUser();
+            BulkSctRequest bulkSctRequest=new BulkSctRequest();
+            bulkSctRequest.setSctids(deprecateBulkSctRequestDTO.getSctids());
+            bulkSctRequest.setNamespace(deprecateBulkSctRequestDTO.getNamespace());
+            bulkSctRequest.setSoftware(deprecateBulkSctRequestDTO.getSoftware());
+            bulkSctRequest.setComment(deprecateBulkSctRequestDTO.getComment());
+
             boolean able = isAbleUser(deprecateBulkSctRequestDTO.getNamespace().toString(), userObj);
             if (!able) {
                 throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
@@ -467,16 +599,16 @@ public class BulkSctidService {
                         }
                     }
                     if(!error) {
-                        deprecateBulkSctRequestDTO.setAuthor(userObj.getLogin());
-                        deprecateBulkSctRequestDTO.setModel(modelsConstants.SCTID);
-                        deprecateBulkSctRequestDTO.setType(jobType.DEPRECATE_SCTIDS);
+                        bulkSctRequest.setAuthor(userObj.getLogin());
+                        bulkSctRequest.setModel(modelsConstants.SCTID);
+                        bulkSctRequest.setType(jobType.DEPRECATE_SCTIDS);
                         //BulkSctRequestDTO deprecateBulkSctRequestDTO = new RegistrationDataDTO(registrationData.getRecords(), registrationData.getNamespace(),
-                          //      registrationData.getSoftware(), registrationData.getComment(), registrationData.getModel(), registrationData.getAuthor(), registrationData.getType());
+                        //      registrationData.getSoftware(), registrationData.getComment(), registrationData.getModel(), registrationData.getAuthor(), registrationData.getType());
                         BulkJob bulk = new BulkJob();
                         try {
                             ObjectMapper objectMapper = new ObjectMapper();
-                            String regString = objectMapper.writeValueAsString(deprecateBulkSctRequestDTO);
-                            bulk.setName(jobType.REGISTER_SCTIDS);
+                            String regString = objectMapper.writeValueAsString(bulkSctRequest);
+                            bulk.setName(jobType.DEPRECATE_SCTIDS);
                             bulk.setStatus("0");
                             bulk.setRequest(regString);
                             bulk.setCreated_at(new Date());
@@ -502,8 +634,23 @@ public class BulkSctidService {
     //Publish API
     public BulkJob publishSctid(String token,BulkSctRequestDTO publishBulkSctRequestDTO) throws APIException {
         BulkJob resultJob = new BulkJob();
+        /*
+    * {
+  "sctids": [
+    "string"
+  ],
+  "namespace": 0,
+  "software": "string",
+  "comment": "string"
+}*/
+        //requestbody change
         if (authenticateToken(token)) {
             UserDTO userObj = this.getAuthenticatedUser();
+            BulkSctRequest bulkSctRequest=new BulkSctRequest();
+            bulkSctRequest.setSctids(publishBulkSctRequestDTO.getSctids());
+            bulkSctRequest.setNamespace(publishBulkSctRequestDTO.getNamespace());
+            bulkSctRequest.setSoftware(publishBulkSctRequestDTO.getSoftware());
+            bulkSctRequest.setComment(publishBulkSctRequestDTO.getComment());
             boolean able = isAbleUser(publishBulkSctRequestDTO.getNamespace().toString(), userObj);
             if (!able) {
                 throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
@@ -527,15 +674,15 @@ public class BulkSctidService {
                         }
                     }
                     if(!error) {
-                        publishBulkSctRequestDTO.setAuthor(userObj.getLogin());
-                        publishBulkSctRequestDTO.setModel(modelsConstants.SCTID);
-                        publishBulkSctRequestDTO.setType(jobType.PUBLISH_SCTIDS);
+                        bulkSctRequest.setAuthor(userObj.getLogin());
+                        bulkSctRequest.setModel(modelsConstants.SCTID);
+                        bulkSctRequest.setType(jobType.PUBLISH_SCTIDS);
                         //BulkSctRequestDTO deprecateBulkSctRequestDTO = new RegistrationDataDTO(registrationData.getRecords(), registrationData.getNamespace(),
                         //      registrationData.getSoftware(), registrationData.getComment(), registrationData.getModel(), registrationData.getAuthor(), registrationData.getType());
                         BulkJob bulk = new BulkJob();
                         try {
                             ObjectMapper objectMapper = new ObjectMapper();
-                            String regString = objectMapper.writeValueAsString(publishBulkSctRequestDTO);
+                            String regString = objectMapper.writeValueAsString(bulkSctRequest);
                             bulk.setName(jobType.PUBLISH_SCTIDS);
                             bulk.setStatus("0");
                             bulk.setRequest(regString);
@@ -563,6 +710,23 @@ public class BulkSctidService {
     public BulkJob releaseSctid(String token,BulkSctRequestDTO releaseBulkSctRequestDTO) throws APIException {
         BulkJob resultJob = new BulkJob();
         if (authenticateToken(token)) {
+
+                    /*
+    * {
+  "sctids": [
+    "string"
+  ],
+  "namespace": 0,
+  "software": "string",
+  "comment": "string"
+}*/
+            //requestbody change
+            BulkSctRequest bulkSctRequest=new BulkSctRequest();
+            bulkSctRequest.setSctids(releaseBulkSctRequestDTO.getSctids());
+            bulkSctRequest.setNamespace(releaseBulkSctRequestDTO.getNamespace());
+            bulkSctRequest.setSoftware(releaseBulkSctRequestDTO.getSoftware());
+            bulkSctRequest.setComment(releaseBulkSctRequestDTO.getComment());
+
             UserDTO userObj = this.getAuthenticatedUser();
             boolean able = isAbleUser(releaseBulkSctRequestDTO.getNamespace().toString(), userObj);
             if (!able) {
@@ -587,15 +751,15 @@ public class BulkSctidService {
                         }
                     }
                     if(!error) {
-                        releaseBulkSctRequestDTO.setAuthor(userObj.getLogin());
-                        releaseBulkSctRequestDTO.setModel(modelsConstants.SCTID);
-                        releaseBulkSctRequestDTO.setType(jobType.RELEASE_SCTIDS);
+                        bulkSctRequest.setAuthor(userObj.getLogin());
+                        bulkSctRequest.setModel(modelsConstants.SCTID);
+                        bulkSctRequest.setType(jobType.RELEASE_SCTIDS);
                         //BulkSctRequestDTO deprecateBulkSctRequestDTO = new RegistrationDataDTO(registrationData.getRecords(), registrationData.getNamespace(),
                         //      registrationData.getSoftware(), registrationData.getComment(), registrationData.getModel(), registrationData.getAuthor(), registrationData.getType());
                         BulkJob bulk = new BulkJob();
                         try {
                             ObjectMapper objectMapper = new ObjectMapper();
-                            String regString = objectMapper.writeValueAsString(releaseBulkSctRequestDTO);
+                            String regString = objectMapper.writeValueAsString(bulkSctRequest);
                             bulk.setName(jobType.RELEASE_SCTIDS);
                             bulk.setStatus("0");
                             bulk.setRequest(regString);
@@ -618,4 +782,81 @@ public class BulkSctidService {
         }
         return resultJob;
     }
+    public BulkJob reserveSctids(String token,SCTIDBulkReservationRequestDto sctidBulkReservationRequestDto) throws APIException {
+        BulkJob output = new BulkJob();
+        if (authenticateToken(token)) {
+            UserDTO userObj = this.getAuthenticatedUser();
+            boolean able = isAbleUser(sctidBulkReservationRequestDto.getNamespace().toString(), userObj);
+            if (able)
+                 output = bulkReserveSctids(sctidBulkReservationRequestDto);
+            else{
+                throw new APIException(HttpStatus.FORBIDDEN, "No permission for the selected operation");
+            }
+
+        }
+        else
+            throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
+        return output;
+    }
+
+    private BulkJob bulkReserveSctids(SCTIDBulkReservationRequestDto sctidBulkReservationRequestDto) throws APIException{
+        UserDTO userObj = this.getAuthenticatedUser();
+
+        /*
+        * {
+  "namespace": 0,
+  "partitionId": "string",
+  "expirationDate": "string",
+  "quantity": 0,
+  "software": "string",
+  "comment": "string"
+}
+        * */
+        //requestbody chNGE
+        //if(isAbleUser(sctidBulkReservationRequestDto.getNamespace().toString(),userObj))
+        //{
+            SctidBulkReserve sctidBulkReserve=new SctidBulkReserve();
+            sctidBulkReserve.setNamespace(sctidBulkReservationRequestDto.getNamespace());
+            sctidBulkReserve.setPartitionId(sctidBulkReservationRequestDto.getPartitionId());
+            sctidBulkReserve.setExpirationDate(sctidBulkReservationRequestDto.getExpirationDate());
+            sctidBulkReserve.setQuantity(sctidBulkReservationRequestDto.getQuantity());
+            sctidBulkReserve.setSoftware(sctidBulkReservationRequestDto.getSoftware());
+            sctidBulkReserve.setComment(sctidBulkReservationRequestDto.getComment());
+
+            if (((sctidBulkReservationRequestDto.getNamespace() ==0) && (!("0".equalsIgnoreCase(sctidBulkReservationRequestDto.getPartitionId().substring(0,1)))))
+                    || (sctidBulkReservationRequestDto.getNamespace()!=0 && (!("1".equalsIgnoreCase(sctidBulkReservationRequestDto.getPartitionId().substring(0,1)))))){
+                throw new APIException(HttpStatus.UNAUTHORIZED,"Namespace and partitionId parameters are not consistent.");
+            }
+            else if (sctidBulkReservationRequestDto.getQuantity()==null  || sctidBulkReservationRequestDto.getQuantity()<1){
+
+                throw new APIException(HttpStatus.UNAUTHORIZED,"Quantity property cannot be lower to 1.");
+            }
+            {
+                sctidBulkReserve.setAuthor(userObj.getLogin());
+                sctidBulkReserve.setModel(modelsConstants.SCTID);
+                sctidBulkReserve.setType(JobTypeConstants.RESERVE_SCTIDS);
+                BulkJob bulkJob = new BulkJob();
+                try {
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    String regString = objectMapper.writeValueAsString(sctidBulkReserve);
+                    bulkJob.setName(JobTypeConstants.RESERVE_SCTIDS);
+                    bulkJob.setStatus("0");
+                    bulkJob.setRequest(regString);
+                    bulkJob.setCreated_at(new Date());
+                    bulkJob.setRequested_at(new Date());
+                } catch (JsonProcessingException e) {
+                    throw new APIException(HttpStatus.BAD_REQUEST, e.getMessage());
+                }
+                bulkJob = bulkJobRepository.save(bulkJob);
+                return bulkJob;
+
+            }
+      //  }
+        /*else{
+            throw new APIException(HttpStatus.FORBIDDEN, "No permission for the selected operation");
+        }*/
+
+    }
+
+
 }

@@ -8,6 +8,9 @@ import com.snomed.api.controller.dto.LoginCredentialsDto;
 import com.snomed.api.controller.dto.LoginResponseDto;
 import com.snomed.api.controller.dto.UserDTO;
 import com.snomed.api.exception.APIException;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
@@ -18,7 +21,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.*;
 import java.util.*;
-
+@Api(tags = "Authentication", value = "Authentication")
 //This class is under modification, code is under Draft version. Null or empty checks will be handled in next version.
 @RestController
 public class SecurityController {
@@ -41,14 +44,17 @@ public class SecurityController {
     @Value("${snomed.devIms.account}")
     String accountUrl;
 
-    @GetMapping("/stats")
-    @ResponseBody
-    public List getStats(@RequestParam String token,@RequestParam String username) throws APIException {
-        List result = new ArrayList();
-        result.add("lakshmana");
-        result.add("keerthika");
-        return result;
-    }
+    @ApiOperation(
+            value="Authentication & Authorization",
+            notes="Returns authentication & authorization operations"
+                    + "<p>The following properties can be expanded:"
+                    + "<p>"
+                    + "&bull;  &ndash; the list of descendants of the concept<br>",tags = { "Authentication & Authorization" })
+    @ApiResponses({
+            // @ApiResponse(code = 200, message = "OK", response = PageableCollectionResource.class),
+            // @ApiResponse(code = 400, message = "Invalid filter config", response = RestApiError.class),
+            // @ApiResponse(code = 404, message = "Branch not found", response = RestApiError.class)
+    })
 
     @GetMapping("/groups/{groupName}/users")
     @ResponseBody
@@ -76,13 +82,31 @@ return this.authenticate();
 
     @GetMapping("/users/{username}/groups/")
     @ResponseBody
-    public List<String> getUserGroup(@PathVariable String username,@RequestParam String token) throws APIException {
+    public List<String> getUserGroup(@PathVariable String username,@RequestParam(name="token",required = false) String token) throws APIException {
         UserDTO user = new UserDTO();
         List<String> role = new ArrayList<>();
         ResponseEntity<UserDTO> resp = this.isValidUser(servReq);
         if(resp.hasBody())
            user  = resp.getBody();
-        role.add(user.getRoles().get(0).split("_")[1]);
+        //role.add(user.getRoles().get(0).split("_")[1]);
+        for (String roleGroup:
+        user.getRoles()) {
+            role.add(roleGroup.split("_")[1]);
+        }
+        return role;
+    }
+
+    public List<String> getUserGroupWithoutToken(@PathVariable String username) throws APIException {
+        UserDTO user = new UserDTO();
+        List<String> role = new ArrayList<>();
+        ResponseEntity<UserDTO> resp = this.isValidUser(servReq);
+        if(resp.hasBody())
+            user  = resp.getBody();
+        //role.add(user.getRoles().get(0).split("_")[1]);
+        for (String roleGroup:
+                user.getRoles()) {
+            role.add(roleGroup.split("_")[1]);
+        }
         return role;
     }
 

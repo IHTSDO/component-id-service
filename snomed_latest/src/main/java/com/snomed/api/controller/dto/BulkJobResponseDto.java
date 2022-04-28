@@ -16,7 +16,7 @@ public class BulkJobResponseDto {
     private String request;
     private Date created_at = new Date();
     private Date requested_at = new Date();
-    private String log;
+    //private String log;
     private List<String> additionalJobs;
 
     public BulkJobResponseDto(Integer id, String name, String status, String request, Date created_at, Date requested_at, String log, List<String> additionalJobs) {
@@ -26,7 +26,7 @@ public class BulkJobResponseDto {
         this.request = request;
         this.created_at = created_at;
         this.requested_at = requested_at;
-        this.log = log;
+        //this.log = log;
         this.additionalJobs = additionalJobs;
     }
 
@@ -37,7 +37,7 @@ public class BulkJobResponseDto {
         this.request = bulkJob.getRequest();
         this.created_at = bulkJob.getCreated_at();
         this.requested_at = bulkJob.getRequested_at();
-        this.log = bulkJob.getLog();
+        //this.log = bulkJob.getLog();
     }
 
     public Integer getId() {
@@ -88,13 +88,13 @@ public class BulkJobResponseDto {
         this.requested_at = requested_at;
     }
 
-    public String getLog() {
+   /* public String getLog() {
         return log;
     }
 
     public void setLog(String log) {
         this.log = log;
-    }
+    }*/
 
     public List<String> getAdditionalJobs() {
         return additionalJobs;

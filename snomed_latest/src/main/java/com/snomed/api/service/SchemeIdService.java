@@ -1,14 +1,10 @@
 package com.snomed.api.service;
 
-import com.google.common.collect.MutableClassToInstanceMap;
 import com.snomed.api.controller.SecurityController;
 import com.snomed.api.controller.dto.*;
 import com.snomed.api.domain.*;
 import com.snomed.api.exception.APIException;
-import com.snomed.api.helper.CTV3ID;
-import com.snomed.api.helper.SNOMEDID;
-import com.snomed.api.helper.SchemeIdHelper;
-import com.snomed.api.helper.StateMachine;
+import com.snomed.api.helper.*;
 import com.snomed.api.repository.BulkSchemeIdRepository;
 import com.snomed.api.repository.PermissionsSchemeRepository;
 import com.snomed.api.repository.SchemeIdBaseRepository;
@@ -29,6 +25,9 @@ public class SchemeIdService {
     @Autowired
     private BulkSchemeIdRepository bulkSchemeIdRepository;
 
+    @Autowired
+    AuthenticateToken authenticateToken;
+
     @PersistenceContext
     EntityManager entityManager;
 
@@ -37,20 +36,31 @@ public class SchemeIdService {
     @Autowired
     private SchemeIdBaseRepository schemeIdBaseRepository;
 
+    @Autowired
     private SchemeIdHelper schemeIdHelper;
 
+    @Autowired
+    private AuthenticateToken authenticateTokenService;
 
     @Autowired
     StateMachine stateMachine;
 
-    public boolean isAbleUser(SchemeName schemeName, UserDTO user) throws APIException {
+    public boolean isAbleUser(String schemeName, UserDTO user) throws APIException {
+        List<String> groups = authenticateToken.getGroupsList();
         boolean able = false;
-        List<String> admins = Arrays.asList("keerthika", "b", "c");
+        for(String group:groups)
+        {
+            if(group.equalsIgnoreCase("component-identifier-service-admin"))
+            {
+                able = true;
+            }
+        }
+       /* List<String> admins = Arrays.asList("keerthika", "b", "c");
         for (String admin : admins) {
             if (admin.equalsIgnoreCase(user.getLogin())) {
                 able = true;
             }
-        }
+        }*/
         if (!able) {
             if (!"false".equalsIgnoreCase(schemeName.toString())) {
                 List<PermissionsScheme> permissionsSchemeList = permissionsSchemeRepository.findByScheme(schemeName.toString());
@@ -78,7 +88,7 @@ public class SchemeIdService {
                 }
             }
         }
-        return false;
+        return able;
     }
 
     public boolean authenticateToken() throws APIException {
@@ -93,8 +103,8 @@ public class SchemeIdService {
         return this.securityController.authenticate();
     }
 
-    public List<SchemeId> getSchemeIds(String limit, String skip, SchemeName schemeName) throws APIException {
-        if (authenticateToken())
+    public List<SchemeId> getSchemeIds(String token,String limit, String skip, SchemeName schemeName) throws APIException {
+        if (authenticateTokenService.authenticateToken(token))
             return this.getSchemeIdsList(limit, skip, schemeName);
         else
             throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
@@ -103,8 +113,7 @@ public class SchemeIdService {
     private List<SchemeId> getSchemeIdsList(String limit, String skip, SchemeName schemeName) throws APIException {
         UserDTO userObj = this.getAuthenticatedUser();
         List<SchemeId> schemeidList = new ArrayList<>();
-
-        if (this.isAbleUser(schemeName, userObj)) {
+        if (this.isAbleUser(schemeName.toString(), userObj)) {
             //ArrayList<String> schemeIdsArrayList = new ArrayList<String>(Arrays.asList(schemedIdArray));
 
             // String[] objQuery = (schemeName.toString()).split(",");
@@ -116,14 +125,14 @@ public class SchemeIdService {
                 skipTo = Integer.parseInt(skip);
             Map<String, String> objQuery = new HashMap<String, String>();
             if (null != schemeName) {
-                objQuery.put("schemeName", schemeName.toString());
+                objQuery.put("scheme", schemeName.toString());
             }
 
             String swhere = "";
             if (objQuery.size() > 0) {
                 for (var query :
                         objQuery.entrySet()) {
-                    swhere += " And " + query.getKey() + "=" + (query.getValue());
+                    swhere += " And " + query.getKey() + "=" +"'"+ (query.getValue())+"'";
                 }
             }
             if (swhere != "") {
@@ -131,18 +140,39 @@ public class SchemeIdService {
             }
             String sql;
             if ((limitR > 0) && (skipTo == 0)) {
-                sql = "SELECT * FROM schemeId" + swhere + " order by schemeId limit " + limit;
+                sql = "Select * FROM schemeid" + swhere + " order by schemeId limit " + limit;
             } else {
-                sql = "SELECT * FROM schemeId" + swhere + " order by schemeId";
+                sql = "Select * FROM schemeid" + swhere + " order by schemeId";
             }
-            Query genQuery = entityManager.createQuery(sql);
+            Query genQuery = entityManager.createNativeQuery(sql,SchemeId.class);
+
             List<SchemeId> resultList = genQuery.getResultList();
+
+            /*
+            * if ((skipTo==0)) {
+            schemeList = resultList;
+        }else {
+            var cont = 1;
+            List<SchemeId> newRows = new ArrayList<>();
+            for (var i = 0; i < resultList.size(); i++) {
+                if (i >= skipTo) {
+                    if (null != limit && limitR > 0 && limitR < cont) {
+                        break;
+                    }
+                    newRows.add(resultList.get(i));
+                    cont++;
+                }
+            }
+            schemeList = newRows;
+        }
+        return schemeList;
+            * */
             if ((skipTo == 0)) {
                 schemeidList = resultList;
             } else {
                 var cont = 1;
                 List<SchemeId> newRows = new ArrayList<>();
-                for (var i = 0; i < resultList.size(); i++) {
+                for (var i = 0; i < (resultList.size()/1000); i++) {
                     if (i >= skipTo) {
                         if (null != limit && limitR > 0 && limitR < cont) {
                             break;
@@ -160,16 +190,17 @@ public class SchemeIdService {
         return schemeidList;
     }
 
-    public SchemeId getSchemeIdsByschemeId(SchemeName schemeName, String schemeid) throws APIException {
-        if (authenticateToken())
-            return this.getSchemeIdsByschemeIdList(schemeName, schemeid);
+    public SchemeId getSchemeId(String token,SchemeName scheme, String schemeid) throws APIException {
+        if (authenticateTokenService.authenticateToken(token))
+            return this.getSchemeIdsByschemeIdList(scheme.toString(), schemeid);
         else
             throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
     }
 
-    public SchemeId getSchemeIdsByschemeIdList(SchemeName schemeName, String schemeid) throws APIException {
-        UserDTO userObj = this.getAuthenticatedUser();
+    public SchemeId getSchemeIdsByschemeIdList(String schemeName, String schemeid) throws APIException {
+        UserDTO userObj = authenticateTokenService.getAuthenticatedUser();
         SchemeId record = new SchemeId();
+        Optional<SchemeId> schemeIdObj=null;
         if (isAbleUser(schemeName, userObj)) {
             if (schemeid == null || schemeid == "") {
 
@@ -181,11 +212,16 @@ public class SchemeIdService {
                 } else if ("CTV3ID".equalsIgnoreCase(schemeName.toString().toUpperCase())) {
                     isValidScheme = CTV3ID.validSchemeId(schemeid);
                 }
-                List<SchemeId> schemeIdList = bulkSchemeIdRepository.findBySchemeAndSchemeId(schemeName, schemeid);
-                if (!schemeIdList.isEmpty()) {
+                System.out.println("bulkScheme:"+bulkSchemeIdRepository);
+                schemeIdObj = bulkSchemeIdRepository.findBySchemeAndSchemeId(schemeName, schemeid);
+                if (schemeIdObj.isEmpty()) {
                     record = getFreeRecords(schemeName, schemeid);
+                    return record;
                 }
-                return record;
+                else
+                {
+                   return  schemeIdObj.get();
+                }
             }
         } else {
             throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
@@ -193,13 +229,13 @@ public class SchemeIdService {
 
     }
 
-    private SchemeId getFreeRecords(SchemeName schemeName, String schemeid) throws APIException {
+    private SchemeId getFreeRecords(String schemeName, String schemeid) throws APIException {
         Map<String, Object> schemeIdRecord = getNewRecord(schemeName, schemeid);
-        schemeIdRecord.put("status", "avilable");
+        schemeIdRecord.put("status", "Available");
         return insertSchemeIdRecord(schemeIdRecord);
     }
 
-    private Map<String, Object> getNewRecord(SchemeName schemeName, String schemeid) {
+    private Map<String, Object> getNewRecord(String schemeName, String schemeid) {
         Map<String, Object> schemeIdRecord = new LinkedHashMap<>();
         schemeIdRecord.put("scheme", schemeName);
         schemeIdRecord.put("schemeId", schemeid);
@@ -211,9 +247,9 @@ public class SchemeIdService {
 
     private SchemeId insertSchemeIdRecord(Map<String, Object> schemeIdRecord) throws APIException {
         String error;
-        SchemeId schemeIdBulk = null;
-        SchemeName scheme = null;
-        String[] schemeId = null;
+        Optional<SchemeId> schemeIdBulk = null;
+        String scheme = null;
+        String schemeId = null;
         Integer sequence = 0;
         Integer checkDigit = 0;
         String systemId = null;
@@ -229,13 +265,19 @@ public class SchemeIdService {
         try {
             for (Map.Entry<String, Object> mapObj : s) {
                 if (mapObj.getKey() == "scheme") {
-                    scheme = (SchemeName) mapObj.getValue();
+                    scheme = (String) mapObj.getValue();
                 } else if (mapObj.getKey() == "schemeId") {
-                    schemeId = new String[]{(String) mapObj.getValue()};
+                    schemeId = (String) mapObj.getValue();
                 } else if (mapObj.getKey() == "sequence") {
-                    sequence = (Integer) mapObj.getValue();
+                    Object sequenceValue = mapObj.getValue();
+                    if (sequenceValue instanceof Integer) {
+                        sequence = (Integer) sequenceValue; // 1
+                    }
                 } else if (mapObj.getKey() == "checkDigit") {
-                    checkDigit = (Integer) mapObj.getValue();
+                    Object checkDigitvalue = mapObj.getValue();
+                    if (checkDigitvalue instanceof Integer) {
+                         checkDigit = (Integer) checkDigitvalue; // 1
+                    }
                 } else if (mapObj.getKey() == "systemId") {
                     systemId = (String) mapObj.getValue();
                 } else if (mapObj.getKey() == "status") {
@@ -247,16 +289,30 @@ public class SchemeIdService {
                 } else if (mapObj.getKey() == "expirationDate") {
                     expirationDate = (Date) mapObj.getValue();
                 } else if (mapObj.getKey() == "jobId") {
-                    jobId = (Integer) mapObj.getValue();
+                    //jobId = (Integer) mapObj.getValue();
+                    Object jobIdvalue = mapObj.getValue();
+                    if (jobIdvalue instanceof Integer) {
+                        jobId = (Integer) jobIdvalue; // 1
+                    }
+
                 } else if (mapObj.getKey() == "created_at") {
-                    created_at = (Date) mapObj.getValue();
+                   Object created_atValue = (Date) mapObj.getValue();
+                   if(created_atValue instanceof Date){
+                       created_at=(Date) created_atValue;
+                   }
                 } else if (mapObj.getKey() == "modified_at") {
-                    modified_at = (Date) mapObj.getValue();
-                }
+                    Object modified_atValue = (Date) mapObj.getValue();
+                    if(modified_atValue instanceof Date){
+                        modified_at=(Date) modified_atValue;
+                    }                }
             }
-            bulkSchemeIdRepository.insertWithQuery(String.valueOf(scheme), schemeId, sequence, checkDigit, systemId, status, author, software, expirationDate, jobId, created_at, modified_at);
-            schemeIdBulk = (SchemeId) bulkSchemeIdRepository.findBySchemeAndSchemeId(scheme, schemeId.toString());
-            return schemeIdBulk;
+            SchemeId schemeIdObj=new SchemeId(scheme, schemeId.toString(), sequence, checkDigit, systemId, status, author, software, expirationDate, jobId, created_at, modified_at);
+            //SchemeId schemeIdObj=new SchemeId("SNOMEDID","A-22335", 0, 0, "systemId0op0o0o0k0k0", "Available", null, null, null, null, null, null);
+
+            bulkSchemeIdRepository.save(schemeIdObj);
+          //  bulkSchemeIdRepository.insertWithQuery(scheme, schemeId.toString(), sequence, checkDigit, systemId, status, author, software, expirationDate, jobId, created_at, modified_at);
+            schemeIdBulk =  bulkSchemeIdRepository.findBySchemeAndSchemeId(scheme.toString(), schemeId.toString());
+            return schemeIdBulk.get();
         } catch (Exception e) {
             error = e.toString();
         }
@@ -265,36 +321,34 @@ public class SchemeIdService {
     }
 
 
-    public SchemeId getSchemeIdsBySystemId(SchemeName schemeName, String systemid) throws APIException {
-        if (authenticateToken())
-            return this.getSchemeIdsBysystemList(schemeName, systemid);
+    public SchemeId getSchemeIdsBySystemId(String token,SchemeName scheme, String systemid) throws APIException {
+        if (authenticateTokenService.authenticateToken(token))
+            return this.getSchemeIdsBysystemList(scheme.toString(), systemid);
         else
             throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
 
     }
 
-    private SchemeId getSchemeIdsBysystemList(SchemeName schemeName, String systemid) throws APIException {
-        UserDTO userObj = this.getAuthenticatedUser();
-        if(isAbleUser(schemeName,userObj)){
-            List<SchemeId> schemeIdList=bulkSchemeIdRepository.findBySchemeAndSystemId(schemeName,systemid);
+    private SchemeId getSchemeIdsBysystemList(String scheme, String systemid) throws APIException {
+        UserDTO userObj = authenticateTokenService.getAuthenticatedUser();
+        boolean a=true;
+        if (/*isAbleUser(schemeName, userObj)*/a) {
+            List<SchemeId> schemeIdList = bulkSchemeIdRepository.findBySchemeAndSystemId(scheme, systemid);
 
-            if(!schemeIdList.isEmpty() && schemeIdList.size()>0){
+            if (!schemeIdList.isEmpty() && schemeIdList.size() > 0) {
                 return schemeIdList.get(0);
-            }
-            else
-            {
+            } else {
                 throw new APIException(HttpStatus.UNAUTHORIZED, "SchemeId list is empty");
             }
-        }
-        else{
+        } else {
             throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
 
 
     }
 
-    public SchemeId deprecateSchemeIds(SchemeName schemeName, SchemeIdUpdateRequestDto request) throws APIException {
-        if (authenticateToken())
+    public SchemeId deprecateSchemeIds(String token,SchemeName schemeName, SchemeIdUpdateRequestDto request) throws APIException {
+        if (authenticateTokenService.authenticateToken(token))
             return this.deprecateSchemeIdList(schemeName, request);
         else
             throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
@@ -302,44 +356,56 @@ public class SchemeIdService {
     }
 
     private SchemeId deprecateSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request) throws APIException {
-        UserDTO userObj = this.getAuthenticatedUser();
-        SchemeId schemeId=new SchemeId();
-        if (isAbleUser(schemeName, userObj)) {
+        UserDTO userObj = authenticateTokenService.getAuthenticatedUser();
+        SchemeId schemeId = new SchemeId();
 
-            request.setAuthor(userObj.getLogin());
-            SchemeId schemeIdrecord=getSchemeIdsByschemeId(schemeName,request.getSchemeId());
+        /*
+    *
+    * {
+  "schemeId": "string",
+  "software": "string",
+  "comment": "string"
+}
+    * */
+        //requestbody change
+
+        if (isAbleUser(schemeName.toString(), userObj)) {
+            SchemeIdUpdateRequest updateRequest = new SchemeIdUpdateRequest();
+            updateRequest.setSchemeId(request.getSchemeId());
+            updateRequest.setSoftware(request.getSoftware());
+            updateRequest.setComment(request.getComment());
+
+            updateRequest.setAuthor(userObj.getLogin());
+            SchemeId schemeIdrecord = getSchemeIdsByschemeIdList(schemeName.toString(), updateRequest.getSchemeId());
 
             //
-            if(schemeIdrecord.getSchemeId().isEmpty())
-            {
-                throw new APIException(HttpStatus.NOT_FOUND,"SchemeId record is empty");
-            }
-            else
-            {
+            if (schemeIdrecord.getSchemeId().isEmpty()) {
+                throw new APIException(HttpStatus.NOT_FOUND, "SchemeId record is empty");
+            } else {
                 var newStatus = stateMachine.getNewStatus(schemeIdrecord.getStatus(), stateMachine.actions.get("deprecate"));
-                if(null!=newStatus)
-                {
+                if (null != newStatus) {
                     schemeIdrecord.setStatus(newStatus);
-                    schemeIdrecord.setAuthor(request.getAuthor());
-                    schemeIdrecord.setSoftware(request.getSoftware());
-                    schemeIdrecord.setComment(request.getComment());
-                    schemeIdrecord.setJobId(Integer.parseInt("null"));
+                    schemeIdrecord.setAuthor(updateRequest.getAuthor());
+                    schemeIdrecord.setSoftware(updateRequest.getSoftware());
+                    schemeIdrecord.setComment(updateRequest.getComment());
+                    schemeIdrecord.setJobId(null);
                     schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
+                } else {
+                    throw new APIException(HttpStatus.ACCEPTED, "Cannot deprecate SchemeId:" + schemeIdrecord.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
                 }
             }
             //
-        }
-        else{
+        } else {
             throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
-return schemeId;
+        return schemeId;
 
     }
     //releaseSchmeId
 
-    public SchemeId releaseSchemeIds(SchemeName schemeName, SchemeIdUpdateRequestDto request) throws APIException {
+    public SchemeId releaseSchemeIds(String token,SchemeName schemeName, SchemeIdUpdateRequestDto request) throws APIException {
 
-        if (authenticateToken())
+        if (authenticateTokenService.authenticateToken(token))
             return this.releaseSchemeIdList(schemeName, request);
         else
             throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
@@ -347,35 +413,46 @@ return schemeId;
     }
 
     private SchemeId releaseSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request) throws APIException {
-        UserDTO userObj = this.getAuthenticatedUser();
-        SchemeId schemeId=new SchemeId();
+        UserDTO userObj = authenticateTokenService.getAuthenticatedUser();
+        SchemeId schemeId = new SchemeId();
+     /*
+    *
+    * {
+  "schemeId": "string",
+  "software": "string",
+  "comment": "string"
+}
+    * */
+        //requestbody change
 
-        if (isAbleUser(schemeName, userObj)) {
-            request.setAuthor(userObj.getLogin());
-            SchemeId schemeIdrecord=getSchemeIdsByschemeId(schemeName,request.getSchemeId());
+        if (isAbleUser(schemeName.toString(), userObj)) {
+
+            SchemeIdUpdateRequest updateRequest = new SchemeIdUpdateRequest();
+            updateRequest.setSchemeId(request.getSchemeId());
+            updateRequest.setSoftware(request.getSoftware());
+            updateRequest.setComment(request.getComment());
+
+            updateRequest.setAuthor(userObj.getLogin());
+            SchemeId schemeIdrecord = getSchemeIdsByschemeIdList(schemeName.toString(), updateRequest.getSchemeId());
 
             //
-            if(schemeIdrecord.getSchemeId().isEmpty())
-            {
-                throw new APIException(HttpStatus.NOT_FOUND,"SchemeId record is empty");
-            }
-            else
-            {
+            if (schemeIdrecord.getSchemeId().isEmpty()) {
+                throw new APIException(HttpStatus.NOT_FOUND, "SchemeId record is empty");
+            } else {
                 var newStatus = stateMachine.getNewStatus(schemeIdrecord.getStatus(), stateMachine.actions.get("release"));
-                if(null!=newStatus)
-                {
+                if (null != newStatus) {
                     schemeIdrecord.setStatus(newStatus);
-                    schemeIdrecord.setAuthor(request.getAuthor());
-                    schemeIdrecord.setSoftware(request.getSoftware());
-                    schemeIdrecord.setComment(request.getComment());
+                    schemeIdrecord.setAuthor(updateRequest.getAuthor());
+                    schemeIdrecord.setSoftware(updateRequest.getSoftware());
+                    schemeIdrecord.setComment(updateRequest.getComment());
                     schemeIdrecord.setJobId(Integer.parseInt("null"));
                     schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
+                } else {
+                    throw new APIException(HttpStatus.ACCEPTED, "Cannot release SchemeId:" + schemeIdrecord.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
                 }
             }
             //
-        }
-        else
-        {
+        } else {
             throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -384,9 +461,9 @@ return schemeId;
 
     //pblish
 
-    public SchemeId publishSchemeId(SchemeName schemeName, SchemeIdUpdateRequestDto request) throws APIException {
+    public SchemeId publishSchemeId(String token, SchemeName schemeName, SchemeIdUpdateRequestDto request) throws APIException {
 
-        if (authenticateToken())
+        if (authenticateTokenService.authenticateToken(token))
             return this.publishSchemeIdList(schemeName, request);
         else
             throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
@@ -394,12 +471,25 @@ return schemeId;
     }
 
     private SchemeId publishSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request) throws APIException {
-        UserDTO userObj = this.getAuthenticatedUser();
-        SchemeId schemeId=new SchemeId();
+        UserDTO userObj = authenticateTokenService.getAuthenticatedUser();
+        SchemeId schemeId = new SchemeId();
+/*
+    *
+    * {
+  "schemeId": "string",
+  "software": "string",
+  "comment": "string"
+}
+    * */
+        //requestbody change
+        if (isAbleUser(schemeName.toString(), userObj)) {
+            SchemeIdUpdateRequest updateRequest = new SchemeIdUpdateRequest();
+            updateRequest.setSchemeId(request.getSchemeId());
+            updateRequest.setSoftware(request.getSoftware());
+            updateRequest.setComment(request.getComment());
 
-        if (isAbleUser(schemeName, userObj)) {
-            request.setAuthor(userObj.getLogin());
-            SchemeId schemeIdrecord=getSchemeIdsByschemeId(schemeName,request.getSchemeId());
+            updateRequest.setAuthor(userObj.getLogin());
+            SchemeId schemeIdrecord = getSchemeIdsByschemeIdList(schemeName.toString(), updateRequest.getSchemeId());
 
             //
             if(schemeIdrecord.getSchemeId().isEmpty())
@@ -412,11 +502,15 @@ return schemeId;
                 if(null!=newStatus)
                 {
                     schemeIdrecord.setStatus(newStatus);
-                    schemeIdrecord.setAuthor(request.getAuthor());
-                    schemeIdrecord.setSoftware(request.getSoftware());
-                    schemeIdrecord.setComment(request.getComment());
+                    schemeIdrecord.setAuthor(updateRequest.getAuthor());
+                    schemeIdrecord.setSoftware(updateRequest.getSoftware());
+                    schemeIdrecord.setComment(updateRequest.getComment());
                     schemeIdrecord.setJobId(Integer.parseInt("null"));
                     schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
+                }
+                else
+                {
+                    throw new APIException(HttpStatus.ACCEPTED,"Cannot publish SchemeId:"+schemeIdrecord.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
                 }
             }
             //
@@ -428,19 +522,32 @@ return schemeId;
         }
         return schemeId;
     }
-    public SchemeId reserveSchemeId(SchemeName schemeName, SchemeIdReserveRequestDto request) throws APIException {
-        if (authenticateToken())
+    public SchemeId reserveSchemeId(String token,SchemeName schemeName, SchemeIdReserveRequestDto request) throws APIException {
+        if (authenticateTokenService.authenticateToken(token))
             return this.reserveSchemeIdList(schemeName, request);
         else
             throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
     }
 
     private SchemeId reserveSchemeIdList(SchemeName schemeName, SchemeIdReserveRequestDto request) throws APIException {
-        UserDTO userObj = this.getAuthenticatedUser();
+        UserDTO userObj = authenticateTokenService.getAuthenticatedUser();
 
-        if (this.isAbleUser(schemeName, userObj)) {
-            request.setAuthor(userObj.getLogin());
-            setNewSchemeIdRecord(schemeName, request, stateMachine.actions.get("reserve"));
+        if (this.isAbleUser(schemeName.toString(), userObj)) {
+
+/*
+    {
+  "software": "string",
+  "expirationDate": "string",
+  "comment": "string"
+}
+    * */
+//requestbody change
+            SchemeIdReserveRequest reserveRequest = new SchemeIdReserveRequest();
+            reserveRequest.setSoftware(request.getSoftware());
+            reserveRequest.setExpirationDate(request.getExpirationDate());
+            reserveRequest.setComment(request.getComment());
+            reserveRequest.setAuthor(userObj.getLogin());
+            setNewSchemeIdRecord(schemeName, reserveRequest, stateMachine.actions.get("reserve"));
         } else {
             throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
@@ -449,7 +556,7 @@ return schemeId;
     }
 
     //List
-    private SchemeId setNewSchemeIdRecord(SchemeName schemeName, SchemeIdReserveRequestDto request, String reserve) throws APIException {
+    private SchemeId setNewSchemeIdRecord(SchemeName schemeName, SchemeIdReserveRequest request, String reserve) throws APIException {
         SchemeId record = setAvailableSchemeIdRecord2NewStatus(schemeName, request, reserve);
         try {
             if (record != null) {
@@ -469,34 +576,34 @@ return schemeId;
 
     }
 
-    private SchemeId setAvailableSchemeIdRecord2NewStatus(SchemeName schemeName, SchemeIdReserveRequestDto request, String reserve) throws APIException {
+    private SchemeId setAvailableSchemeIdRecord2NewStatus(SchemeName schemeName, SchemeIdReserveRequest request, String reserve) throws APIException {
         Map<String, String> objQuery = new HashMap<String, String>();
         SchemeId outputSchemeRec = new SchemeId();
         SchemeId updatedrecord = null;
         if (null != schemeName) {
-            objQuery.put("schemeName", schemeName.toString());
+            objQuery.put("scheme", schemeName.toString());
             objQuery.put("status", "available");
         }
 
-        SchemeId schemeIdRecords = findschemeRecord(objQuery, "1", null);
+        List<SchemeId> schemeIdRecords = findschemeRecord(objQuery, "1", null);
         //no list so no size
-        if (schemeIdRecords != null /*&& schemeIdRecords.size() > 0*/) {
+        if (schemeIdRecords != null && schemeIdRecords.size() > 0) {
 
-            var newStatus = stateMachine.getNewStatus(schemeIdRecords.getStatus(), reserve);
-            if (!newStatus.isBlank()) {
+            var newStatus = stateMachine.getNewStatus(schemeIdRecords.get(0).getStatus(), reserve);
+            if (null != newStatus) {
 
                 if (null != request.getSystemId() && request.getSystemId().trim() != "") {
-                    schemeIdRecords.setSystemId(request.getSystemId());
+                    schemeIdRecords.get(0).setSystemId(request.getSystemId());
                 }
-                schemeIdRecords.setStatus(newStatus);
-                schemeIdRecords.setAuthor(request.getAuthor());
-                schemeIdRecords.setSoftware(request.getSoftware());
+                schemeIdRecords.get(0).setStatus(newStatus);
+                schemeIdRecords.get(0).setAuthor(request.getAuthor());
+                schemeIdRecords.get(0).setSoftware(request.getSoftware());
                 //Expiration Date Not available in request.
-                schemeIdRecords.setExpirationDate(null);
-                schemeIdRecords.setComment(request.getComment());
-                schemeIdRecords.setJobId(Integer.parseInt("null"));
+                schemeIdRecords.get(0).setExpirationDate(null);
+                schemeIdRecords.get(0).setComment(request.getComment());
+                schemeIdRecords.get(0).setJobId(Integer.parseInt("null"));
                 // outputSchemeRec = bulkSchemeIdRepository.save(schemeIdRecords.get(0));
-                updatedrecord = updateSchemeIdRecord(schemeIdRecords, schemeName);
+                updatedrecord = updateSchemeIdRecord(schemeIdRecords.get(0), schemeName.toString());
                 return updatedrecord;
             } else {
                 counterMode(schemeName, request, reserve);
@@ -508,14 +615,14 @@ return schemeId;
 
     }
 
-    public SchemeId counterMode(SchemeName schemeName, SchemeIdReserveRequestDto request, String reserve) throws APIException {
-        SchemeId newSchemeId = getNextSchemeId(schemeName,  request);
+    public SchemeId counterMode(SchemeName schemeName, SchemeIdReserveRequest request, String reserve) throws APIException {
+        SchemeId newSchemeId = getNextSchemeId(schemeName, request);
         if (newSchemeId != null) {
-            SchemeId schemeIdRecord = getSchemeIdsByschemeIdList(schemeName, newSchemeId.toString());
+            SchemeId schemeIdRecord = getSchemeIdsByschemeIdList(schemeName.schemeName, newSchemeId.toString());
             SchemeId updatedrecord;
             if (schemeIdRecord != null) {
                 var newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(), reserve);
-                if (!newStatus.isBlank()) {
+                if (null != newStatus) {
 
                     if (null != request.getSystemId() && request.getSystemId().trim() != "") {
                         schemeIdRecord.setSystemId(request.getSystemId());
@@ -528,7 +635,7 @@ return schemeId;
                     schemeIdRecord.setComment(request.getComment());
                     schemeIdRecord.setJobId(Integer.parseInt("null"));
                     // outputSchemeRec = bulkSchemeIdRepository.save(schemeIdRecords.get(0));
-                    updatedrecord = updateSchemeIdRecord(schemeIdRecord, schemeName);
+                    updatedrecord = updateSchemeIdRecord(schemeIdRecord, schemeName.toString());
                     return updatedrecord;
                 } else {
                     counterMode(schemeName, request, reserve);
@@ -538,20 +645,20 @@ return schemeId;
         return newSchemeId;
     }
 
-    private SchemeId getNextSchemeId(SchemeName schemeName, SchemeIdReserveRequestDto request) {
-        List<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeName.toString());
+    private SchemeId getNextSchemeId(SchemeName schemeName, SchemeIdReserveRequest request) {
+        Optional<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeName.toString());
         SchemeIdBase schemeIdBase = null;
-        schemeIdBase.setIdBase(schemeIdBaseList.get(0).getIdBase());
+        schemeIdBase.setIdBase(schemeIdBaseList.get().getIdBase());
         schemeIdBaseRepository.save(schemeIdBase);
         return null;//List<SchmeId>
     }
 
-    public SchemeId updateSchemeIdRecord(SchemeId schemeId, SchemeName schemeName) {
+    public SchemeId updateSchemeIdRecord(SchemeId schemeId, String schemeName) {
         Map<String, String> objQuery = new HashMap<String, String>();
 
         if (null != schemeId) {
             objQuery.put("schemeId", String.valueOf(schemeId));
-            objQuery.put("schemeName", schemeName.toString());
+            objQuery.put("scheme", schemeName.toString());
         }
         String supdate = "";
 
@@ -573,7 +680,7 @@ return schemeId;
 
     }
 
-    public SchemeId findschemeRecord(Map<String, String> objQuery, String limit, String skip) {
+    public List<SchemeId> findschemeRecord(Map<String, String> objQuery, String limit, String skip) {
         SchemeId schemeidList = null;
         var limitR = 100;
         var skipTo = 0;
@@ -590,7 +697,7 @@ return schemeId;
         if (objQuery.size() > 0) {
             for (var query :
                     objQuery.entrySet()) {
-                swhere += " And " + query.getKey() + "=" + (query.getValue());
+                swhere += " And " + query.getKey() + "=" +"'"+query.getValue()+"'";
             }
         }
         if (swhere != "") {
@@ -602,14 +709,15 @@ return schemeId;
         } else {
             sql = "SELECT * FROM schemeId" + swhere + " order by schemeId";
         }
-        Query genQuery = entityManager.createQuery(sql);
-        SchemeId resultList = (SchemeId) genQuery.getResultList();
+        Query genQuery = entityManager.createNativeQuery(sql,SchemeId.class);
+
+       List<SchemeId> resultList =  genQuery.getResultList();
         if ((skipTo == 0)) {
-            schemeidList = resultList;
-        } /*else {
+            return resultList;
+        } else {
             var cont = 1;
             List<SchemeId> newRows = new ArrayList<>();
-            for (var i = 0; i < resultList.size(); i++) {
+            for (var i = 0; i < (resultList.size()/2); i++) {
                 if (i >= skipTo) {
                     if (null != limit && limitR > 0 && limitR < cont) {
                         break;
@@ -618,37 +726,52 @@ return schemeId;
                     cont++;
                 }
             }
-            schemeidList = newRows;
-        }*/
-        return schemeidList;
+            return newRows;
+        }
+       // return schemeidList;
     }
 
 
-    public SchemeId generateSchemeId(SchemeName schemeName, SchemeIdGenerateRequestDto request) throws APIException {
-        if (authenticateToken())
-            return this.generateSchemeIds(schemeName, request);
+    public SchemeId generateSchemeId(String token,SchemeName schemeName, SchemeIdGenerateRequestDto request) throws APIException {
+        if (authenticateTokenService.authenticateToken(token))
+            return this.generateSchemeIds(schemeName.toString(), request);
         else
             throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
     }
 
-    public SchemeId generateSchemeIds(SchemeName schemeName, SchemeIdGenerateRequestDto request) throws APIException {
-        UserDTO userObj = this.getAuthenticatedUser();
+    public SchemeId generateSchemeIds(String schemeName, SchemeIdGenerateRequestDto request) throws APIException {
+
+        /*
+        * {
+  "systemId": "string",
+  "software": "string",
+  "comment": "string"
+}
+        * */
+        // requestbody change
+        UserDTO userObj = authenticateTokenService.getAuthenticatedUser();
         SchemeId schemeIdRec = new SchemeId();
         if (this.isAbleUser(schemeName, userObj)) {
-            if (request.getSystemId() != null || request.getSystemId().trim() == "") {
-                request.setSystemId(schemeIdHelper.guid());
-                request.setAutoSysId(true);
+            SchemeIdGenerateRequest generateRequest = new SchemeIdGenerateRequest();
+            generateRequest.setSystemId(request.getSystemId());
+            generateRequest.setSoftware(request.getSoftware());
+            generateRequest.setComment(request.getComment());
+
+            if (request.getSystemId().isBlank() || request.getSystemId().trim() == "") {
+                generateRequest.setSystemId(schemeIdHelper.guid());
+                generateRequest.setAutoSysId(true);
             }
-            request.setAuthor(request.getAuthor());
-            if (!request.isAutoSysId()) {
+            generateRequest.setAuthor(generateRequest.getAuthor());
+            if (!generateRequest.isAutoSysId()) {
                 schemeIdRec = getSchemeIdBySystemId(schemeName, request.systemId);
                 if (schemeIdRec != null) {
                     return schemeIdRec;
                 } else {
-                    setNewSchemeIdRecordGen(schemeName, request, stateMachine.actions.get("generate"));
+                    //request body change
+                    setNewSchemeIdRecordGen(schemeName, generateRequest, stateMachine.actions.get("generate"));
                 }
             } else {
-                setNewSchemeIdRecordGen(schemeName, request, stateMachine.actions.get("generate"));
+                setNewSchemeIdRecordGen(schemeName, generateRequest, stateMachine.actions.get("generate"));
             }
 
         } else {
@@ -658,17 +781,18 @@ return schemeId;
         return schemeIdRec;
     }
 
-    public SchemeId getSchemeIdBySystemId(SchemeName schemeName, String systemId) {
+    public SchemeId getSchemeIdBySystemId(String schemeName, String systemId) {
         List<SchemeId> schemeId = bulkSchemeIdRepository.findBySchemeAndSystemId(schemeName, systemId);
         if (schemeId.size() > 0) {
-            return (SchemeId) schemeId.get(0);
+            return schemeId.get(0);
         } else {
-            return (SchemeId) schemeId;
+            //requestbody change fix
+            return null;
         }
 
     }
 
-    public SchemeId setNewSchemeIdRecordGen(SchemeName schemeName, SchemeIdGenerateRequestDto request, String reserve) throws APIException {
+    public SchemeId setNewSchemeIdRecordGen(String schemeName, SchemeIdGenerateRequest request, String reserve) throws APIException {
         SchemeId record = setAvailableSchemeIdRecord2NewStatusGen(schemeName, request, reserve);
         try {
             if (record != null) {
@@ -688,53 +812,53 @@ return schemeId;
 
     }
 
-    public SchemeId setAvailableSchemeIdRecord2NewStatusGen(SchemeName schemeName, SchemeIdGenerateRequestDto request, String generate) throws APIException {
+    public SchemeId setAvailableSchemeIdRecord2NewStatusGen(String schemeName, SchemeIdGenerateRequest request, String generate) throws APIException {
         Map<String, String> objQuery = new HashMap<String, String>();
         SchemeId outputSchemeRec = new SchemeId();
         SchemeId updatedrecord = null;
         if (null != schemeName) {
-            objQuery.put("schemeName", schemeName.toString());
-            objQuery.put("status", "available");
+            objQuery.put("scheme", schemeName.toString());
+            objQuery.put("status", "Available");
         }
 
-        SchemeId schemeIdRecords = findschemeRecord(objQuery, "1", null);
+        List<SchemeId> schemeIdRecords = findschemeRecord(objQuery, "1", null);
         //no list so no size
-        if (schemeIdRecords != null /*&& schemeIdRecords.size() > 0*/) {
+        if (schemeIdRecords != null && schemeIdRecords.size() > 0) {
 
-            var newStatus = stateMachine.getNewStatus(schemeIdRecords.getStatus(), generate);
-            if (!newStatus.isBlank()) {
+            var newStatus = stateMachine.getNewStatus(schemeIdRecords.get(0).getStatus(), generate);
+            if (null != newStatus) {
 
                 if (null != request.getSystemId() && request.getSystemId().trim() != "") {
-                    schemeIdRecords.setSystemId(request.getSystemId());
+                    schemeIdRecords.get(0).setSystemId(request.getSystemId());
                 }
-                schemeIdRecords.setStatus(newStatus);
-                schemeIdRecords.setAuthor(request.getAuthor());
-                schemeIdRecords.setSoftware(request.getSoftware());
+                schemeIdRecords.get(0).setStatus(newStatus);
+                schemeIdRecords.get(0).setAuthor(request.getAuthor());
+                schemeIdRecords.get(0).setSoftware(request.getSoftware());
                 //Expiration Date Not available in request.
-                schemeIdRecords.setExpirationDate(null);
-                schemeIdRecords.setComment(request.getComment());
-                schemeIdRecords.setJobId(Integer.parseInt("null"));
+                schemeIdRecords.get(0).setExpirationDate(null);
+                schemeIdRecords.get(0).setComment(request.getComment());
+                schemeIdRecords.get(0).setJobId(Integer.parseInt("null"));
                 // outputSchemeRec = bulkSchemeIdRepository.save(schemeIdRecords.get(0));
-                updatedrecord = updateSchemeIdRecord(schemeIdRecords, schemeName);
+                updatedrecord = updateSchemeIdRecord(schemeIdRecords.get(0), schemeName);
                 return updatedrecord;
             } else {
                 counterModeGen(schemeName, request, generate);
             }
         } else {
-            return null;
+            throw new APIException(HttpStatus.ACCEPTED,"error getting available schemeId for:" + schemeName  + ", err: " );
         }
         return updatedrecord;
 
     }
 
-    public SchemeId counterModeGen(SchemeName schemeName, SchemeIdGenerateRequestDto request, String reserve) throws APIException {
+    public SchemeId counterModeGen(String schemeName, SchemeIdGenerateRequest request, String reserve) throws APIException {
         SchemeId newSchemeId = getNextSchemeIdGen(schemeName, request);
         if (newSchemeId != null) {
             SchemeId schemeIdRecord = getSchemeIdsByschemeIdList(schemeName, newSchemeId.toString());
             SchemeId updatedrecord;
             if (schemeIdRecord != null) {
                 var newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(), reserve);
-                if (!newStatus.isBlank()) {
+                if (null!=newStatus) {
 
                     if (null != request.getSystemId() && request.getSystemId().trim() != "") {
                         schemeIdRecord.setSystemId(request.getSystemId());
@@ -747,7 +871,7 @@ return schemeId;
                     schemeIdRecord.setComment(request.getComment());
                     schemeIdRecord.setJobId(Integer.parseInt("null"));
                     // outputSchemeRec = bulkSchemeIdRepository.save(schemeIdRecords.get(0));
-                    updatedrecord = updateSchemeIdRecord(schemeIdRecord, schemeName);
+                    updatedrecord = updateSchemeIdRecord(schemeIdRecord, schemeName.toString());
                     return updatedrecord;
                 } else {
                     counterModeGen(schemeName, request, reserve);
@@ -757,33 +881,48 @@ return schemeId;
         return newSchemeId;
     }
 
-    public SchemeId getNextSchemeIdGen(SchemeName schemeName, SchemeIdGenerateRequestDto request) {
-        List<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeName.toString());
+    public SchemeId getNextSchemeIdGen(String schemeName, SchemeIdGenerateRequest request) {
+        Optional<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeName.toString());
         SchemeIdBase schemeIdBase = null;
-        schemeIdBase.setIdBase(schemeIdBaseList.get(0).getIdBase());
+        schemeIdBase.setIdBase(schemeIdBaseList.get().getIdBase());
         schemeIdBaseRepository.save(schemeIdBase);
         return null;//List<SchmeId>
     }
 
     //registerSchemeId
-    public SchemeId registerSchemeId(SchemeName schemeName, SchemeIdRegisterRequestDto request) throws APIException {
-        if (authenticateToken())
+    public SchemeId registerSchemeId(String token,SchemeName schemeName, SchemeIdRegisterRequestDto request) throws APIException {
+        if (authenticateTokenService.authenticateToken(token))
             return this.registerSchemeIds(schemeName, request);
         else
             throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
     }
 
     public SchemeId registerSchemeIds(SchemeName schemeName, SchemeIdRegisterRequestDto request) throws APIException {
-        UserDTO userObj = this.getAuthenticatedUser();
-        SchemeId schemeIdRec = null;
+       /*
+*
+* {
+  "schemeId": "string",
+  "systemId": "string",
+  "software": "string",
+  "comment": "string"
+}*/
+        //requestbody change
 
-        if (this.isAbleUser(schemeName, userObj)) {
+        UserDTO userObj = authenticateTokenService.getAuthenticatedUser();
+        SchemeId schemeIdRec = null;
+        if (this.isAbleUser(schemeName.toString(), userObj)) {
+            SchemeIdRegisterRequest registerRequest = new SchemeIdRegisterRequest();
+            registerRequest.setSchemeId(request.getSchemeId());
+            registerRequest.setSystemId(request.getSystemId());
+            registerRequest.setSoftware(request.getSoftware());
+            registerRequest.setComment(request.getComment());
 
             if (request.getSystemId() != null || request.getSystemId() == "") {
-                request.setSystemId(schemeIdHelper.guid());
-                request.setAutoSysId(true);
-                if (!request.isAutoSysId()) {
-                    schemeIdRec = getSchemeIdBySystemId(schemeName, request.getSystemId());
+                registerRequest.setSystemId(schemeIdHelper.guid());
+                registerRequest.setAutoSysId(true);
+                registerRequest.setAuthor(registerRequest.getAuthor());
+                if (!registerRequest.isAutoSysId()) {
+                    schemeIdRec = getSchemeIdBySystemId(schemeName.toString(), registerRequest.getSystemId());
                     if (schemeIdRec != null) {
                         if (schemeIdRec.getSchemeId() != request.getSchemeId()) {
                             throw new APIException(HttpStatus.BAD_REQUEST, "SystemId" + request.getSystemId() + " already exists with SchemeId:" + schemeIdRec.getSchemeId());
@@ -791,14 +930,13 @@ return schemeId;
                         if (Objects.equals(schemeIdRec.getStatus(), stateMachine.statuses.get("assigned"))) {
                             return schemeIdRec;
                         } else {
-                            schemeIdRec = registerNewSchemeId(schemeName, request);
+                            schemeIdRec = registerNewSchemeId(schemeName, registerRequest);
                         }
                     }
                 } else {
-                    schemeIdRec = registerNewSchemeId(schemeName, request);
+                    schemeIdRec = registerNewSchemeId(schemeName, registerRequest);
                 }
             }
-            request.setAuthor(request.getAuthor());
         } else {
             throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
@@ -806,8 +944,8 @@ return schemeId;
         return schemeIdRec;
     }
 
-    private SchemeId registerNewSchemeId(SchemeName schemeName, SchemeIdRegisterRequestDto request) throws APIException {
-        SchemeId schemeIdrecord = getSchemeIdsByschemeId(schemeName, request.getSchemeId());
+    private SchemeId registerNewSchemeId(SchemeName schemeName, SchemeIdRegisterRequest request) throws APIException {
+        SchemeId schemeIdrecord = getSchemeIdsByschemeIdList(schemeName.schemeName, request.getSchemeId());
         SchemeId schemeId = new SchemeId();
 
         //
@@ -815,7 +953,7 @@ return schemeId;
             throw new APIException(HttpStatus.NOT_FOUND, "SchemeId record is empty");
         } else {
             var newStatus = stateMachine.getNewStatus(schemeIdrecord.getStatus(), stateMachine.actions.get("register"));
-            if (!newStatus.isBlank()) {
+            if (null != newStatus) {
                 if (request.getSystemId() != null && request.getSystemId().trim() != "") {
                     schemeIdrecord.setSystemId(request.getSystemId());
                 }
@@ -826,10 +964,9 @@ return schemeId;
                 schemeIdrecord.setComment(request.getComment());
                 schemeIdrecord.setJobId(null);
                 //schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
-                schemeId=updateSchemeIdRecord(schemeIdrecord, schemeName);
-            }else
-            {
-                throw new APIException(HttpStatus.BAD_REQUEST,"Cannot register SchemeId:" + request.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
+                schemeId = updateSchemeIdRecord(schemeIdrecord, schemeName.toString());
+            } else {
+                throw new APIException(HttpStatus.BAD_REQUEST, "Cannot register SchemeId:" + request.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
             }
         }
         return schemeId;

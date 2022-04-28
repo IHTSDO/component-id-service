@@ -1,21 +1,31 @@
 package com.snomed.api.controller.dto;
 
 public class DeprecateSctRequestDTO {
+
+    /*
+    * {
+  "sctid": "string",
+  "namespace": 0,
+  "software": "string",
+  "comment": "string"
+}
+    * */
+    // request body change
     private String sctid;
     private Integer namespace;
     private String software;
     private String comment;
-    private String author;
+
 
     public DeprecateSctRequestDTO() {
     }
 
-    public DeprecateSctRequestDTO(String sctid, Integer namespace, String software, String comment, String author) {
+    public DeprecateSctRequestDTO(String sctid, Integer namespace, String software, String comment) {
         this.sctid = sctid;
         this.namespace = namespace;
         this.software = software;
         this.comment = comment;
-        this.author = author;
+
     }
 
     public String getSctid() {
@@ -50,11 +60,4 @@ public class DeprecateSctRequestDTO {
         this.comment = comment;
     }
 
-    public String getAuthor() {
-        return author;
-    }
-
-    public void setAuthor(String author) {
-        this.author = author;
-    }
 }

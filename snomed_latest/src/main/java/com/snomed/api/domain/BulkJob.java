@@ -8,7 +8,7 @@ import java.util.Date;
 
 public class BulkJob  {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Integer id;
     private String name;

@@ -7,24 +7,6 @@ public class SctidsGenerateRequestDto {
     private String software;
     private String comment;
     private boolean generateLegacyIds;
-    private boolean autoSysId = false;
-    private String author;
-
-    public String getAuthor() {
-        return author;
-    }
-
-    public void setAuthor(String author) {
-        this.author = author;
-    }
-
-    public boolean isAutoSysId() {
-        return autoSysId;
-    }
-
-    public void setAutoSysId(boolean autoSysId) {
-        this.autoSysId = autoSysId;
-    }
 
     public Integer getNamespace() {
         return namespace;

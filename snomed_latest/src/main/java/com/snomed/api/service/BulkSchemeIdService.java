@@ -22,11 +22,16 @@ public class BulkSchemeIdService {
     @Autowired
     private BulkSchemeIdRepository bulkSchemeIdRepository;
     @Autowired
+    AuthenticateToken authenticateToken;
+
+    @Autowired
     private SchemeIdBaseRepository schemeIdBaseRepository;
     @Autowired
     private SecurityController securityController;
     @Autowired
     private BulkJobRepository bulkJobRepository;
+    @Autowired
+    private BulkSctidService bulkSctidService;
 
     @Autowired
     private PermissionsSchemeRepository permissionsSchemeRepository;
@@ -34,13 +39,21 @@ public class BulkSchemeIdService {
     private SNOMEDID snomedid;
 
     public boolean isAbleUser(SchemeName schemeName, UserDTO user) throws APIException {
+        List<String> groups = authenticateToken.getGroupsList();
         boolean able = false;
-        List<String> admins = Arrays.asList("a", "b", "c");
+        for(String group:groups)
+        {
+            if(group.equalsIgnoreCase("component-identifier-service-admin"))
+            {
+                able = true;
+            }
+        }
+       /* List<String> admins = Arrays.asList("keerthika", "lakshmana", "c");
         for (String admin : admins) {
             if (admin.equalsIgnoreCase(user.getLogin())) {
                 able = true;
             }
-        }
+        }*/
         if (!able) {
             if (!"false".equalsIgnoreCase(schemeName.toString())) {
                 List<PermissionsScheme> permissionsSchemeList = permissionsSchemeRepository.findByScheme(schemeName.toString());
@@ -68,7 +81,7 @@ public class BulkSchemeIdService {
                 }
             }
         }
-        return false;
+        return able;
     }
 
     public boolean authenticateToken() throws APIException {
@@ -79,12 +92,11 @@ public class BulkSchemeIdService {
             return false;
     }
 
-    public List<SchemeId> getSchemeIds(SchemeName schemeName, String schemeIds) throws APIException {
+    public List<SchemeId> getSchemeIds(String token,SchemeName schemeName, String schemeIds) throws APIException {
         String[] schemedIdArray = schemeIds.replaceAll("\\s+", "").split(",");
-        //authenticate()
-        //{
-        //boolean isAble = isAbleUser();
-        boolean able = true;
+        if (bulkSctidService.authenticateToken(token)) {
+            UserDTO userObj = bulkSctidService.getAuthenticatedUser();
+            boolean able = isAbleUser(schemeName, userObj);
         if (able) {
             for (String schemeId : schemedIdArray) {
                 if (schemeId == null || schemeId.isEmpty()) {
@@ -96,12 +108,12 @@ public class BulkSchemeIdService {
                     } else if ("CTV3ID".equalsIgnoreCase(schemeName.toString().toUpperCase())) {
                         isValidScheme = CTV3ID.validSchemeId(schemeId);
                     }
-                    if (!isValidScheme) {
+                   /* if (!isValidScheme) {
                         throw new APIException(HttpStatus.BAD_REQUEST, "Not a valid schemeId");
-                    }
+                    }*/
 
                     ArrayList<String> schemeIdsArrayList = new ArrayList<String>(Arrays.asList(schemedIdArray));
-                    List<SchemeId> resSchemeArrayList = bulkSchemeIdRepository.findBySchemeAndSchemeIdIn(schemeName.toString(), schemedIdArray);
+                    List<SchemeId> resSchemeArrayList = bulkSchemeIdRepository.findBySchemeAndSchemeIdIn(schemeName.toString().toUpperCase(), List.of(schemedIdArray));
                     // resSchemeArrayList push
                     List<String> respSchemeIdArray = new ArrayList<>();
                     for (int i = 0; i < resSchemeArrayList.size(); i++) {
@@ -115,7 +127,7 @@ public class BulkSchemeIdService {
                     if (resultDiff.size() > 0) {
                         for (String diffSchemeId :
                                 resultDiff) {
-                            SchemeId schemeIdBulkObj = getFreeRecord(schemeName.toString(), diffSchemeId, null, "true");
+                            SchemeId schemeIdBulkObj = getFreeRecord(String.valueOf(schemeName)/*.toString()*/, diffSchemeId, null, "true");
                             resSchemeArrayList.add(schemeIdBulkObj);
                         }
                     }
@@ -126,7 +138,11 @@ public class BulkSchemeIdService {
         } else {
             throw new APIException(HttpStatus.BAD_REQUEST, "No permission for the selected operation");
         }
-        //}
+        }
+        else
+        {
+            throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
+        }
         return null;
     }
 
@@ -140,7 +156,7 @@ public class BulkSchemeIdService {
     private SchemeId insertSchemeIdRecord(Map<String, Object> schemeIdRecord) throws APIException {
         String error;
         SchemeId schemeIdBulk = null;
-        String scheme = null;
+        SchemeName scheme = null;
         String[] schemeId = null;
         Integer sequence = 0;
         Integer checkDigit = 0;
@@ -157,7 +173,7 @@ public class BulkSchemeIdService {
         try {
             for (Map.Entry<String, Object> mapObj : s) {
                 if (mapObj.getKey() == "scheme") {
-                    scheme = (String) mapObj.getValue();
+                    scheme = (SchemeName) mapObj.getValue();
                 } else if (mapObj.getKey() == "schemeId") {
                     schemeId = new String[]{(String) mapObj.getValue()};
                 } else if (mapObj.getKey() == "sequence") {
@@ -182,14 +198,15 @@ public class BulkSchemeIdService {
                     modified_at = (Date) mapObj.getValue();
                 }
             }
-            bulkSchemeIdRepository.insertWithQuery(scheme, schemeId, sequence, checkDigit, systemId, status, author, software, expirationDate, jobId, created_at, modified_at);
-            schemeIdBulk = (SchemeId) bulkSchemeIdRepository.findBySchemeAndSchemeIdIn(scheme, schemeId);
+            bulkSchemeIdRepository.insertWithQuery(scheme, schemeId.toString(), sequence, checkDigit, systemId, status, author, software, expirationDate, jobId, created_at, modified_at);
+           Optional<SchemeId> schemeDB =bulkSchemeIdRepository.findBySchemeAndSchemeId(String.valueOf(scheme), schemeId.toString());
+            schemeIdBulk = schemeDB.get();
             return schemeIdBulk;
         } catch (Exception e) {
             error = e.toString();
         }
         if (error != null) {
-            List<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeIdBulk.getScheme().toString());
+            Optional<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeIdBulk.getScheme().toString());
             if (error.indexOf("ER_DUP_ENTRY") > -1) {
                 if (error.indexOf("'PRIMARY'") > -1 /*&& ()*/) {
                     System.out.println("Trying to solve the primary key error during scheme id insert.");
@@ -214,7 +231,7 @@ public class BulkSchemeIdService {
 
     public Map<String, Object> getNewRecord(String schemeName, String diffSchemeId, String systemId) {
         Map<String, Object> schemeIdRecord = new LinkedHashMap<>();
-        schemeIdRecord.put("scheme", schemeName.toUpperCase());
+        schemeIdRecord.put("scheme", schemeName);
         schemeIdRecord.put("schemeId", diffSchemeId);
         schemeIdRecord.put("sequence", schemeIdHelper.getSequence(diffSchemeId));
         schemeIdRecord.put("checkDigit", schemeIdHelper.getCheckDigit(diffSchemeId));
@@ -232,9 +249,28 @@ public class BulkSchemeIdService {
         return this.securityController.authenticate();
     }
 
-    public BulkJob generateSchemeIds(SchemeName schemeName, SchemeIdBulkGenerationRequestDto schemeIdBulkDto) throws APIException {
-        if (authenticateToken()) {
-            UserDTO userObj = this.getAuthenticatedUser();
+    public BulkJob generateSchemeIds(String token,SchemeName schemeName, SchemeIdBulkGenerationRequestDto schemeIdBulkDto) throws APIException {
+
+        /*
+    * {
+  "quantity": 0,
+  "systemIds": [
+    "string"
+  ],
+  "software": "string",
+  "comment"
+    * */
+
+        //requestbody change
+        if (bulkSctidService.authenticateToken(token)) {
+            SchemeIdBulkGenerate bulkGenerate=new SchemeIdBulkGenerate();
+            bulkGenerate.setQuantity(schemeIdBulkDto.getQuantity());
+            bulkGenerate.setSystemIds(schemeIdBulkDto.getSystemIds());
+            bulkGenerate.setSoftware(schemeIdBulkDto.getSoftware());
+            bulkGenerate.setComment(schemeIdBulkDto.getComment());
+
+
+            UserDTO userObj = bulkSctidService.getAuthenticatedUser();
 
             boolean able = isAbleUser(schemeName, userObj);
             if (!able) {
@@ -244,19 +280,20 @@ public class BulkSchemeIdService {
                 throw new APIException(HttpStatus.BAD_REQUEST, "SystemIds quantity is not equal to quantity requirement");
             }
             if (schemeIdBulkDto.getSystemIds() != null || schemeIdBulkDto.getSystemIds().length == 0) {
-                schemeIdBulkDto.setAutoSysId(true);
+                bulkGenerate.setAutoSysId(true);
             }
-            schemeIdBulkDto.setType(JobTypeConstants.GENERATE_SCHEMEIDS);
-            schemeIdBulkDto.setAuthor(userObj.getLogin());
-            schemeIdBulkDto.setModel(ModelsConstants.SCHEME_ID);
-            schemeIdBulkDto.setScheme(schemeName);
-            SchemeIdBulkGenerationRequestDto requestDto = new SchemeIdBulkGenerationRequestDto(schemeIdBulkDto.getQuantity(), schemeIdBulkDto.getSystemIds(),
+            bulkGenerate.setType(JobTypeConstants.GENERATE_SCHEMEIDS);
+            bulkGenerate.setAuthor(userObj.getLogin());
+            bulkGenerate.setModel(ModelsConstants.SCHEME_ID);
+            bulkGenerate.setScheme(schemeName);
+            /*SchemeIdBulkGenerationRequestDto requestDto = new SchemeIdBulkGenerationRequestDto(schemeIdBulkDto.getQuantity(), schemeIdBulkDto.getSystemIds(),
                     schemeIdBulkDto.getSoftware(), schemeIdBulkDto.getComment(), true, schemeIdBulkDto.getAuthor(),schemeIdBulkDto.getModel(),schemeIdBulkDto.getScheme(),schemeIdBulkDto.getType());
+*/
 // Type is set here not as an attribute
             BulkJob bulk = new BulkJob();
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
-                String regString = objectMapper.writeValueAsString(requestDto);
+                String regString = objectMapper.writeValueAsString(bulkGenerate);
                 bulk.setName(JobTypeConstants.GENERATE_SCHEMEIDS);
                 bulk.setStatus("0");
                 bulk.setRequest(regString);
@@ -276,35 +313,57 @@ public class BulkSchemeIdService {
 
     // Register SchemeId
 
-    public BulkJob registerSchemeIds(SchemeName schemeName, SchemeIdBulkRegisterRequestDto request) throws APIException {
-        if (authenticateToken())
+    public BulkJob registerSchemeIds(String token,SchemeName schemeName, SchemeIdBulkRegisterRequestDto request) throws APIException {
+        if (bulkSctidService.authenticateToken(token))
             return this.registerBulkSchemeIds(schemeName, request);
         else
             throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
     }
 
     public BulkJob registerBulkSchemeIds(SchemeName schemeName, SchemeIdBulkRegisterRequestDto schemeIdBulkRegisterDto) throws APIException {
-        BulkJob bulkJob = new BulkJob();
-        UserDTO userObj = this.getAuthenticatedUser();
-
+        com.snomed.api.domain.BulkJob bulkJob = new com.snomed.api.domain.BulkJob();
+            UserDTO userObj = bulkSctidService.getAuthenticatedUser();
+/*
+*
+* {
+  "records": [
+    {
+      "schemeId": "string",
+      "systemId": "string"
+    }
+  ],
+  "software": "string",
+  "comment": "string"
+}
+* */
+        //requestbody change
         if (this.isAbleUser(schemeName, userObj)) {
+            SchemeIdBulkRegister bulkRegister=new SchemeIdBulkRegister();
+            bulkRegister.setRecords(schemeIdBulkRegisterDto.getRecords());
+            bulkRegister.setSoftware(schemeIdBulkRegisterDto.getSoftware());
+            bulkRegister.setComment(schemeIdBulkRegisterDto.getComment());
+
+
+//requestbody change
+
+
             if (schemeIdBulkRegisterDto.getRecords() == null || schemeIdBulkRegisterDto.getRecords().size() == 0) {
                 throw new APIException(HttpStatus.BAD_REQUEST,"Records property cannot be empty.");
             }
-            schemeIdBulkRegisterDto.setType(JobTypeConstants.REGISTER_SCHEMEIDS);
-            schemeIdBulkRegisterDto.setAuthor(userObj.getLogin());
-            schemeIdBulkRegisterDto.setModel(ModelsConstants.SCHEME_ID);
-            schemeIdBulkRegisterDto.setScheme(schemeName.toString());
+            bulkRegister.setType(JobTypeConstants.REGISTER_SCHEMEIDS);
+            bulkRegister.setAuthor(userObj.getLogin());
+            bulkRegister.setModel(ModelsConstants.SCHEME_ID);
+            bulkRegister.setScheme(schemeName.toString());
 
-            SchemeIdBulkRegisterRequestDto requestDto = new SchemeIdBulkRegisterRequestDto(schemeIdBulkRegisterDto.getRecords(), schemeIdBulkRegisterDto.getSoftware(),
-                    schemeIdBulkRegisterDto.getComments(),
+           /* SchemeIdBulkRegisterRequestDto requestDto = new SchemeIdBulkRegisterRequestDto(schemeIdBulkRegisterDto.getRecords(), schemeIdBulkRegisterDto.getSoftware(),
+                    schemeIdBulkRegisterDto.getComment(),
                     schemeIdBulkRegisterDto.getAuthor(),
                     schemeIdBulkRegisterDto.getModel(),schemeIdBulkRegisterDto.getScheme(),schemeIdBulkRegisterDto.getType());
-
+*/
             BulkJob bulk = new BulkJob();
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
-                String regString = objectMapper.writeValueAsString(requestDto);
+                String regString = objectMapper.writeValueAsString(bulkRegister);
                 bulk.setName(JobTypeConstants.REGISTER_SCHEMEIDS);
                 bulk.setStatus("0");
                 bulk.setRequest(regString);
@@ -326,36 +385,51 @@ public class BulkSchemeIdService {
     // Reserve SchemeId bulk
 
 
-    public BulkJob reserveSchemeIds(SchemeName schemeName, SchemeIdBulkReserveRequestDto request) throws APIException {
-        if (authenticateToken())
+    public BulkJob reserveSchemeIds(String token,SchemeName schemeName, SchemeIdBulkReserveRequestDto request) throws APIException {
+        if (bulkSctidService.authenticateToken(token))
             return this.reserveBulkSchemeIds(schemeName, request);
         else
             throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
     }
 
     public BulkJob reserveBulkSchemeIds(SchemeName schemeName, SchemeIdBulkReserveRequestDto request) throws APIException {
-        BulkJob bulkJob = new BulkJob();
-        UserDTO userObj = this.getAuthenticatedUser();
-
+        com.snomed.api.domain.BulkJob bulkJob = new com.snomed.api.domain.BulkJob();
+            UserDTO userObj = bulkSctidService.getAuthenticatedUser();
+/*
+* {
+  "quantity": 0,
+  "software": "string",
+  "expirationDate": "string",
+  "comment": "string"
+}
+* */
+        //request body change
         if (this.isAbleUser(schemeName, userObj)) {
-            if(request.getQuantity() != null || request.getQuantity()<1)
+
+            SchemeIdBulkReserve bulkReserve=new SchemeIdBulkReserve();
+            bulkReserve.setQuantity(request.getQuantity());
+            bulkReserve.setSoftware((request.getSoftware()));
+            bulkReserve.setExpirationDate(request.getExpirationDate());
+            bulkReserve.setComment(request.getComment());
+
+            if((null==request.getQuantity()) || request.getQuantity()<1)
             {
                 throw new APIException(HttpStatus.BAD_REQUEST,"Quantity property cannot be lower to 1.");
             }
-            request.setType(JobTypeConstants.RESERVE_SCHEMEIDS);
-            request.setModel(ModelsConstants.SCHEME_ID);
-            request.setAuthor(userObj.getLogin());
-            request.setScheme(schemeName.toString());
+            bulkReserve.setType(JobTypeConstants.RESERVE_SCHEMEIDS);
+            bulkReserve.setModel(ModelsConstants.SCHEME_ID);
+            bulkReserve.setAuthor(userObj.getLogin());
+            bulkReserve.setScheme(schemeName.toString());
 
-            SchemeIdBulkReserveRequestDto requestDto=new SchemeIdBulkReserveRequestDto(request.getQuantity(),
+          /*  SchemeIdBulkReserveRequestDto requestDto=new SchemeIdBulkReserveRequestDto(request.getQuantity(),
                     request.getSoftware(),request.getExpirationDate(),
                     request.getComment(), request.getAuthor(), request.getModel(),
                     request.getScheme(), request.getType());
-
+*/
             BulkJob bulk = new BulkJob();
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
-                String regString = objectMapper.writeValueAsString(requestDto);
+                String regString = objectMapper.writeValueAsString(bulkReserve);
                 bulk.setName(JobTypeConstants.RESERVE_SCHEMEIDS);
                 bulk.setStatus("0");
                 bulk.setRequest(regString);
@@ -375,8 +449,10 @@ public class BulkSchemeIdService {
         }
     }
 
-    public BulkJob deprecateSchemeIds(SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws APIException {
-        if (authenticateToken())
+    //deprecateSchemeIds
+
+    public BulkJob deprecateSchemeIds(String token,SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws APIException {
+        if (bulkSctidService.authenticateToken(token))
             return this.deprecateBulkSchemeIds(schemeName, request);
         else
             throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
@@ -384,23 +460,39 @@ public class BulkSchemeIdService {
 
     public BulkJob deprecateBulkSchemeIds(SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws APIException {
         com.snomed.api.domain.BulkJob bulkJob = new com.snomed.api.domain.BulkJob();
-        UserDTO userObj = this.getAuthenticatedUser();
+                UserDTO userObj = bulkSctidService.getAuthenticatedUser();
+  /*
+    *
+    * {
+  "schemeIds": [
+    "string"
+  ],
+  "software": "string",
+  "comment": "string"
+}*/
+
+        //requestbody change
 
         if (this.isAbleUser(schemeName, userObj)) {
+            BulkSchemeIdUpdate bulkSchemeIdUpdate=new BulkSchemeIdUpdate();
+            bulkSchemeIdUpdate.setSchemeIds(request.getSchemeIds());
+            bulkSchemeIdUpdate.setSoftware(request.getSoftware());
+            bulkSchemeIdUpdate.setComment(request.getComment());
+
             if(request.getSchemeIds()==null || request.getSchemeIds().size() <1)
             {
                 throw new APIException(HttpStatus.UNAUTHORIZED,"SchemeIds property cannot be empty.");
             }
+//requestbody change
+            bulkSchemeIdUpdate.setType(JobTypeConstants.DEPRECATE_SCHEMEIDS);
+            bulkSchemeIdUpdate.setModel(ModelsConstants.SCHEME_ID);
+            bulkSchemeIdUpdate.setAuthor(userObj.getLogin());
+            bulkSchemeIdUpdate.setScheme(schemeName.toString());/*schemeName.schemeName.toUpperCase();*/
 
-            request.setType(JobTypeConstants.DEPRECATE_SCHEMEIDS);
-            request.setModel(ModelsConstants.SCHEME_ID);
-            request.setAuthor(userObj.getLogin());
-            request.setScheme(schemeName.toString());/*schemeName.schemeName.toUpperCase();*/
-
-            SchemeIdBulkDeprecateRequestDto requestDto=new SchemeIdBulkDeprecateRequestDto(request.getSchemeIds(),
+            /*SchemeIdBulkDeprecateRequestDto requestDto=new SchemeIdBulkDeprecateRequestDto(request.getSchemeIds(),
                     request.getSoftware(),request.getComment(), request.getAuthor(), request.getModel(),
-                    request.getScheme(), request.getType());
-            return  createJob(requestDto);
+                    request.getScheme(), request.getType());*/
+            return  createJob(bulkSchemeIdUpdate,"deprecate");
 
         } else {
             throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
@@ -408,12 +500,18 @@ public class BulkSchemeIdService {
         }
     }
 
-    public BulkJob createJob(SchemeIdBulkDeprecateRequestDto requestDto) throws APIException {
+    //requestbody change
+    public BulkJob createJob(BulkSchemeIdUpdate bulkSchemeIdUpdate,String functionType) throws APIException {
         BulkJob bulk = new BulkJob();
         try {
             ObjectMapper objectMapper = new ObjectMapper();
-            String regString = objectMapper.writeValueAsString(requestDto);
-            bulk.setName(JobTypeConstants.RESERVE_SCHEMEIDS);
+            String regString = objectMapper.writeValueAsString(bulkSchemeIdUpdate);
+            if(functionType.equalsIgnoreCase("release"))
+            bulk.setName(JobTypeConstants.RELEASE_SCHEMEIDS);
+            else if(functionType.equalsIgnoreCase("publish"))
+                bulk.setName(JobTypeConstants.PUBLISH_SCHEMEIDS);
+            else if(functionType.equalsIgnoreCase("deprecate"))
+                bulk.setName(JobTypeConstants.DEPRECATE_SCHEMEIDS);
             bulk.setStatus("0");
             bulk.setRequest(regString);
 
@@ -428,8 +526,8 @@ public class BulkSchemeIdService {
 
 //releaseSchemeIds
 
-    public BulkJob releaseSchemeIds(SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws APIException {
-        if (authenticateToken())
+    public BulkJob releaseSchemeIds(String token,SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws APIException {
+        if (bulkSctidService.authenticateToken(token))
             return this.releaseBulkSchemeIds(schemeName, request);
         else
             throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
@@ -437,23 +535,29 @@ public class BulkSchemeIdService {
 
     public BulkJob releaseBulkSchemeIds(SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws APIException {
         com.snomed.api.domain.BulkJob bulkJob = new com.snomed.api.domain.BulkJob();
-        UserDTO userObj = this.getAuthenticatedUser();
+            UserDTO userObj = bulkSctidService.getAuthenticatedUser();
 
         if (this.isAbleUser(schemeName, userObj)) {
+//requestbody change
+            BulkSchemeIdUpdate bulkSchemeIdUpdate=new BulkSchemeIdUpdate();
+            bulkSchemeIdUpdate.setSchemeIds(request.getSchemeIds());
+            bulkSchemeIdUpdate.setSoftware(request.getSoftware());
+            bulkSchemeIdUpdate.setComment(request.getComment());
+
             if(request.getSchemeIds()==null || request.getSchemeIds().size() <1)
             {
                 throw new APIException(HttpStatus.UNAUTHORIZED,"SchemeIds property cannot be empty.");
             }
 
-            request.setType(JobTypeConstants.RELEASE_SCHEMEIDS);
-            request.setModel(ModelsConstants.SCHEME_ID);
-            request.setAuthor(userObj.getLogin());
-            request.setScheme(schemeName.toString());/*schemeName.schemeName.toUpperCase();*/
+            bulkSchemeIdUpdate.setType(JobTypeConstants.RELEASE_SCHEMEIDS);
+            bulkSchemeIdUpdate.setModel(ModelsConstants.SCHEME_ID);
+            bulkSchemeIdUpdate.setAuthor(userObj.getLogin());
+            bulkSchemeIdUpdate.setScheme(schemeName.toString());/*schemeName.schemeName.toUpperCase();*/
 
-            SchemeIdBulkDeprecateRequestDto requestDto=new SchemeIdBulkDeprecateRequestDto(request.getSchemeIds(),
+           /* SchemeIdBulkDeprecateRequestDto requestDto=new SchemeIdBulkDeprecateRequestDto(request.getSchemeIds(),
                     request.getSoftware(),request.getComment(), request.getAuthor(), request.getModel(),
-                    request.getScheme(), request.getType());
-            return  createJob(requestDto);
+                    request.getScheme(), request.getType());*/
+            return  createJob(bulkSchemeIdUpdate,"release");
 
 
         } else {
@@ -461,33 +565,38 @@ public class BulkSchemeIdService {
 
         }
     }
-    //publishSchemeIds
-    public BulkJob publishSchemeIds(SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws APIException {
-        if (authenticateToken())
-            return this.publishBulkSchemeIds(schemeName, request);
-        else
-            throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
-    }
+//publishSchemeIds
+public BulkJob publishSchemeIds(String token,SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws APIException {
+    if (bulkSctidService.authenticateToken(token))
+        return this.publishBulkSchemeIds(schemeName, request);
+    else
+        throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
+}
 
     public BulkJob publishBulkSchemeIds(SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws APIException {
         com.snomed.api.domain.BulkJob bulkJob = new com.snomed.api.domain.BulkJob();
-        UserDTO userObj = this.getAuthenticatedUser();
-
+            UserDTO userObj = bulkSctidService.getAuthenticatedUser();
         if (this.isAbleUser(schemeName, userObj)) {
+            //requestbody change
+            BulkSchemeIdUpdate bulkSchemeIdUpdate=new BulkSchemeIdUpdate();
+            bulkSchemeIdUpdate.setSchemeIds(request.getSchemeIds());
+            bulkSchemeIdUpdate.setSoftware(request.getSoftware());
+            bulkSchemeIdUpdate.setComment(request.getComment());
+
             if(request.getSchemeIds()==null || request.getSchemeIds().size() <1)
             {
                 throw new APIException(HttpStatus.UNAUTHORIZED,"SchemeIds property cannot be empty.");
             }
 
-            request.setType(JobTypeConstants.PUBLISH_SCHEMEIDS);
-            request.setModel(ModelsConstants.SCHEME_ID);
-            request.setAuthor(userObj.getLogin());
-            request.setScheme(schemeName.toString());/*schemeName.schemeName.toUpperCase();*/
+            bulkSchemeIdUpdate.setType(JobTypeConstants.PUBLISH_SCHEMEIDS);
+            bulkSchemeIdUpdate.setModel(ModelsConstants.SCHEME_ID);
+            bulkSchemeIdUpdate.setAuthor(userObj.getLogin());
+            bulkSchemeIdUpdate.setScheme(schemeName.toString());/*schemeName.schemeName.toUpperCase();*/
 
-            SchemeIdBulkDeprecateRequestDto requestDto=new SchemeIdBulkDeprecateRequestDto(request.getSchemeIds(),
+           /* SchemeIdBulkDeprecateRequestDto requestDto=new SchemeIdBulkDeprecateRequestDto(request.getSchemeIds(),
                     request.getSoftware(),request.getComment(), request.getAuthor(), request.getModel(),
-                    request.getScheme(), request.getType());
-            return  createJob(requestDto);
+                    request.getScheme(), request.getType());*/
+            return  createJob(bulkSchemeIdUpdate,"publish");
 
         } else {
             throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");

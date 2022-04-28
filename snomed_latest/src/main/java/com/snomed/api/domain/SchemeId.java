@@ -1,36 +1,51 @@
 package com.snomed.api.domain;
 
-import org.springframework.lang.Nullable;
-
 import javax.persistence.*;
-import javax.validation.constraints.Null;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Date;
 
 @Entity
 @Table(name="schemeid")
-@IdClass(SchemeIdPK.class)
-public class SchemeId {
-    @Id
+/*
+@IdClass(SchemeIdKey.class)
+*/
+public class SchemeId implements Serializable {
+
+
+    @NotNull
     private String scheme;
+    @NotNull
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private String schemeId;
-    private Long sequence;
+    private Integer sequence;
     private Integer checkDigit;
+    @NotNull
     private String systemId;
     private String status;
     private String author;
     private String software;
     private Date expirationDate;
-    private String comment;
     private Integer jobId;
     private Date created_at;
     private Date modified_at;
 
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
+    private String comment;
+
     public SchemeId() {
     }
 
-    public SchemeId(String scheme, String schemeId, Long sequence, Integer checkDigit, String systemId, String status, String author, String software, Date expirationDate, String comment, Integer jobId, Date created_at, Date modified_at) {
+    public SchemeId(String scheme, String schemeId, Integer sequence, Integer checkDigit, String systemId, String status, String author, String software, Date expirationDate, Integer jobId, Date created_at, Date modified_at) {
         this.scheme = scheme;
         this.schemeId = schemeId;
         this.sequence = sequence;
@@ -40,7 +55,6 @@ public class SchemeId {
         this.author = author;
         this.software = software;
         this.expirationDate = expirationDate;
-        this.comment = comment;
         this.jobId = jobId;
         this.created_at = created_at;
         this.modified_at = modified_at;
@@ -62,11 +76,11 @@ public class SchemeId {
         this.schemeId = schemeId;
     }
 
-    public Long getSequence() {
+    public Integer getSequence() {
         return sequence;
     }
 
-    public void setSequence(Long sequence) {
+    public void setSequence(Integer sequence) {
         this.sequence = sequence;
     }
 
@@ -116,14 +130,6 @@ public class SchemeId {
 
     public void setExpirationDate(Date expirationDate) {
         this.expirationDate = expirationDate;
-    }
-
-    public String getComment() {
-        return comment;
-    }
-
-    public void setComment(String comment) {
-        this.comment = comment;
     }
 
     public Integer getJobId() {

@@ -33,10 +33,12 @@ public interface SctidRepository extends JpaRepository<Sctid, String> {
             nativeQuery = true)
     Sctid getSctidsById(String id);
 
-    @Query(
+   /* @Query(
             value = "SELECT * FROM sctid u where u.sctid in (:ids)",
             nativeQuery = true)
-    List<Sctid> getSctidsByIds(@Param("ids") String ids);
+    List<Sctid> getSctidsByIds(@Param("ids") String ids);*/
+
+    List<Sctid> findBySctidIn(List<String> ids);
 
     @Modifying
     @Transactional

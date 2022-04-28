@@ -10,7 +10,6 @@ import com.snomed.api.domain.Sctid;
 import com.snomed.api.exception.APIException;
 import com.snomed.api.helper.ModelsConstants;
 import com.snomed.api.repository.BulkJobRepository;
-import com.snomed.api.repository.SchemeIdRepository;
 import com.snomed.api.repository.SctidRepository;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +26,10 @@ public class BulkJobService {
     @Autowired
     BulkSctidService bulkSctidService;
 
+    @Autowired
+    AuthenticateToken authenticateToken;
+
+
     @PersistenceContext
     EntityManager entityManager;
 
@@ -40,13 +43,10 @@ public class BulkJobService {
     BulkJobsListResponse bulkJobsListResponse;
 
     @Autowired
-    SchemeIdRepository schemeIdRepository;
-
-    @Autowired
     SctidRepository sctidRepository;
 
-    public List<BulkJobsListResponse> getJobs(String token) throws APIException {
-        List<BulkJobsListResponse> result = null;
+    public List<BulkJob> getJobs(String token) throws APIException {
+        List<BulkJob> result = null;
         if (bulkSctidService.authenticateToken(token)) {
             Map<String, Object> queryObject = new HashMap();
             Map<String, Integer> fields = new LinkedHashMap<>();
@@ -65,8 +65,8 @@ public class BulkJobService {
         return result;
     }
 
-    public List<BulkJobsListResponse> findFieldSelect(Map<String, Object> queryObject, Map<String,Integer> fields, Integer limit, Integer skip, Map<String,String> orderBy){
-        List<BulkJobsListResponse> bulkJobList;
+    public List<BulkJob> findFieldSelect(Map<String, Object> queryObject, Map<String,Integer> fields, Integer limit, Integer skip, Map<String,String> orderBy){
+        List<BulkJob> bulkJobList;
             if (queryObject.isEmpty()){
                 queryObject= new HashMap<>();
             }
@@ -113,13 +113,19 @@ public class BulkJobService {
             }
             String sql;
             if ((null != limit && limit>0) && ((null == skip || skip==0))) {
-                sql = "SELECT " + select + " FROM bulkJob" + swhere + " order by " + dataOrder + " limit " + limit;
+                sql = "SELECT " + "*" + " FROM bulkJob" + swhere + " order by " + dataOrder + " limit " + limit;
             }else{
-                sql = "SELECT " + select + " FROM bulkJob" + swhere + " order by " + dataOrder ;
+                sql = "SELECT " + "*" + " FROM bulkJob" + swhere + " order by " + dataOrder ;
             }
         Query genQuery = entityManager.createNativeQuery(sql,BulkJob.class);
         System.out.println("genQuery BUlkJob:"+genQuery);
-        List<BulkJobsListResponse> resultList = genQuery.getResultList();
+        List<BulkJob> resultList = genQuery.getResultList();
+        for (Object resp:
+        resultList) {
+            System.out.println("reesp1:"+resp.getClass());
+
+            //BulkJobsListResponse response = new BulkJobsListResponse(resp(0))
+        }
         if(null == skip || skip==0)
         {
             bulkJobList = resultList;
@@ -127,7 +133,7 @@ public class BulkJobService {
         else
         {
             var cont = 1;
-            List<BulkJobsListResponse> newRows = new ArrayList<>();
+            List<BulkJob> newRows = new ArrayList<>();
             for (var i = 0; i < resultList.size(); i++) {
                 if (i >= skip) {
                     if (null != limit && limit > 0 && limit < cont) {
@@ -328,15 +334,22 @@ public class BulkJobService {
             return result;
         }
 
-        public boolean isAbleUser(String username)
-        {
-        boolean able = false;
-        List<String> admins = Arrays.asList("keerthika", "lakshmana", "c");
+        public boolean isAbleUser(String username) throws APIException {
+            List<String> groups = authenticateToken.getGroupsList();
+            boolean able = false;
+            for(String group:groups)
+            {
+                if(group.equalsIgnoreCase("component-identifier-service-admin"))
+                {
+                    able = true;
+                }
+            }
+       /* List<String> admins = Arrays.asList("keerthika", "lakshmana", "c");
         for (String admin : admins) {
             if (admin.equalsIgnoreCase(username)) {
                 able = true;
             }
-        }
+        }*/
         return able;
     }
     }
