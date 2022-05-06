@@ -94,6 +94,7 @@ public class BulkSchemeIdService {
 
     public List<SchemeId> getSchemeIds(String token,SchemeName schemeName, String schemeIds) throws APIException {
         String[] schemedIdArray = schemeIds.replaceAll("\\s+", "").split(",");
+        List<SchemeId> resSchemeArrayList = new ArrayList<>();
         if (bulkSctidService.authenticateToken(token)) {
             UserDTO userObj = bulkSctidService.getAuthenticatedUser();
             boolean able = isAbleUser(schemeName, userObj);
@@ -113,7 +114,7 @@ public class BulkSchemeIdService {
                     }*/
 
                     ArrayList<String> schemeIdsArrayList = new ArrayList<String>(Arrays.asList(schemedIdArray));
-                    List<SchemeId> resSchemeArrayList = bulkSchemeIdRepository.findBySchemeAndSchemeIdIn(schemeName.toString().toUpperCase(), List.of(schemedIdArray));
+                    resSchemeArrayList = bulkSchemeIdRepository.findBySchemeAndSchemeIdIn(schemeName.toString().toUpperCase(), List.of(schemedIdArray));
                     // resSchemeArrayList push
                     List<String> respSchemeIdArray = new ArrayList<>();
                     for (int i = 0; i < resSchemeArrayList.size(); i++) {
@@ -131,8 +132,6 @@ public class BulkSchemeIdService {
                             resSchemeArrayList.add(schemeIdBulkObj);
                         }
                     }
-                    return resSchemeArrayList;
-
                 }
             }//validate schemeId
         } else {
@@ -143,13 +142,13 @@ public class BulkSchemeIdService {
         {
             throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
         }
-        return null;
+        return resSchemeArrayList;
     }
 
 
     public SchemeId getFreeRecord(String schemeName, String diffSchemeId, String systemId, String autoSysId) throws APIException {
         Map<String, Object> schemeIdRecord = getNewRecord(schemeName, diffSchemeId, systemId);
-        schemeIdRecord.put("status", "avilable");
+        schemeIdRecord.put("status", "available");
         return insertSchemeIdRecord(schemeIdRecord);
     }
 

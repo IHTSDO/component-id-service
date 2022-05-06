@@ -1,5 +1,7 @@
 package com.snomed.api.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import javax.persistence.*;
 import java.util.Date;
 import java.util.List;
@@ -9,16 +11,17 @@ import java.util.List;
 public class Namespace {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer namespace;
     private String organizationName;
     private String organizationAndContactDetails;
-    private Date dateIssued;
+    @Column(name="dateIssued")
+    @Temporal(TemporalType.DATE)
+    private java.util.Date dateIssued;
     private String email;
     private String notes;
     //fix
-    @OneToMany(mappedBy = "namespace", cascade = CascadeType.ALL,fetch = FetchType.EAGER)
-    private List<Partitions> partitions;
+   /* @OneToMany(mappedBy = "namespace", cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    private List<Partitions> partitions;*/
 
     private String idPregenerate ;
 
@@ -29,7 +32,8 @@ public class Namespace {
 
     }
 
-    public Namespace(Integer namespace, String organizationName, String organizationAndContactDetails, Date dateIssued, String email, String notes,List<Partitions> partitions,
+    public Namespace(Integer namespace, String organizationName, String organizationAndContactDetails, Date dateIssued, String email, String notes,
+                    // List<Partitions> partitions,
                      String idPregenerate
     ) {
         this.namespace = namespace;
@@ -38,7 +42,7 @@ public class Namespace {
         this.dateIssued = dateIssued;
         this.email = email;
         this.notes = notes;
-        this.partitions=partitions;
+        //this.partitions=partitions;
         this.idPregenerate = idPregenerate;
     }
 
@@ -69,11 +73,11 @@ public class Namespace {
         this.organizationAndContactDetails = organizationAndContactDetails;
     }
 
-    public Date getDateIssued() {
+    public java.util.Date getDateIssued() {
         return dateIssued;
     }
 
-    public void setDateIssued(Date dateIssued) {
+    public void setDateIssued(java.util.Date dateIssued) {
         this.dateIssued = dateIssued;
     }
 
@@ -93,13 +97,13 @@ public class Namespace {
         this.notes = notes;
     }
 
-    public List<Partitions> getPartitions() {
+    /*public List<Partitions> getPartitions() {
         return partitions;
     }
 
     public void setPartitions(List<Partitions> partitions) {
         this.partitions = partitions;
-    }
+    }*/
 
     public String getIdPregenerate() {
         return idPregenerate;

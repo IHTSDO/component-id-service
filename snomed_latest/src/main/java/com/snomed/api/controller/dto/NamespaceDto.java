@@ -1,5 +1,6 @@
 package com.snomed.api.controller.dto;
 
+import com.snomed.api.domain.Namespace;
 import com.snomed.api.domain.Partitions;
 
 import java.util.Date;
@@ -10,16 +11,17 @@ public class NamespaceDto {
     private Integer namespace;
     private String organizationName;
     private String organizationAndContactDetails;
-    private Date dateIssued;
+    private String dateIssued;
     private String email;
     private String notes;
     private String idPregenerate ;
-    private List<PartitionsDto> partitions;
+    //private Namespace namespace;
+    private List<Partitions> partitions;
 
     public NamespaceDto() {
     }
 
-    public NamespaceDto(Integer namespace, String organizationName, String organizationAndContactDetails, Date dateIssued, String email, String notes, String idPregenerate, List<PartitionsDto> partitions) {
+    public NamespaceDto(Integer namespace, String organizationName, String organizationAndContactDetails, String dateIssued, String email, String notes, String idPregenerate, List<Partitions> partitions) {
         this.namespace = namespace;
         this.organizationName = organizationName;
         this.organizationAndContactDetails = organizationAndContactDetails;
@@ -54,11 +56,11 @@ public class NamespaceDto {
         this.organizationAndContactDetails = organizationAndContactDetails;
     }
 
-    public Date getDateIssued() {
+    public String getDateIssued() {
         return dateIssued;
     }
 
-    public void setDateIssued(Date dateIssued) {
+    public void setDateIssued(String dateIssued) {
         this.dateIssued = dateIssued;
     }
 
@@ -86,11 +88,11 @@ public class NamespaceDto {
         this.idPregenerate = idPregenerate;
     }
 
-    public List<PartitionsDto> getPartitions() {
+    public List<Partitions> getPartitions() {
         return partitions;
     }
 
-    public void setPartitions(List<PartitionsDto> partitions) {
+    public void setPartitions(List<Partitions> partitions) {
         this.partitions = partitions;
     }
 }

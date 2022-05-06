@@ -21,6 +21,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -58,12 +60,12 @@ public class NamespaceService {
         return this.securityController.authenticate();
     }
 
-    public List<Namespace> getNamespaces(String token) throws APIException {
+    public List<NamespaceDto> getNamespaces(String token) throws APIException {
         if (bulkSctidService.authenticateToken(token)) return this.getNamespaceslist();
         else throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
     }
 
-    public List<Namespace> getNamespaceslist() {
+    public List<NamespaceDto> getNamespaceslist() {
 
         Namespace namespace = null;
         List<NamespaceDto> namespaceDtoList = new ArrayList<>();
@@ -72,148 +74,144 @@ public class NamespaceService {
         List<PartitionsDto> partitionsDtoList = new ArrayList<>();
         List<Partitions> partitionsList = partitionsRepository.findAll();
         List<Namespace> namespaceList = namespaceRepository.findAll();
-        //namespaceGet
-
-        for (Partitions partitions : partitionsList) {
-            partitionsDto = new PartitionsDto(partitions.namespace.getNamespace(), partitions.getPartitionId(), partitions.getSequence());
+        for(int i=0;i<namespaceList.size();i++)
+        {
+            Namespace namespace1 = namespaceList.get(i);
+            Integer namespace1Namespace =namespace1.getNamespace();
+            NamespaceDto dto = new NamespaceDto();
+            dto.setNamespace(namespace1.getNamespace());
+            dto.setOrganizationName(namespace1.getOrganizationName());
+            dto.setOrganizationAndContactDetails(namespace1.getOrganizationAndContactDetails());
+            dto.setEmail(namespace1.getEmail());
+            dto.setNotes(namespace1.getNotes());
+            dto.setDateIssued(String.valueOf(namespace1.getDateIssued()));
+            dto.setIdPregenerate(namespace1.getIdPregenerate());
+            List<Partitions> partList = new ArrayList<>();
+            for(int j=0;j<partitionsList.size();j++)
+            {
+                int partNamespace =partitionsList.get(j).getNamespace();
+                if(namespace1Namespace.equals(partNamespace))
+                {
+                    partList.add(partitionsList.get(j));
+                }
+            }
+            dto.setPartitions(partList);
+            namespaceDtoList.add(dto);
+        }
+//keerthika commenting
+       /* for (Partitions partitions : partitionsList) {
+            partitionsDto = new PartitionsDto(partitions.getNamespace().getNamespace(), partitions.getPartitionId(), partitions.getSequence());
             partitionsDtoList.add(partitionsDto);
         }
         namespaceDto.setPartitions(partitionsDtoList);
 
         for (Namespace namespace1 : namespaceList) {
-            namespaceDto = new NamespaceDto(namespace1.getNamespace(), namespace1.getOrganizationName(), namespace1.getOrganizationAndContactDetails(), namespace1.getDateIssued(),
+            namespaceDto = new NamespaceDto(namespace1.getNamespace(), namespace1.getOrganizationName(), namespace1.getOrganizationAndContactDetails(), namespace1.getDateIssued().toString(),
                     namespace1.getEmail(), namespace1.getNotes(), namespace1.getIdPregenerate(), partitionsDtoList);
             namespaceDtoList.add(namespaceDto);
 
-        }
+        }*/
+        //keerthika commenting
         //  namespace.setPartitions( partitionsList);
 
 
-        if (namespaceDto != null) {
-            //Collections.sort(namespaceList);
+        if (namespaceDtoList.size()>0) {
+            //Collections.sort(namespaceDtoList);
             Collections.sort(namespaceDtoList, Comparator.comparingInt(NamespaceDto::getNamespace));
         }
 
-        return namespaceList;
+        return namespaceDtoList;
 
     }
 
-    public String createNamespace(String token, Namespace namespace) throws APIException {
+    public String createNamespace(String token, NamespaceDto namespace) throws APIException, ParseException {
         if (bulkSctidService.authenticateToken(token)) return this.createNamespaces(token, namespace);
         else throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
     }
 
-    public String createNamespaces(String token, Namespace namespace) throws APIException {
-        com.snomed.api.domain.BulkJob bulkJob = new com.snomed.api.domain.BulkJob();
+    public String createNamespaces(String token, NamespaceDto namespace) throws APIException, ParseException {
         UserDTO userObj = this.getAuthenticatedUser();
         String namespaceString = namespace.getNamespace() + "";
-NamespaceDto output = new NamespaceDto();
+        NamespaceDto output = new NamespaceDto();
         if (this.isAbletoEdit(namespace.getNamespace(), userObj)) {
-            if (namespaceString.length() != 7 && namespaceString != "0") {
-                 throw new APIException(HttpStatus.BAD_REQUEST, "Invalid namespace");
+            if (namespaceString.length() != 7 && !namespaceString.equalsIgnoreCase("0")) {
+                throw new APIException(HttpStatus.BAD_REQUEST, "Invalid namespace");
             } else {
-                output = createNamespaceList(namespace);
+                return createNamespaceList(namespace);
             }
-
-
         } else {
             throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
-        if(null!=output.getNamespace() && output.getPartitions().size()>0)
-            return "Success";
-        else
-            return "Record Not Created";
     }
 
-    private NamespaceDto createNamespaceList(Namespace namespace) {
+    private String createNamespaceList(NamespaceDto namespace) throws ParseException {
         NamespaceDto output = new NamespaceDto();
+        JSONObject response = new JSONObject();
         List<Partitions> partitionsOfObj = namespace.getPartitions();
-        List<PartitionsDto> partitionsDtoList = new ArrayList<>();
+        //List<Partitions> partitionsList = new ArrayList<>();
         PartitionsDto partitionsDto = new PartitionsDto();
         List<Partitions> partitionsList = new ArrayList<>();
-    Namespace createdNamespace = namespaceRepository.save(namespace);
-        output.setNamespace(createdNamespace.getNamespace());
+        /*output.setNamespace(createdNamespace.getNamespace());
         output.setOrganizationName(createdNamespace.getOrganizationName());
         output.setOrganizationAndContactDetails(createdNamespace.getOrganizationAndContactDetails());
-        output.setDateIssued(createdNamespace.getDateIssued());
+        output.setDateIssued(createdNamespace.getDateIssued().toString());
         output.setEmail(createdNamespace.getEmail());
         output.setNotes(createdNamespace.getNotes());
         output.setIdPregenerate(createdNamespace.getIdPregenerate());
-     if (partitionsOfObj != null && !partitionsOfObj.isEmpty()) {
+        output.setNamespace(createdNamespace);*/
+        if (partitionsOfObj != null && !partitionsOfObj.isEmpty() && partitionsOfObj.size()>0) {
             partitionsList = partitionsOfObj;
-            /*for(PartitionsDto part:partitionsOfObj){
-               // part.setNamespace(namespace1);
-            }*/
         }
         else {
-            if (namespace.getNamespace() == 0) {
+            if (namespace.getNamespace()== 0) {
                 // PartitionsPk partitionsPk=new PartitionsPk(namespace.getNamespace(),"00");
-                Partitions partitionsObj1 = new Partitions(null, "00", 0);
-                partitionsList.add(0, partitionsObj1);
+                Partitions partitionsObj1 = new Partitions(namespace.getNamespace(), "00", 0);
+                partitionsList.add(partitionsObj1);
                 //partitionsRepository.inserWithQuery(namespace, "00", 0);
-                Partitions p1 = partitionsRepository.save(partitionsObj1);
-PartitionsDto p1Dto = new PartitionsDto();
-p1Dto.setNamespace(p1.getNamespace().getNamespace());
-p1Dto.setPartitionId(p1.getPartitionId());
-p1Dto.setSequence(p1.getSequence());
-                Partitions partitionsObj2 = new Partitions(null, "01", 0);
-                partitionsList.add(1, partitionsObj2);
-             //   partitionsRepository.inserWithQuery(namespace, "01", 0);
-                Partitions p2 = partitionsRepository.save(partitionsObj2);
-                PartitionsDto p2Dto = new PartitionsDto();
-                p2Dto.setNamespace(p2.getNamespace().getNamespace());
-                p2Dto.setPartitionId(p2.getPartitionId());
-                p2Dto.setSequence(p2.getSequence());
+              //  Partitions p1 = partitionsRepository.save(partitionsObj1);
+                Partitions partitionsObj2 = new Partitions(namespace.getNamespace(), "01", 0);
+                partitionsList.add(partitionsObj2);
+                //   partitionsRepository.inserWithQuery(namespace, "01", 0);
+                //Partitions p2 = partitionsRepository.save(partitionsObj2);
 
-                Partitions partitionsObj3 = new Partitions(null, "02", 0);
-                partitionsList.add(2, partitionsObj3);
-               // partitionsRepository.inserWithQuery(namespace, "02", 0);
-                Partitions p3 = partitionsRepository.save(partitionsObj3);
-                PartitionsDto p3Dto = new PartitionsDto();
-                p3Dto.setNamespace(p3.getNamespace().getNamespace());
-                p3Dto.setPartitionId(p3.getPartitionId());
-                p3Dto.setSequence(p3.getSequence());
-                partitionsDtoList.add(p1Dto);
-                partitionsDtoList.add(p2Dto);
-                partitionsDtoList.add(p3Dto);
+                Partitions partitionsObj3 = new Partitions(namespace.getNamespace(), "02", 0);
+                partitionsList.add(partitionsObj3);
+                // partitionsRepository.inserWithQuery(namespace, "02", 0);
+                //Partitions p3 = partitionsRepository.save(partitionsObj3);
+
             }//namespace=0
             else {
 
-                Partitions partitionsObj1 = new Partitions(null, "10", 0);
-                partitionsList.add(0, partitionsObj1);
-                Partitions p1 = partitionsRepository.save(partitionsObj1);
-                PartitionsDto p1Dto = new PartitionsDto();
-                p1Dto.setNamespace(p1.getNamespace().getNamespace());
-                p1Dto.setPartitionId(p1.getPartitionId());
-                p1Dto.setSequence(p1.getSequence());
+                Partitions partitionsObj1 = new Partitions(namespace.getNamespace(), "10", 0);
+                partitionsList.add(partitionsObj1);
+                //Partitions p1 = partitionsRepository.save(partitionsObj1);
 
-                Partitions partitionsObj2 = new Partitions(null, "11", 0);
-                partitionsList.add(1, partitionsObj2);
-                Partitions p2 = partitionsRepository.save(partitionsObj2);
-                PartitionsDto p2Dto = new PartitionsDto();
-                p2Dto.setNamespace(p2.getNamespace().getNamespace());
-                p2Dto.setPartitionId(p2.getPartitionId());
-                p2Dto.setSequence(p2.getSequence());
+                Partitions partitionsObj2 = new Partitions(namespace.getNamespace(), "11", 0);
+                partitionsList.add(partitionsObj2);
+                //Partitions p2 = partitionsRepository.save(partitionsObj2);
 
-                Partitions partitionsObj3 = new Partitions(null, "12", 0);
-                partitionsList.add(2, partitionsObj3);
-                Partitions p3 = partitionsRepository.save(partitionsObj3);
-                PartitionsDto p3Dto = new PartitionsDto();
-                p3Dto.setNamespace(p3.getNamespace().getNamespace());
-                p3Dto.setPartitionId(p3.getPartitionId());
-                p3Dto.setSequence(p3.getSequence());
-                partitionsDtoList.add(p1Dto);
-                partitionsDtoList.add(p2Dto);
-                partitionsDtoList.add(p3Dto);
+                Partitions partitionsObj3 = new Partitions(namespace.getNamespace(), "12", 0);
+                partitionsList.add(partitionsObj3);
+                //Partitions p3 = partitionsRepository.save(partitionsObj3);
             }
-output.setPartitions(partitionsDtoList);
         }
        /* namespaceRepository.insertWithQuery(namespace.getNamespace(), namespace.getOrganizationName(), namespace.getOrganizationAndContactDetails(),
                 namespace.getDateIssued(), namespace.getEmail(), namespace.getNotes(), namespace.getIdPregenerate(), partitionsOfObj);
        */
-
-        return output;
+        List<Partitions> part = partitionsRepository.saveAll(partitionsList);
+        Namespace toBeCreated = new Namespace();
+        toBeCreated.setNamespace(namespace.getNamespace());
+        toBeCreated.setOrganizationName(namespace.getOrganizationName());
+        toBeCreated.setOrganizationAndContactDetails(namespace.getOrganizationAndContactDetails());
+        toBeCreated.setDateIssued(new Date(namespace.getDateIssued()));
+        toBeCreated.setEmail(namespace.getEmail());
+        toBeCreated.setNotes(namespace.getNotes());
+        toBeCreated.setIdPregenerate(namespace.getIdPregenerate());
+        Namespace createdNamespace = namespaceRepository.save(toBeCreated);
+        if(part.size()>0 && (createdNamespace.getNamespace().equals(namespace.getNamespace())))
+            response.put("message","Success");
+        return response.toString();
     }
 
     private boolean isAbletoEdit(Integer namespace, UserDTO userObj) throws APIException {
@@ -253,13 +251,12 @@ output.setPartitions(partitionsDtoList);
         return able;
     }//isAbleToEdit
 
-    public Namespace updateNamespace(String token, Namespace namespace) throws APIException {
+    public String updateNamespace(String token, NamespaceDto namespace) throws Exception {
         if (bulkSctidService.authenticateToken(token)) return this.updateNamespaces(token, namespace);
         else throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
     }
 
-    public Namespace updateNamespaces(String token, Namespace namespace) throws APIException {
-        com.snomed.api.domain.BulkJob bulkJob = new com.snomed.api.domain.BulkJob();
+    public String updateNamespaces(String token, NamespaceDto namespace) throws Exception {
         UserDTO userObj = this.getAuthenticatedUser();
 
         if (this.isAbletoEdit(namespace.getNamespace(), userObj)) {
@@ -272,12 +269,13 @@ output.setPartitions(partitionsDtoList);
         }
     }
 
-    private Namespace editNamespace(Integer namespaceId, Namespace namespaceObj) {
+    private String editNamespace(Integer namespaceId, NamespaceDto namespaceObj) throws Exception {
 
         NamespaceDto namespacesObj = new NamespaceDto();
         List<Partitions> partitionsList = null;
         PartitionsDto partitionsDto = null;
         List<PartitionsDto> partitionsDtoList = new ArrayList<>();
+        JSONObject response = new JSONObject();
 
         Namespace namespace = new Namespace();
         Optional<Namespace> namespaces = namespaceRepository.findById(namespaceId);
@@ -285,14 +283,27 @@ output.setPartitions(partitionsDtoList);
 
 
         namespaceGet.setOrganizationName(namespaceObj.getOrganizationName());
-        namespaceGet.setOrganizationAndContactDetails(namespaceObj.getOrganizationName());
-        namespaceGet.setDateIssued(namespaceObj.getDateIssued());
+        namespaceGet.setOrganizationAndContactDetails(namespaceObj.getOrganizationAndContactDetails());
+        namespaceGet.setDateIssued(new Date(namespaceObj.getDateIssued()));
         namespaceGet.setEmail(namespaceObj.getEmail());
         namespaceGet.setNotes(namespaceObj.getNotes());
         namespaceGet.setIdPregenerate(namespaceObj.getIdPregenerate());
 
-        namespace=namespaceRepository.save(namespaceGet);
-        return namespace;
+       /* namespaceGet.setOrganizationName("test");
+        namespaceGet.setOrganizationAndContactDetails("test");
+        namespaceGet.setDateIssued(null);
+        namespaceGet.setEmail("keerth.san@gmail.com");
+        namespaceGet.setNotes("test");
+        namespaceGet.setIdPregenerate(null);*/
+try {
+    namespace = namespaceRepository.save(namespaceGet);
+    response.put("message", "Success");
+}
+catch (Exception e)
+{
+    throw new Exception(String.valueOf(response.put("message",e.getMessage())));
+}
+        return response.toString();
     }
 
 
@@ -321,7 +332,7 @@ output.setPartitions(partitionsDtoList);
             }//for
         }
         otherGroup.add(userName);
-        List<PermissionsNamespace> permissionsNamespaceList = permissionsNamespaceRepository.findByUsernameIn(otherGroup/*"srs-dev"*/);
+        List<PermissionsNamespace> permissionsNamespaceList = permissionsNamespaceRepository.findByUsernameIn(otherGroup);
         if (namespacesFromGroup != null && !namespacesFromGroup.isEmpty()) {
             namespaces = namespacesFromGroup;
         }
@@ -356,36 +367,44 @@ output.setPartitions(partitionsDtoList);
     }
 
     @Transactional
-    public NamespaceDto getNamespaceId(String token, String namespaceId) {
-        // List<Namespace> namespaceList = null;
+    public NamespaceDto getNamespaceId(String token, String namespaceId) throws APIException {
+        JSONObject response = new JSONObject();
+        if (namespaceId.length() != 7 && !(namespaceId.equalsIgnoreCase("0")))
+            throw new APIException(HttpStatus.NOT_FOUND, "Invalid namespace");
         NamespaceDto namespacesObj = new NamespaceDto();
         List<Partitions> partitionsList = null;
         PartitionsDto partitionsDto = null;
         List<PartitionsDto> partitionsDtoList = new ArrayList<>();
         //namespaceList = namespaceRepository.findByNamespace(Integer.parseInt(namespaceId));
         Optional<Namespace> namespaces = namespaceRepository.findById(Integer.parseInt(namespaceId));
-        Namespace namespaceGet = namespaces.get();
-        partitionsList = partitionsRepository.findByNamespace(Integer.parseInt(namespaceId));
+        if(namespaces.isPresent()) {
+            Namespace namespaceGet = namespaces.get();
+            partitionsList = partitionsRepository.findByNamespace(Integer.parseInt(namespaceId));
 
-        for (Partitions partitions : partitionsList) {
-            partitionsDto = new PartitionsDto(partitions.namespace.getNamespace(), partitions.getPartitionId(), partitions.getSequence());
+      /*  for (Partitions partitions : partitionsList) {
+            partitionsDto = new PartitionsDto(partitions.getNamespace(), partitions.getPartitionId(), partitions.getSequence());
             partitionsDtoList.add(partitionsDto);
-        }
+        }*/
+           // namespacesObj.setNamespace(namespaceGet);
         namespacesObj.setNamespace(namespaceGet.getNamespace());
         namespacesObj.setOrganizationName(namespaceGet.getOrganizationName());
         namespacesObj.setOrganizationAndContactDetails(namespaceGet.getOrganizationAndContactDetails());
-        namespacesObj.setDateIssued(namespaceGet.getDateIssued());
+        namespacesObj.setDateIssued(null!=namespaceGet.getDateIssued()?namespaceGet.getDateIssued().toString():null);
         namespacesObj.setEmail(namespaceGet.getEmail());
         namespacesObj.setNotes(namespaceGet.getNotes());
         namespacesObj.setIdPregenerate(namespaceGet.getIdPregenerate());
-        namespacesObj.setPartitions(partitionsDtoList);
+            namespacesObj.setPartitions(partitionsList);
+        }
+        else
+        {
+            namespacesObj = null;
+        }
         return namespacesObj;
 
     }
 
 
     public String deleteNamespace(String token, String namespaceId) throws APIException {
-        boolean a = true;
         if (bulkSctidService.authenticateToken(token)) return this.deleteNamespaces(token, namespaceId);
         else throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
     }
@@ -393,42 +412,51 @@ output.setPartitions(partitionsDtoList);
     public String deleteNamespaces(String token, String namespaceId) throws APIException {
         UserDTO userObj = this.getAuthenticatedUser();
         JSONObject response = new JSONObject();
+        if (namespaceId.length() != 7 && namespaceId != "0")
+            response.put("message","Invalid Namespace");
+        else {
+            int deletedRows = 0;
+            if (this.isAbletoEdit(Integer.valueOf(namespaceId), userObj)) {
+                Optional<Namespace> namespaceObj = namespaceRepository.findById(Integer.valueOf(namespaceId));
+                if (namespaceObj.isPresent()) {
+                    namespaceRepository.delete(namespaceObj.get());
+                }
+                List<Partitions> partNamespace = partitionsRepository.findByNamespace(Integer.valueOf(namespaceId));
+                if (partNamespace.size() > 0)
+                    partitionsRepository.deleteAll(partNamespace);
+                response.put("message", "Success");
+            } else {
+                throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
-        if (this.isAbletoEdit(Integer.valueOf(namespaceId), userObj)) {
-            Optional<Namespace> namespaceObj = namespaceRepository.findById(Integer.valueOf(namespaceId));
-            if (namespaceObj.isPresent()) {
-                namespaceRepository.delete(namespaceObj.get());
             }
-            response.put("message", "Success");
-            return response.toString();
-
-        } else {
-            throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
-
         }
+        return response.toString();
     }
 
 
-    public Namespace updatePartitionSequence(String token, String namespaceId, String partitionId, String value) throws APIException {
+    public String updatePartitionSequence(String token, String namespaceId, String partitionId, String value) throws APIException {
         if (bulkSctidService.authenticateToken(token))
             return this.updatePartitionSequences(token, namespaceId, partitionId, value);
         else throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
     }
 
-    public Namespace updatePartitionSequences(String token, String namespaceId, String partitionId, String value) throws APIException {
+    public String updatePartitionSequences(String token, String namespaceId, String partitionId, String value) throws APIException {
         UserDTO userObj = this.getAuthenticatedUser();
-Integer namespaceIdint= Integer.valueOf(namespaceId);
+        String out ="";
+        Integer namespaceIdint= Integer.valueOf(namespaceId);
+        JSONObject response = new JSONObject();
         if (this.isAbletoEdit(Integer.valueOf(namespaceId), userObj)) {
 
             Optional<Partitions> partitions = partitionsRepository.findById(new PartitionsPk(namespaceIdint, partitionId));
             partitions.get().setSequence(Integer.parseInt(value));
-            partitionsRepository.save(partitions.get());
-            return partitions.get().getNamespace();
+            Partitions partResult= partitionsRepository.save(partitions.get());
+            if((partResult.getSequence()).equals(Integer.parseInt(value)))
+                response.put("message", "Success");
         } else {
             throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
-
+return response.toString();
     }
 
 }//class

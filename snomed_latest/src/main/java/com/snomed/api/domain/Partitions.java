@@ -1,6 +1,8 @@
 package com.snomed.api.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -11,45 +13,42 @@ import java.io.Serializable;
 public class Partitions implements Serializable {
 
 
-    @Id
+   /* @Id
     //@JoinColumn(name = "namespace")
     @ManyToOne
     @JoinColumn(name="namespace", nullable=false)
     //fix
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnoreProperties("partitions")
     @JsonIgnore
-    public Namespace namespace;
+    public Namespace namespace;*/
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    public String partitionId;
+    private Integer namespace;
 
-    public Partitions(Namespace namespaceId, String partitionId, Integer sequence) {
-        this.namespace = namespaceId;
-        this.partitionId = partitionId;
-        this.sequence = sequence;
-    }
+    @Id
+    private String partitionId;
 
-    @Column
-    public Integer sequence;
+    private Integer sequence;
 
 
     public Partitions() {
     }
 
-    public Partitions(Namespace namespace, Integer sequence) {
-       // this.namespace = namespace;
+    public Partitions(Integer namespace, String partitionId, Integer sequence) {
+        this.namespace = namespace;
+        this.partitionId = partitionId;
         this.sequence = sequence;
     }
 
-
-
-    public Namespace getNamespace() {
+    public Integer getNamespace() {
         return namespace;
     }
 
-    public void setNamespace(Namespace namespace) {
+    public void setNamespace(Integer namespace) {
         this.namespace = namespace;
     }
+
     public String getPartitionId() {
         return partitionId;
     }

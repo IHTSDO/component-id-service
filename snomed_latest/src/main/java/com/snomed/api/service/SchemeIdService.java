@@ -445,7 +445,7 @@ public class SchemeIdService {
                     schemeIdrecord.setAuthor(updateRequest.getAuthor());
                     schemeIdrecord.setSoftware(updateRequest.getSoftware());
                     schemeIdrecord.setComment(updateRequest.getComment());
-                    schemeIdrecord.setJobId(Integer.parseInt("null"));
+                    schemeIdrecord.setJobId(null);
                     schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
                 } else {
                     throw new APIException(HttpStatus.ACCEPTED, "Cannot release SchemeId:" + schemeIdrecord.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
@@ -505,7 +505,7 @@ public class SchemeIdService {
                     schemeIdrecord.setAuthor(updateRequest.getAuthor());
                     schemeIdrecord.setSoftware(updateRequest.getSoftware());
                     schemeIdrecord.setComment(updateRequest.getComment());
-                    schemeIdrecord.setJobId(Integer.parseInt("null"));
+                    schemeIdrecord.setJobId(null);
                     schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
                 }
                 else
@@ -601,7 +601,7 @@ public class SchemeIdService {
                 //Expiration Date Not available in request.
                 schemeIdRecords.get(0).setExpirationDate(null);
                 schemeIdRecords.get(0).setComment(request.getComment());
-                schemeIdRecords.get(0).setJobId(Integer.parseInt("null"));
+                schemeIdRecords.get(0).setJobId(null);
                 // outputSchemeRec = bulkSchemeIdRepository.save(schemeIdRecords.get(0));
                 updatedrecord = updateSchemeIdRecord(schemeIdRecords.get(0), schemeName.toString());
                 return updatedrecord;
@@ -633,7 +633,7 @@ public class SchemeIdService {
                     //Expiration Date Not available in request.
                     schemeIdRecord.setExpirationDate(null);
                     schemeIdRecord.setComment(request.getComment());
-                    schemeIdRecord.setJobId(Integer.parseInt("null"));
+                    schemeIdRecord.setJobId(null);
                     // outputSchemeRec = bulkSchemeIdRepository.save(schemeIdRecords.get(0));
                     updatedrecord = updateSchemeIdRecord(schemeIdRecord, schemeName.toString());
                     return updatedrecord;
@@ -837,7 +837,7 @@ public class SchemeIdService {
                 //Expiration Date Not available in request.
                 schemeIdRecords.get(0).setExpirationDate(null);
                 schemeIdRecords.get(0).setComment(request.getComment());
-                schemeIdRecords.get(0).setJobId(Integer.parseInt("null"));
+                schemeIdRecords.get(0).setJobId(null);
                 // outputSchemeRec = bulkSchemeIdRepository.save(schemeIdRecords.get(0));
                 updatedrecord = updateSchemeIdRecord(schemeIdRecords.get(0), schemeName);
                 return updatedrecord;
@@ -869,7 +869,7 @@ public class SchemeIdService {
                     //Expiration Date Not available in request.
                     schemeIdRecord.setExpirationDate(null);
                     schemeIdRecord.setComment(request.getComment());
-                    schemeIdRecord.setJobId(Integer.parseInt("null"));
+                    schemeIdRecord.setJobId(null);
                     // outputSchemeRec = bulkSchemeIdRepository.save(schemeIdRecords.get(0));
                     updatedrecord = updateSchemeIdRecord(schemeIdRecord, schemeName.toString());
                     return updatedrecord;

@@ -237,7 +237,7 @@ public class SctidService {
         var skipTo = 0;
         if (!limit.isEmpty() && null != limit)
             limitR = Integer.parseInt(limit);
-        if (!skip.isEmpty() && null != skip)
+        if (null != skip)
             skipTo = Integer.parseInt(skip);
         //sctidRepository.findSct(queryObject,limitR,skipTo);
         String swhere = "";
@@ -391,7 +391,7 @@ public class SctidService {
             UserDTO userObj = bulkSctidService.getAuthenticatedUser();
             Integer returnedNamespace = sctIdHelper.getNamespace(request.getSctid());
             if (!returnedNamespace.equals(request.getNamespace())) {
-                throw new APIException(HttpStatus.ACCEPTED, "Namespaces differences between sctId and parameter");
+                throw new APIException(HttpStatus.BAD_REQUEST, "Namespaces differences between sctId and parameter");
             } else {
                 if (bulkSctidService.isAbleUser(String.valueOf(returnedNamespace), userObj)) {
                     deprecateSctRequest.setAuthor(userObj.getLogin());
@@ -408,7 +408,7 @@ public class SctidService {
                             sctRec.setJobId(null);
                             output = sctidRepository.save(sctRec);
                         } else {
-                            throw new APIException(HttpStatus.ACCEPTED, "Cannot deprecate SCTID:" + request.getSctid() + ", current status: " + sctRec.getStatus());
+                            throw new APIException(HttpStatus.BAD_REQUEST, "Cannot deprecate SCTID:" + request.getSctid() + ", current status: " + sctRec.getStatus());
                         }
                     }
 
@@ -619,8 +619,8 @@ public class SctidService {
         Map<String, Object> queryObject = new HashMap<>();
         if (null != generationData.getNamespace() && !generationData.getPartitionId().isBlank()) {
             queryObject.put("namespace", generationData.getNamespace());
-            queryObject.put("partitionId", generationData.getPartitionId());
-            queryObject.put("status", stateMachine.statuses.get("available"));
+            queryObject.put("partitionId", "'"+generationData.getPartitionId()+"'");
+            queryObject.put("status", "'"+stateMachine.statuses.get("available")+"'");
             sctList = this.findSctWithIndexAndLimit(queryObject, "1", null);
             if (sctList.size() > 0) {
                 var newStatus = stateMachine.getNewStatus(sctList.get(0).getStatus(), action);
@@ -634,7 +634,7 @@ public class SctidService {
                     //Doubt - need to be clarified- there is no ExpirationDate in Request body.
                     sctList.get(0).setExpirationDate(new Date());
                     sctList.get(0).setComment(generationData.getComment());
-                    sctList.get(0).setJobId(Integer.valueOf("null"));
+                    sctList.get(0).setJobId(null);
                     sctList.get(0).setModified_at(new Date());
                     sctOutput = sctidRepository.save(sctList.get(0));
                 } else {
@@ -729,7 +729,7 @@ public class SctidService {
                 //Expiration Date Not available in request.
                 schemeIdRecords.get(0).setExpirationDate(null);
                 schemeIdRecords.get(0).setComment(generationData.getComment());
-                schemeIdRecords.get(0).setJobId(Integer.parseInt("null"));
+                schemeIdRecords.get(0).setJobId(null);
                 outputSchemeRec = schemeIdRepository.save(schemeIdRecords.get(0));
             } else {
                 counterMode(scheme, generationData, action);
@@ -808,7 +808,7 @@ public class SctidService {
                     //Expiration Date Not available in request.
                     schemeIdRecord.setExpirationDate(null);
                     schemeIdRecord.setComment(request.getComment());
-                    schemeIdRecord.setJobId(Integer.parseInt("null"));
+                    schemeIdRecord.setJobId(null);
                     // outputSchemeRec = bulkSchemeIdRepository.save(schemeIdRecords.get(0));
                     updatedrecord = schemeIdService.updateSchemeIdRecord(schemeIdRecord, schemeName.toString());
                     return updatedrecord;

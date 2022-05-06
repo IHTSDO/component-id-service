@@ -64,7 +64,7 @@ function createCookie(name, value, days) {
 }
 
 function loginWithCredentials(credentials, callback, rememberMe) {
-    $.post("/api/login", credentials).done(function (data) {
+    $.post("/api/loginUI", credentials).done(function (data) {
     //alert("here1");
         var token = data.token;
         var email = data.email;

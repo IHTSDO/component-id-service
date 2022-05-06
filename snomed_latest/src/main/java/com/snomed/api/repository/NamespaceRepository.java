@@ -1,5 +1,6 @@
 package com.snomed.api.repository;
 
+import com.snomed.api.controller.dto.NamespaceDto;
 import com.snomed.api.controller.dto.NamespacePublicResponse;
 import com.snomed.api.domain.Namespace;
 import com.snomed.api.domain.Partitions;
@@ -24,6 +25,7 @@ public interface NamespaceRepository extends JpaRepository<Namespace,Integer> {
     @Query(value="Delete from namespace where namespace= (:namespace)",nativeQuery = true)
     public List<Namespace> deleteNamespace(Integer namespace);
 
-
+    /*@Query(value="select p from namespace n join partitions p on n.namespace = p.namespace",nativeQuery = true)
+public  List<NamespaceDto> getAllNamespace();*/
 
 }

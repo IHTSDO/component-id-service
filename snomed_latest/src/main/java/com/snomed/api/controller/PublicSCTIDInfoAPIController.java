@@ -1,6 +1,7 @@
 package com.snomed.api.controller;
 
 import com.snomed.api.controller.dto.CheckSctidResponseDTO;
+import com.snomed.api.controller.dto.NamespaceDto;
 import com.snomed.api.controller.dto.NamespacePublicResponse;
 import com.snomed.api.domain.Namespace;
 import com.snomed.api.exception.APIException;
@@ -37,7 +38,7 @@ public class PublicSCTIDInfoAPIController {
     })
     @GetMapping("/sct/namespaces")
     @ResponseBody
-    public List<Namespace> getNamespaces(@RequestParam(name="token",required = false)String token)
+    public List<NamespaceDto> getNamespaces(@RequestParam(name="token",required = false)String token)
     {
         return namespaceService.getNamespaceslist();
     }

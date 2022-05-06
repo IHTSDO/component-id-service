@@ -44,6 +44,11 @@
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-core</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.github.jknack</groupId>
+			<artifactId>handlebars-springmvc</artifactId>
+			<version>4.0.6</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
@@ -102,13 +107,8 @@
 		<!-- https://mvnrepository.com/artifact/com.github.jknack/handlebars -->
 		<dependency>
 			<groupId>com.github.jknack</groupId>
-			<artifactId>handlebars</artifactId>
-			<version>2.0.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.github.jknack</groupId>
-			<artifactId>handlebars-springmvc</artifactId>
-			<version>4.0.6</version>
+			<artifactId>handlebars-guava-cache</artifactId>
+			<version>4.0.5</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.jknack</groupId>
@@ -117,9 +117,20 @@
 		</dependency>
 		<dependency>
 			<groupId>com.github.jknack</groupId>
-			<artifactId>handlebars-guava-cache</artifactId>
+			<artifactId>handlebars</artifactId>
 			<version>4.0.5</version>
 		</dependency>
+		<dependency>
+			<groupId>com.github.jknack</groupId>
+			<artifactId>handlebars-springmvc</artifactId>
+			<version>4.0.6</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.thymeleaf/thymeleaf -->
+		<!--<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>-->
+
 		<!-- https://mvnrepository.com/artifact/org.json/json -->
 		<dependency>
 			<groupId>org.json</groupId>

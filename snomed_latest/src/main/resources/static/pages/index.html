@@ -655,7 +655,6 @@
                     function loadPartitions(namespace){
                         $("#generateIds-send-button").addClass("disabled");
                         $.get("/api/sct/namespaces/" + namespace + "?token=" + options.token).done(function(res){
-                            console.log("output from namespace:"+res);
                             var partitionsHtml = "";
                             res.partitions.forEach(function(partition){
                                 partitionsHtml+= '<option value="' + partition.partitionId + '">' + partition.partitionId + '</option>';
