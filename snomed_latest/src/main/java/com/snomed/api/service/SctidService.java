@@ -937,17 +937,20 @@ public class SctidService {
         if (bulkSctidService.authenticateToken(token)) {
             ResultDto result = new ResultDto();
             List<String> users = new ArrayList<>();
-            List<String> admins = new ArrayList<>();
+            List<String> securityAdmins = new ArrayList<>();
+            List<String> securityUsers = new ArrayList<>();
+            securityAdmins.add("keerthika");
+            securityAdmins.add("lakshmana");
             boolean adminU = false;
             // boolean found = this.added(userToAdd);
-            for(String admin:admins)
+            for(String admin:securityAdmins)
             {
                 if(admin.equalsIgnoreCase(username))
                     adminU = true;
                 if(!added(admin))
                     users.add(admin);
             }
-            for(String user:users)
+            for(String user:securityUsers)
             {
                 if(!added(user))
                     users.add(user);
@@ -973,15 +976,15 @@ public class SctidService {
                         long sctCount = sctidCount(queryObject);
                         if(sctCount>0)
                         {
-                            done++;
                             hash.put(namespace.getNamespace().toString(),sctCount);
                             //result.getNamespaces("namespace.getNamespace()") = sctCount;
-                            if(total == done)
-                            {
-                                hash.put("total",namespaceCount);
-                                result.setNamespaces(hash);
-                                break;
-                            }
+                        }
+                        done++;
+                        if(total == done)
+                        {
+                            hash.put("total",namespaceCount);
+                            result.setNamespaces(hash);
+                            break;
                         }
                     }
                 }
@@ -1038,7 +1041,7 @@ public class SctidService {
                             done++;
                             // result.getNamespaces("namespace.getNamespace()") = sctCount;
                             hash.put(namespaceR.getNamespace().toString(),sctCount);
-                            if(total == done)
+                            if(total==done)
                             {
                                 hash.put("total", (long) total);
                                 result.setNamespaces(hash);
@@ -1084,9 +1087,9 @@ public class SctidService {
         }
         String sql;
         sql = "SELECT count(*) as count FROM sctId" + swhere ;
-        Query query = entityManager.createNativeQuery(sql,Sctid.class);
-        List<Long> result = query.getResultList();
-        return result.get(0);
+        Query query = entityManager.createNativeQuery(sql);
+        List<BigInteger> result = query.getResultList();
+        return result.get(0).longValue();
     }
     public Long permissionsSchemeCount(Map<String, ArrayList<String>> queryObject)
     {
@@ -1097,11 +1100,11 @@ public class SctidService {
                     queryObject.entrySet()) {
                 for (String group:
                         query.getValue()) {
-                    groupList+=","+"('"+group+"'";
+                    groupList+=","+"'"+group+"'";
                 }
-                groupList += ")";
+               // groupList += ")";
                 groupList = groupList.substring(1);
-                swhere += " And " + query.getKey() + " in" + (groupList);
+                swhere += " And " + query.getKey() + " in" + "("+groupList+")";
             }
         }
 
@@ -1125,11 +1128,11 @@ public class SctidService {
                     queryObject.entrySet()) {
                 for (String group:
                         query.getValue()) {
-                    groupList+=","+"('"+group+"'";
+                    groupList+=","+"'"+group+"'";
                 }
-                groupList += ")";
+                //groupList += ")";
                 groupList = groupList.substring(1);
-                swhere += " And " + query.getKey() + " in" + (groupList);
+                swhere += " And " + query.getKey() + " in" + "("+groupList+")";
             }
         }
 
