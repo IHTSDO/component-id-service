@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 @Api(tags = "Bulk Jobs", value = "Bulk Jobs")
 @RestController
+@RequestMapping(path = "/api")
 public class BulkJobsController {
     @Autowired
     BulkJobService bulkJobService;

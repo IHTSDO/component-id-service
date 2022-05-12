@@ -3,10 +3,7 @@ package com.snomed.api.service;
 import com.google.common.collect.Lists;
 import com.snomed.api.controller.SecurityController;
 import com.snomed.api.controller.dto.*;
-import com.snomed.api.domain.Namespace;
-import com.snomed.api.domain.Partitions;
-import com.snomed.api.domain.PartitionsPk;
-import com.snomed.api.domain.PermissionsNamespace;
+import com.snomed.api.domain.*;
 import com.snomed.api.exception.APIException;
 import com.snomed.api.repository.NamespaceRepository;
 import com.snomed.api.repository.PartitionsRepository;
@@ -16,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -23,6 +22,7 @@ import javax.persistence.Query;
 import javax.transaction.Transactional;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -62,7 +62,7 @@ public class NamespaceService {
 
     public List<NamespaceDto> getNamespaces(String token) throws APIException {
         if (bulkSctidService.authenticateToken(token)) return this.getNamespaceslist();
-        else throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
+        else throw new APIException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
     }
 
     public List<NamespaceDto> getNamespaceslist() {
@@ -126,7 +126,7 @@ public class NamespaceService {
 
     public String createNamespace(String token, NamespaceDto namespace) throws APIException, ParseException {
         if (bulkSctidService.authenticateToken(token)) return this.createNamespaces(token, namespace);
-        else throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
+        else throw new APIException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
     }
 
     public String createNamespaces(String token, NamespaceDto namespace) throws APIException, ParseException {
@@ -199,12 +199,13 @@ public class NamespaceService {
        /* namespaceRepository.insertWithQuery(namespace.getNamespace(), namespace.getOrganizationName(), namespace.getOrganizationAndContactDetails(),
                 namespace.getDateIssued(), namespace.getEmail(), namespace.getNotes(), namespace.getIdPregenerate(), partitionsOfObj);
        */
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-M-yyyy hh:mm:ss a", Locale.ENGLISH);
         List<Partitions> part = partitionsRepository.saveAll(partitionsList);
         Namespace toBeCreated = new Namespace();
         toBeCreated.setNamespace(namespace.getNamespace());
         toBeCreated.setOrganizationName(namespace.getOrganizationName());
         toBeCreated.setOrganizationAndContactDetails(namespace.getOrganizationAndContactDetails());
-        toBeCreated.setDateIssued(new Date(namespace.getDateIssued()));
+        toBeCreated.setDateIssued(null!=namespace.getDateIssued()?formatter.parse(namespace.getDateIssued()):null);
         toBeCreated.setEmail(namespace.getEmail());
         toBeCreated.setNotes(namespace.getNotes());
         toBeCreated.setIdPregenerate(namespace.getIdPregenerate());
@@ -253,7 +254,7 @@ public class NamespaceService {
 
     public String updateNamespace(String token, NamespaceDto namespace) throws Exception {
         if (bulkSctidService.authenticateToken(token)) return this.updateNamespaces(token, namespace);
-        else throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
+        else throw new APIException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
     }
 
     public String updateNamespaces(String token, NamespaceDto namespace) throws Exception {
@@ -275,6 +276,7 @@ public class NamespaceService {
         List<Partitions> partitionsList = null;
         PartitionsDto partitionsDto = null;
         List<PartitionsDto> partitionsDtoList = new ArrayList<>();
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-M-yyyy hh:mm:ss a", Locale.ENGLISH);
         JSONObject response = new JSONObject();
 
         Namespace namespace = new Namespace();
@@ -284,7 +286,7 @@ public class NamespaceService {
 
         namespaceGet.setOrganizationName(namespaceObj.getOrganizationName());
         namespaceGet.setOrganizationAndContactDetails(namespaceObj.getOrganizationAndContactDetails());
-        namespaceGet.setDateIssued(new Date(namespaceObj.getDateIssued()));
+        namespaceGet.setDateIssued(null!=namespaceObj.getDateIssued()? formatter.parse(namespaceObj.getDateIssued()) : null);
         namespaceGet.setEmail(namespaceObj.getEmail());
         namespaceGet.setNotes(namespaceObj.getNotes());
         namespaceGet.setIdPregenerate(namespaceObj.getIdPregenerate());
@@ -309,7 +311,7 @@ catch (Exception e)
 
     public List<Namespace> getNamespacesForUser(String token, String userName) throws APIException {
         if (authenticateToken()) return this.getNamespacesListForUser(token, userName);
-        else throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
+        else throw new APIException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
     }
 
     public List<Namespace> getNamespacesListForUser(String token, String userName) throws APIException {
@@ -363,7 +365,7 @@ catch (Exception e)
 
     public NamespaceDto getNamespace(String token, String namespaceId) throws APIException {
         if (bulkSctidService.authenticateToken(token)) return this.getNamespaceId(token, namespaceId);
-        else throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
+        else throw new APIException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
     }
 
     @Transactional
@@ -406,7 +408,7 @@ catch (Exception e)
 
     public String deleteNamespace(String token, String namespaceId) throws APIException {
         if (bulkSctidService.authenticateToken(token)) return this.deleteNamespaces(token, namespaceId);
-        else throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
+        else throw new APIException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
     }
 
     public String deleteNamespaces(String token, String namespaceId) throws APIException {
@@ -437,7 +439,7 @@ catch (Exception e)
     public String updatePartitionSequence(String token, String namespaceId, String partitionId, String value) throws APIException {
         if (bulkSctidService.authenticateToken(token))
             return this.updatePartitionSequences(token, namespaceId, partitionId, value);
-        else throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
+        else throw new APIException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
     }
 
     public String updatePartitionSequences(String token, String namespaceId, String partitionId, String value) throws APIException {
@@ -459,4 +461,64 @@ catch (Exception e)
 return response.toString();
     }
 
-}//class
+    /* Method for "/sct/namespaces/{namespaceId}/permissions" */
+    public List<PermissionsNamespace> getPermissionForNS(String token, String namespaceId) throws APIException {
+        List<PermissionsNamespace> permissionsNamespaceListFinal;
+        if (bulkSctidService.authenticateToken(token))
+        {
+            List<PermissionsNamespace> permissionsNamespaceList = permissionsNamespaceRepository.findByNamespace(Integer.valueOf(namespaceId));
+            if(permissionsNamespaceList.size()>0)
+                permissionsNamespaceListFinal = permissionsNamespaceList;
+            else
+                permissionsNamespaceListFinal =Collections.EMPTY_LIST;
+        }
+        else {
+            throw new APIException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
+        }
+        return permissionsNamespaceListFinal;
+    }
+    /** method for Authorization Controller*/
+    public String deleteNamespacePermissions(String token,String namespaceId,String username) throws APIException {
+        if (bulkSctidService.authenticateToken(token))
+        {
+            UserDTO userObj = this.getAuthenticatedUser();
+            if (this.isAbletoEdit(Integer.valueOf(namespaceId), userObj)) {
+                JSONObject response = new JSONObject();
+               long deletedCount = permissionsNamespaceRepository.deleteByNamespaceAndUsername(Integer.valueOf(namespaceId),username);
+               if(deletedCount>0)
+                   response.put("message", "success");
+               else
+                   response.put("message", "success");
+              return response.toString();
+            }
+            else {
+                throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
+            }
+        }
+        else {
+            throw new APIException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
+        }
+    }
+
+    public String createNamespacePermissions (String token, String namespaceId,
+                  String username, String role) throws APIException {
+        if (bulkSctidService.authenticateToken(token))
+        {
+            UserDTO userObj = this.getAuthenticatedUser();
+            if (this.isAbletoEdit(Integer.valueOf(namespaceId), userObj)) {
+                JSONObject response = new JSONObject();
+                PermissionsNamespace permissionsNamespace = new PermissionsNamespace(Integer.valueOf(namespaceId),username,role);
+                PermissionsNamespace permissionsNamespace1 = permissionsNamespaceRepository.save(permissionsNamespace);
+                response.put("message", "success");
+                return response.toString();
+            }
+            else {
+                throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
+            }
+        }
+        else {
+            throw new APIException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
+        }
+    }
+
+}

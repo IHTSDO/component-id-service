@@ -23,6 +23,7 @@ import com.snomed.api.controller.dto.SchemeIdBulkDeprecateRequestDto;
 import java.util.List;
 @Api(tags = "SchemeIds - Bulk Operations", value = "SchemeIds - Bulk Operations")
 @RestController
+@RequestMapping(path = "/api")
 public class BulkSchemeIdController {
 
     @Autowired

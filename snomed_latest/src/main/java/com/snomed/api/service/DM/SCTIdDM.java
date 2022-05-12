@@ -70,7 +70,7 @@ public class SCTIdDM {
         Sctid sctIdRecord = this.getSctid(sctidRegistrationRequest.getSctid());
         if (null != sctIdRecord) {
             var newStatus = stateMachine.getNewStatus(sctIdRecord.getStatus(), stateMachine.actions.get("register"));
-            if (!newStatus.isBlank()) {
+            if (null!=newStatus) {
                 if (!sctidRegistrationRequest.getSystemId().isEmpty()) {
                     sctIdRecord.setSystemId(sctidRegistrationRequest.getSystemId());
                 }
@@ -83,7 +83,7 @@ public class SCTIdDM {
                 Sctid updatedRecord = sctidRepository.save(sctIdRecord);
                 result = updatedRecord;
             } else {
-                throw new APIException(HttpStatus.ACCEPTED, ("Cannot register SCTID:" + sctidRegistrationRequest.getSctid() + ", current status: " + sctIdRecord.getStatus()));
+                throw new APIException(HttpStatus.BAD_REQUEST, ("Cannot register SCTID:" + sctidRegistrationRequest.getSctid() + ", current status: " + sctIdRecord.getStatus()));
             }
         }
         return result;
@@ -173,7 +173,7 @@ public class SCTIdDM {
 
     }
 
-    public Sctid counterMode(SctidsGenerateRequestDto operation, String action) throws APIException {
+    public Sctid counterMode(SctidGenerate operation, String action) throws APIException {
         Sctid result = new Sctid();
        /* if (requestDto.equalsIgnoreCase("SCTIDRegistrationRequest"))
             operation = (SCTIDRegistrationRequest) operation;
@@ -203,13 +203,13 @@ public class SCTIdDM {
         return result;
     }
 
-    public Integer getNextNumber(SctidsGenerateRequestDto operation) throws APIException {
+    public Integer getNextNumber(SctidGenerate operation) throws APIException {
         Optional<Partitions> partitionsList =partitionsRepository.findById(new PartitionsPk(operation.getNamespace(),operation.getPartitionId()));
         Integer nextNumber = ((partitionsList.get().getSequence()) +1);
         return nextNumber;
     }
 
-    public String computeSCTID(SctidsGenerateRequestDto operation,Integer sequence){
+    public String computeSCTID(SctidGenerate operation,Integer sequence){
 
         var tmpNsp=operation.getNamespace().toString();
         if (tmpNsp=="0"){

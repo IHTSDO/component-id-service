@@ -113,7 +113,7 @@ public class SchemeIdService {
     private List<SchemeId> getSchemeIdsList(String limit, String skip, SchemeName schemeName) throws APIException {
         UserDTO userObj = this.getAuthenticatedUser();
         List<SchemeId> schemeidList = new ArrayList<>();
-        if (this.isAbleUser(schemeName.toString(), userObj)) {
+        if (this.isAbleUser("false", userObj)) {
             //ArrayList<String> schemeIdsArrayList = new ArrayList<String>(Arrays.asList(schemedIdArray));
 
             // String[] objQuery = (schemeName.toString()).split(",");
@@ -140,7 +140,7 @@ public class SchemeIdService {
             }
             String sql;
             if ((limitR > 0) && (skipTo == 0)) {
-                sql = "Select * FROM schemeid" + swhere + " order by schemeId limit " + limit;
+                sql = "Select * FROM schemeid" + swhere + " order by schemeId limit " + limitR;
             } else {
                 sql = "Select * FROM schemeid" + swhere + " order by schemeId";
             }
@@ -174,7 +174,7 @@ public class SchemeIdService {
                 List<SchemeId> newRows = new ArrayList<>();
                 for (var i = 0; i < (resultList.size()/1000); i++) {
                     if (i >= skipTo) {
-                        if (null != limit && limitR > 0 && limitR < cont) {
+                        if (limitR > 0 && limitR < cont) {
                             break;
                         }
                         newRows.add(resultList.get(i));
@@ -391,7 +391,7 @@ public class SchemeIdService {
                     schemeIdrecord.setJobId(null);
                     schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
                 } else {
-                    throw new APIException(HttpStatus.ACCEPTED, "Cannot deprecate SchemeId:" + schemeIdrecord.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
+                    throw new APIException(HttpStatus.BAD_REQUEST, "Cannot deprecate SchemeId:" + schemeIdrecord.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
                 }
             }
             //
@@ -448,7 +448,7 @@ public class SchemeIdService {
                     schemeIdrecord.setJobId(null);
                     schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
                 } else {
-                    throw new APIException(HttpStatus.ACCEPTED, "Cannot release SchemeId:" + schemeIdrecord.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
+                    throw new APIException(HttpStatus.BAD_REQUEST, "Cannot release SchemeId:" + schemeIdrecord.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
                 }
             }
             //
@@ -510,7 +510,7 @@ public class SchemeIdService {
                 }
                 else
                 {
-                    throw new APIException(HttpStatus.ACCEPTED,"Cannot publish SchemeId:"+schemeIdrecord.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
+                    throw new APIException(HttpStatus.BAD_REQUEST,"Cannot publish SchemeId:"+schemeIdrecord.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
                 }
             }
             //
@@ -844,7 +844,12 @@ public class SchemeIdService {
             } else {
                 counterModeGen(schemeName, request, generate);
             }
-        } else {
+        }
+        else if(schemeIdRecords.size() ==0)
+        {
+            counterModeGen(schemeName, request, generate);
+        }
+        else {
             throw new APIException(HttpStatus.ACCEPTED,"error getting available schemeId for:" + schemeName  + ", err: " );
         }
         return updatedrecord;
@@ -883,6 +888,8 @@ public class SchemeIdService {
 
     public SchemeId getNextSchemeIdGen(String schemeName, SchemeIdGenerateRequest request) {
         Optional<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeName.toString());
+        //var nextId = schemeName.toUpperCase().getNextId(schemaIdBaseRecord.idBase);
+       // schemaIdBaseRecord.idBase = nextId;
         SchemeIdBase schemeIdBase = null;
         schemeIdBase.setIdBase(schemeIdBaseList.get().getIdBase());
         schemeIdBaseRepository.save(schemeIdBase);

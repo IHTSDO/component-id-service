@@ -4,25 +4,38 @@ import com.sun.istack.NotNull;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.IdClass;
 import javax.persistence.Table;
+import java.io.Serializable;
 
 @Entity
 @Table(name="permissionsnamespace")
-public class PermissionsNamespace {
+@IdClass(PermissionsNamespacePK.class)
+public class PermissionsNamespace implements Serializable {
     @Id
-    private int namespace=0;
+    private Integer namespace;
 
+    @Id
     @NotNull
     private String username;
 
     @NotNull
     private String role;
 
-    public int getNamespace() {
+    public PermissionsNamespace() {
+    }
+
+    public PermissionsNamespace(Integer namespace, String username, String role) {
+        this.namespace = namespace;
+        this.username = username;
+        this.role = role;
+    }
+
+    public Integer getNamespace() {
         return namespace;
     }
 
-    public PermissionsNamespace setNamespace(int namespace) {
+    public PermissionsNamespace setNamespace(Integer namespace) {
         this.namespace = namespace;
         return this;
     }

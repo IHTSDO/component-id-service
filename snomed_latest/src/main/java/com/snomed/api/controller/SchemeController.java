@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 @Api(tags = "Scheme", value = "Scheme")
 @RestController
+@RequestMapping(path = "/api")
 public class SchemeController {
 
     @Autowired
@@ -38,12 +39,12 @@ public class SchemeController {
     }
 
     @GetMapping("/schemes")
-    public ResponseEntity<List<Scheme>> getSchemes(@RequestParam String token) throws APIException {
+    public ResponseEntity<List<SchemeIdBase>> getSchemes(@RequestParam String token) throws APIException {
         return ResponseEntity.ok(schemeService.getSchemes(token));
     }
 
     @GetMapping("/schemes/{schemeName}")
-    public ResponseEntity<Scheme> getScheme(@RequestParam String token,@PathVariable String schemeName) throws APIException {
+    public ResponseEntity<SchemeIdBase> getScheme(@RequestParam String token,@PathVariable String schemeName) throws APIException {
         return ResponseEntity.ok(schemeService.getScheme(token,schemeName));
     }
 

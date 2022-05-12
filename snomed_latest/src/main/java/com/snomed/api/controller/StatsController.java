@@ -5,15 +5,13 @@ import com.snomed.api.exception.APIException;
 import com.snomed.api.service.SctidService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @Api(tags = "Stats", value = "Stats")
 @RestController
+@RequestMapping(path = "/api")
 public class StatsController {
 
         @Autowired

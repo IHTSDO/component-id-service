@@ -173,10 +173,17 @@ public class SctidService {
             UserDTO userObj = bulkSctidService.getAuthenticatedUser();
             if (bulkSctidService.isAbleUser("false", userObj)) {
                 Map<String, Object> queryObject = new HashMap();
-                if (!namespace.isEmpty() && null != namespace) {
+                if (null != namespace) {
                     queryObject.put("namespace", namespace);
                 }
+                if(null!=limit && null!=skip)
                 sctList = this.findSctWithIndexAndLimit(queryObject, limit, skip);
+                else
+                    sctList = this.findSctWithIndexAndLimit(queryObject, null, null);
+                if(sctList.size()>0)
+                    return sctList;
+                else
+                    return Collections.EMPTY_LIST;
                 /*Sctid sct = (Sctid) sctList.get(0);
                 sct.setSctid(sctList.get(0).getSctid());
                 sct.setAuthor(sctList.get(0).getAuthor());
@@ -201,7 +208,6 @@ public class SctidService {
         } else {
             throw new APIException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
         }
-        return sctList;
     }
 
     public SctWithSchemeResponseDTO getSctWithId(String token, String sctid, String includeAdditionalIds) throws APIException {
@@ -235,7 +241,7 @@ public class SctidService {
         List<Sctid> sctList;
         var limitR = 100;
         var skipTo = 0;
-        if (!limit.isEmpty() && null != limit)
+        if (null != limit)
             limitR = Integer.parseInt(limit);
         if (null != skip)
             skipTo = Integer.parseInt(skip);
@@ -253,11 +259,16 @@ public class SctidService {
         String sql;
         if ((limitR > 0) && (skipTo == 0)) {
             //sql = "SELECT * FROM sctId" + swhere + " order by sctid limit " + limit;
-
-            sql = "Select * FROM sctid USE INDEX (nam_par_st)" + swhere + " order by sctid limit " + limit;
+if(swhere!="")
+            sql = "Select * FROM sctid USE INDEX (nam_par_st)" + swhere + " order by sctid limit " + limitR;
+else
+    sql = "Select * FROM sctid " + swhere + " order by sctid limit " + limitR;
         } else {
             //sql = "SELECT * FROM sctId" + swhere + " order by sctid";
+            if(swhere!="")
             sql = "Select * FROM sctid USE INDEX (nam_par_st)" + swhere + " order by sctid";
+            else
+                sql = "Select * FROM sctid " + swhere + " order by sctid";
         }
         Query genQuery = entityManager.createNativeQuery(sql,Sctid.class);
         System.out.println("genQuery:"+genQuery);
@@ -269,7 +280,7 @@ public class SctidService {
             List<Sctid> newRows = new ArrayList<>();
             for (var i = 0; i < resultList.size(); i++) {
                 if (i >= skipTo) {
-                    if (null != limit && limitR > 0 && limitR < cont) {
+                    if ((limitR > 0) && (limitR < cont)) {
                         break;
                     }
                     newRows.add(resultList.get(i));
@@ -463,7 +474,7 @@ public class SctidService {
                             sctRec.setJobId(null);
                             output = sctidRepository.save(sctRec);
                         } else {
-                            throw new APIException(HttpStatus.ACCEPTED, "Cannot release SCTID:" + request.getSctid() + ", current status: " + sctRec.getStatus());
+                            throw new APIException(HttpStatus.BAD_REQUEST, "Cannot release SCTID:" + request.getSctid() + ", current status: " + sctRec.getStatus());
                         }
                     }
 
@@ -519,7 +530,7 @@ public class SctidService {
                             sctRec.setJobId(null);
                             output = sctidRepository.save(sctRec);
                         } else {
-                            throw new APIException(HttpStatus.ACCEPTED, "Cannot publish SCTID:" + request.getSctid() + ", current status: " + sctRec.getStatus());
+                            throw new APIException(HttpStatus.BAD_REQUEST, "Cannot publish SCTID:" + request.getSctid() + ", current status: " + sctRec.getStatus());
                         }
                     }
 
@@ -624,7 +635,7 @@ public class SctidService {
             sctList = this.findSctWithIndexAndLimit(queryObject, "1", null);
             if (sctList.size() > 0) {
                 var newStatus = stateMachine.getNewStatus(sctList.get(0).getStatus(), action);
-                if (!newStatus.isBlank()) {
+                if (null!=newStatus) {
                     if (null != generationData.getSystemId() && generationData.getSystemId().trim() != "") {
                         sctList.get(0).setSystemId(generationData.getSystemId());
                     }
@@ -638,11 +649,11 @@ public class SctidService {
                     sctList.get(0).setModified_at(new Date());
                     sctOutput = sctidRepository.save(sctList.get(0));
                 } else {
-                    // sctIdDM.counterMode(generationData, action);
+                     sctIdDM.counterMode(generationData, action);
                 }
             } else {
                 //throw new APIException(HttpStatus.ACCEPTED,"error getting available partitionId:" + generationData.getPartitionId() + " and namespace:" + generationData.getNamespace() + ", err: ");
-                //sctIdDM.counterMode(generationData, action);
+                sctIdDM.counterMode(generationData, action);
             }
         } else {
             throw new APIException(HttpStatus.BAD_REQUEST, "Request Cannot be Empty");
@@ -718,7 +729,7 @@ public class SctidService {
         schemeIdRecords = this.findSchemeWithIndexAndLimit(queryObject, "1", null);
         if(schemeIdRecords.size()>0) {
             var newStatus = stateMachine.getNewStatus(schemeIdRecords.get(0).getStatus(), action);
-            if (!newStatus.isBlank()) {
+            if (null!=newStatus) {
 
                 if (null != generationData.getSystemId() && generationData.getSystemId().trim() != "") {
                     schemeIdRecords.get(0).setSystemId(generationData.getSystemId());
@@ -797,7 +808,7 @@ public class SctidService {
             SchemeId updatedrecord;
             if (schemeIdRecord != null) {
                 var newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(), reserve);
-                if (!newStatus.isBlank()) {
+                if (null!=newStatus) {
 
                     if (null != request.getSystemId() && request.getSystemId().trim() != "") {
                         schemeIdRecord.setSystemId(request.getSystemId());

@@ -15,7 +15,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Api(tags = "SCTIDS", value = "SCTIDS")
-@Controller
+@RestController
+@RequestMapping(path = "/api")
 public class SctidController {
 //Test Comment
     @Autowired

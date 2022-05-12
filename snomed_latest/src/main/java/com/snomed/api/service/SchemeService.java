@@ -3,13 +3,13 @@ package com.snomed.api.service;
 import com.snomed.api.controller.SecurityController;
 import com.snomed.api.controller.dto.Scheme;
 import com.snomed.api.controller.dto.UserDTO;
-import com.snomed.api.domain.PermissionsNamespace;
 import com.snomed.api.domain.PermissionsScheme;
 import com.snomed.api.domain.SchemeIdBase;
 import com.snomed.api.domain.SchemeName;
 import com.snomed.api.exception.APIException;
 import com.snomed.api.repository.PermissionsSchemeRepository;
 import com.snomed.api.repository.SchemeIdBaseRepository;
+import net.bytebuddy.description.type.RecordComponentList;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,10 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class SchemeService {
@@ -117,46 +114,52 @@ public class SchemeService {
 
 
     //@GetMapping("/schemes")
-    public List<Scheme> getSchemes(String token) throws APIException {
+    public List<SchemeIdBase> getSchemes(String token) throws APIException {
         if (bulkSctidService.authenticateToken(token)) return this.getSchemesAll(token);
         else throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
     }
 
-    public List<Scheme> getSchemesAll(String token) throws APIException {
+    public List<SchemeIdBase> getSchemesAll(String token) throws APIException {
         List<Scheme> schemeList = new ArrayList<>();
         List<SchemeIdBase> schemeIdBase = schemeIdBaseRepository.findAll();
+        List<SchemeIdBase> finalList = new ArrayList();
         if (schemeIdBase != null) {
-            for (SchemeIdBase schemeIdBase1 : schemeIdBase) {
+           /* for (SchemeIdBase schemeIdBase1 : schemeIdBase) {
                 Scheme schemeObj = new Scheme(schemeIdBase1.getScheme(), schemeIdBase1.getIdBase());
                 schemeList.add(schemeObj);
-            }
-
+            }*/
+            finalList = schemeIdBase;
+        }
+        else
+        {
+            finalList = Collections.EMPTY_LIST;
         }
 
-        return schemeList;
+        return finalList;
     }
 
 
     //@GetMapping("/schemes/{schemeName}")
-    public Scheme getScheme(String token, String schemeName) throws APIException {
+    public SchemeIdBase getScheme(String token, String schemeName) throws APIException {
         if (bulkSctidService.authenticateToken(token)) return this.getSchemeAll(token,schemeName);
         else throw new APIException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
     }
 
-    public Scheme getSchemeAll(String token,String scheme) throws APIException {
-
+    public SchemeIdBase getSchemeAll(String token,String scheme) throws APIException {
 
         Optional<SchemeIdBase> schemeIdBase = schemeIdBaseRepository.findByScheme(scheme);
-        Scheme schemeObj=new Scheme();
+       /* Scheme schemeObj=new Scheme();
 
         if(schemeIdBase.isPresent()){
             SchemeIdBase schemeIdBase1=schemeIdBase.get();
              schemeObj= new Scheme(schemeIdBase1.getScheme(),schemeIdBase1.getIdBase());
-        }
+        }*/
 
-        logger.info("Get All Scheme - ", schemeObj);
-
-        return schemeObj;
+        logger.info("Get All Scheme - ", schemeIdBase);
+if(null!=schemeIdBase.get())
+        return schemeIdBase.get();
+else
+    return new SchemeIdBase();
     }
 
     //updateScheme
@@ -198,5 +201,61 @@ public class SchemeService {
         return null;
     }
 
+    /* Method for "/schemes/{schemeName}/permissions" */
+    public List<PermissionsScheme> getPermissionForScheme(String token, String schemeName) throws APIException {
+        List permissionsListFinal;
+        if (bulkSctidService.authenticateToken(token))
+        {
+            List<PermissionsScheme> permissionsSchemeList = permissionsSchemeRepository.findByScheme(schemeName);
+            if(permissionsSchemeList.size()>0)
+                permissionsListFinal = permissionsSchemeList;
+            else
+                permissionsListFinal = Collections.EMPTY_LIST;
+        }
+        else {
+            throw new APIException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
+        }
+        return permissionsListFinal;
+    }
+    /** method for Authorization Controller*/
+    public String deleteSchemesPermissions(String token,String schemeName,String username) throws APIException {
+        if (bulkSctidService.authenticateToken(token))
+        {
+            UserDTO userObj = this.getAuthenticatedUser();
+            if (this.isAbleToEdit(SchemeName.valueOf(schemeName), userObj)) {
+                JSONObject response = new JSONObject();
+               permissionsSchemeRepository.deleteBySchemeAndUsername(schemeName,username);
+                    response.put("message", "success");
+                return response.toString();
+            }
+            else {
+                throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
+            }
+        }
+        else {
+            throw new APIException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
+        }
+    }
+
+    public String createSchemesPermissions (String token, String schemeName,
+                                              String username, String role) throws APIException {
+        if (bulkSctidService.authenticateToken(token))
+        {
+            UserDTO userObj = this.getAuthenticatedUser();
+            if (this.isAbleToEdit(SchemeName.valueOf(schemeName), userObj)) {
+                JSONObject response = new JSONObject();
+                PermissionsScheme permissionsScheme = new PermissionsScheme(schemeName,username,role);
+                PermissionsScheme permissionsScheme1 = permissionsSchemeRepository.save(permissionsScheme);
+                response.put("message", "success");
+                return response.toString();
+            }
+            else {
+                throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
+            }
+        }
+        else {
+            throw new APIException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
+        }
+    }
 
 }

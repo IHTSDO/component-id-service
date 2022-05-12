@@ -101,7 +101,7 @@ function loginWithCredentials(credentials, callback, rememberMe) {
                 }
             });
             if (canEnter){
-            //alert("inside canEnter");
+           // alert("inside canEnter");
                 cookieJson.adminUser = admin;
                 cookieJson.managerUser = manager;
                 cookieJson = JSON.stringify(cookieJson);

@@ -30,6 +30,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 @Api(tags = "SCTIDS - Bulk Operations", value = "SCTIDS - Bulk Operations")
 @RestController
+@RequestMapping(path = "/api")
 public class BulkSctidController {
     @Autowired
     private BulkSctidService service;

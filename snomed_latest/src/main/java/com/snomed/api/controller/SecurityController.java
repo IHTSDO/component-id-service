@@ -24,6 +24,7 @@ import java.util.*;
 @Api(tags = "Authentication", value = "Authentication")
 //This class is under modification, code is under Draft version. Null or empty checks will be handled in next version.
 @RestController
+@RequestMapping(path = "/api")
 public class SecurityController {
 
     @Autowired
@@ -133,11 +134,41 @@ return this.authenticate();
     @RequestMapping(value = "/loginUI", method = RequestMethod.POST,
             consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
             produces = {MediaType.APPLICATION_JSON_VALUE})
-    public @ResponseBody LoginResponseDto loginFromUI(LoginCredentialsDto credentialsDto) throws JsonProcessingException {
-        return this.validateUser(servletResponse);
+    public @ResponseBody LoginResponseDto loginFromUI(LoginCredentialsDto credentialsDto) throws JsonProcessingException, APIException {
+        return this.validateUser(credentialsDto,servletResponse);
     }
 
     @Cacheable(value="token-cache")
+    @GetMapping("/login")
+    public @ResponseBody LoginResponseDto validateUser(LoginCredentialsDto credentialsDto, HttpServletResponse resp) throws JsonProcessingException,APIException {
+        LoginResponseDto responseDto = new LoginResponseDto();
+        String uri = authenticateUrl;
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        System.out.println("roles from Prop:"+userProperties.getRoles().get(0));
+        UserDTO dto = new UserDTO(credentialsDto.getUsername(),credentialsDto.getPassword(),"","","","", new ArrayList<>());
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        String userAsJson = ow.writeValueAsString(dto);
+        HttpEntity<?> request = new HttpEntity<>(userAsJson,headers);
+        ResponseEntity response;
+        try {
+            response = restTemplate.exchange(uri, HttpMethod.POST, request, ResponseEntity.class);
+        }
+        catch(Exception e)
+        {
+throw new APIException(HttpStatus.UNAUTHORIZED,"Account with name <"+ credentialsDto.getUsername() + "> failed to authenticate: User <"+credentialsDto.getUsername()+"> does not exist");
+        }
+            System.out.println("cookies:" + response.getHeaders().get("set-cookie"));
+            String[] cookieArr = response.getHeaders().get("set-cookie").get(0).split(";");
+            String[] arr = cookieArr[0].split(";")[0].split("=");
+            Cookie cookie = new Cookie(arr[0], arr[1]);
+            resp.addCookie(cookie);
+            responseDto.setToken(response.getHeaders().get("set-cookie").get(0).split(";")[0].split("=")[1]);
+        return responseDto;
+    }
+
+    /*@Cacheable(value="token-cache")
     @GetMapping("/login")
     public @ResponseBody LoginResponseDto validateUser(HttpServletResponse resp
     ) throws JsonProcessingException {
@@ -159,7 +190,7 @@ return this.authenticate();
         resp.addCookie(cookie);
         responseDto.setToken(response.getHeaders().get("set-cookie").get(0).split(";")[0].split("=")[1]);
         return responseDto;
-    }
+    }*/
 
     @CacheEvict(value="account-cache", key="'AccountCache'+#request.getCookies()[0]",condition = "request.getCookies()[0]==''")
     @Cacheable(value="account-cache", key="'AccountCache'+#request.getCookies()[0]",condition = "request.getCookies()[0]!=''")

@@ -18,6 +18,7 @@ import java.util.List;
 
 @Api(tags = "Namespaces", value = "Namespaces")
 @RestController
+@RequestMapping(path = "/api")
 public class NamespaceController {
 
     @Autowired
