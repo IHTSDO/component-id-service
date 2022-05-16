@@ -206,7 +206,12 @@ public class SCTIdDM {
     public Integer getNextNumber(SctidGenerate operation) throws APIException {
         Optional<Partitions> partitionsList =partitionsRepository.findById(new PartitionsPk(operation.getNamespace(),operation.getPartitionId()));
         Integer nextNumber = ((partitionsList.get().getSequence()) +1);
-        return nextNumber;
+        Partitions partitions = new Partitions(operation.getNamespace(),operation.getPartitionId(),nextNumber);
+        Partitions partOutput = partitionsRepository.save(partitions);
+        if(null!=partOutput)
+            return nextNumber;
+                    else
+                        return null;
     }
 
     public String computeSCTID(SctidGenerate operation,Integer sequence){

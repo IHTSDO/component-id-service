@@ -34,6 +34,9 @@ public class BulkSchemeIdService {
     private BulkSctidService bulkSctidService;
 
     @Autowired
+    private SctIdHelper sctIdHelper;
+
+    @Autowired
     private PermissionsSchemeRepository permissionsSchemeRepository;
     private SchemeIdHelper schemeIdHelper;
     private SNOMEDID snomedid;
@@ -197,7 +200,7 @@ public class BulkSchemeIdService {
                     modified_at = (Date) mapObj.getValue();
                 }
             }
-            bulkSchemeIdRepository.insertWithQuery(scheme, schemeId.toString(), sequence, checkDigit, systemId, status, author, software, expirationDate, jobId, created_at, modified_at);
+            bulkSchemeIdRepository.insertWithQuery(String.valueOf(scheme), schemeId.toString(), sequence, checkDigit, systemId, status, author, software, expirationDate, jobId, created_at, modified_at);
            Optional<SchemeId> schemeDB =bulkSchemeIdRepository.findBySchemeAndSchemeId(String.valueOf(scheme), schemeId.toString());
             schemeIdBulk = schemeDB.get();
             return schemeIdBulk;
@@ -232,13 +235,13 @@ public class BulkSchemeIdService {
         Map<String, Object> schemeIdRecord = new LinkedHashMap<>();
         schemeIdRecord.put("scheme", schemeName);
         schemeIdRecord.put("schemeId", diffSchemeId);
-        schemeIdRecord.put("sequence", schemeIdHelper.getSequence(diffSchemeId));
-        schemeIdRecord.put("checkDigit", schemeIdHelper.getCheckDigit(diffSchemeId));
+        schemeIdRecord.put("sequence", sctIdHelper.getSequence(diffSchemeId));
+        schemeIdRecord.put("checkDigit", sctIdHelper.getCheckDigit(diffSchemeId));
 
         if (systemId != "null") {
             schemeIdRecord.put("systemId", systemId);
         } else {
-            schemeIdRecord.put("systemId", schemeIdHelper.guid());
+            schemeIdRecord.put("systemId", sctIdHelper.guid());
         }
         return schemeIdRecord;
     }

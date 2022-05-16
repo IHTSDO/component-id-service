@@ -36,7 +36,7 @@ public class NamespaceController {
     }
 
     @PostMapping("/sct/namespaces")
-    public ResponseEntity<String> createNamespace(@RequestParam String token, @RequestBody Namespace namespace) throws APIException {
+    public ResponseEntity<String> createNamespace(@RequestParam String token, @RequestBody NamespaceDto namespace) throws APIException,ParseException {
         return ResponseEntity.ok(namespaceService.createNamespace(token,namespace));
     }
 

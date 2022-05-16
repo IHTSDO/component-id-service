@@ -649,11 +649,11 @@ else
                     sctList.get(0).setModified_at(new Date());
                     sctOutput = sctidRepository.save(sctList.get(0));
                 } else {
-                     sctIdDM.counterMode(generationData, action);
+                    sctOutput = sctIdDM.counterMode(generationData, action);
                 }
             } else {
                 //throw new APIException(HttpStatus.ACCEPTED,"error getting available partitionId:" + generationData.getPartitionId() + " and namespace:" + generationData.getNamespace() + ", err: ");
-                sctIdDM.counterMode(generationData, action);
+                sctOutput = sctIdDM.counterMode(generationData, action);
             }
         } else {
             throw new APIException(HttpStatus.BAD_REQUEST, "Request Cannot be Empty");

@@ -59,20 +59,17 @@ public class SctIdHelper {
     static int[] InverseD5 = { 0, 4, 3, 2, 1, 5, 6, 7, 8, 9 };
 
     public static boolean validSCTId(String sctId){
-        init();
         // var validSCTId=function (sctid){
+        init();
         String tmp=sctId;
         try{
             var cd = Character.toString((tmp.charAt((tmp.length()) -1)));
             var num = tmp.substring(0,(tmp.length()-1));
             var ret=verhoeffCompute(num);
             return parseInt(cd)==ret;
-           // return true;
         }catch (Exception e){
             System.out.println("parser error:" + e);
         }
-
-
         return false;
     }
 

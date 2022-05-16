@@ -120,11 +120,6 @@
 			<artifactId>handlebars</artifactId>
 			<version>4.0.5</version>
 		</dependency>
-		<dependency>
-			<groupId>com.github.jknack</groupId>
-			<artifactId>handlebars-springmvc</artifactId>
-			<version>4.0.6</version>
-		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.thymeleaf/thymeleaf -->
 		<!--<dependency>
 			<groupId>org.springframework.boot</groupId>

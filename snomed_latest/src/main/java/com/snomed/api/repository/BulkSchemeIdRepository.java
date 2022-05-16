@@ -27,7 +27,7 @@ public interface BulkSchemeIdRepository extends JpaRepository<SchemeId, Integer>
             "values(:scheme,:schemeId, :sequence,:checkDigit,:systemId,:status,:author,:software,:expirationDate,:jobId,:created_at,:modified_at)",
             nativeQuery = true)
     public void insertWithQuery(
-            @Param("scheme") SchemeName scheme,
+            @Param("scheme") String scheme,
             @Param("schemeId") String schemeId,
             @Param("sequence") Integer sequence,
             @Param("checkDigit") Integer checkDigit,

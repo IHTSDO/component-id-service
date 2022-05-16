@@ -40,6 +40,9 @@ public class SchemeIdService {
     private SchemeIdHelper schemeIdHelper;
 
     @Autowired
+    private SctIdHelper sctIdHelper;
+
+    @Autowired
     private AuthenticateToken authenticateTokenService;
 
     @Autowired
@@ -204,7 +207,7 @@ public class SchemeIdService {
         if (isAbleUser(schemeName, userObj)) {
             if (schemeid == null || schemeid == "") {
 
-                throw new APIException(HttpStatus.UNAUTHORIZED, "Not a valid schemeid");
+                throw new APIException(HttpStatus.UNAUTHORIZED, "Not valid schemeId.");
             } else {
                 boolean isValidScheme = false;
                 if ("SNOMEDID".equalsIgnoreCase(schemeName.toString().toUpperCase())) {
@@ -212,6 +215,9 @@ public class SchemeIdService {
                 } else if ("CTV3ID".equalsIgnoreCase(schemeName.toString().toUpperCase())) {
                     isValidScheme = CTV3ID.validSchemeId(schemeid);
                 }
+                if(!isValidScheme)
+                    throw new APIException(HttpStatus.UNAUTHORIZED, "Not valid schemeId.");
+            }
                 System.out.println("bulkScheme:"+bulkSchemeIdRepository);
                 schemeIdObj = bulkSchemeIdRepository.findBySchemeAndSchemeId(schemeName, schemeid);
                 if (schemeIdObj.isEmpty()) {
@@ -222,7 +228,7 @@ public class SchemeIdService {
                 {
                    return  schemeIdObj.get();
                 }
-            }
+
         } else {
             throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
@@ -239,9 +245,9 @@ public class SchemeIdService {
         Map<String, Object> schemeIdRecord = new LinkedHashMap<>();
         schemeIdRecord.put("scheme", schemeName);
         schemeIdRecord.put("schemeId", schemeid);
-        schemeIdRecord.put("sequence", schemeIdHelper.getSequence(schemeid));
-        schemeIdRecord.put("checkDigit", schemeIdHelper.getCheckDigit(schemeid));
-        schemeIdRecord.put("systemId", schemeIdHelper.guid());
+        schemeIdRecord.put("sequence", sctIdHelper.getSequence(schemeid));
+        schemeIdRecord.put("checkDigit", sctIdHelper.getCheckDigit(schemeid));
+        schemeIdRecord.put("systemId", sctIdHelper.guid());
         return schemeIdRecord;
     }
 
@@ -309,8 +315,8 @@ public class SchemeIdService {
             SchemeId schemeIdObj=new SchemeId(scheme, schemeId.toString(), sequence, checkDigit, systemId, status, author, software, expirationDate, jobId, created_at, modified_at);
             //SchemeId schemeIdObj=new SchemeId("SNOMEDID","A-22335", 0, 0, "systemId0op0o0o0k0k0", "Available", null, null, null, null, null, null);
 
-            bulkSchemeIdRepository.save(schemeIdObj);
-          //  bulkSchemeIdRepository.insertWithQuery(scheme, schemeId.toString(), sequence, checkDigit, systemId, status, author, software, expirationDate, jobId, created_at, modified_at);
+          //  bulkSchemeIdRepository.save(schemeIdObj);
+            bulkSchemeIdRepository.insertWithQuery(scheme, schemeId.toString(), sequence, checkDigit, systemId, status, author, software, expirationDate, jobId, created_at, modified_at);
             schemeIdBulk =  bulkSchemeIdRepository.findBySchemeAndSchemeId(scheme.toString(), schemeId.toString());
             return schemeIdBulk.get();
         } catch (Exception e) {
@@ -758,7 +764,7 @@ public class SchemeIdService {
             generateRequest.setComment(request.getComment());
 
             if (request.getSystemId().isBlank() || request.getSystemId().trim() == "") {
-                generateRequest.setSystemId(schemeIdHelper.guid());
+                generateRequest.setSystemId(sctIdHelper.guid());
                 generateRequest.setAutoSysId(true);
             }
             generateRequest.setAuthor(generateRequest.getAuthor());
@@ -768,17 +774,17 @@ public class SchemeIdService {
                     return schemeIdRec;
                 } else {
                     //request body change
-                    setNewSchemeIdRecordGen(schemeName, generateRequest, stateMachine.actions.get("generate"));
+                    return setNewSchemeIdRecordGen(schemeName, generateRequest, stateMachine.actions.get("generate"));
                 }
             } else {
-                setNewSchemeIdRecordGen(schemeName, generateRequest, stateMachine.actions.get("generate"));
+                return setNewSchemeIdRecordGen(schemeName, generateRequest, stateMachine.actions.get("generate"));
             }
 
         } else {
             throw new APIException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
-        return schemeIdRec;
+        //return schemeIdRec;
     }
 
     public SchemeId getSchemeIdBySystemId(String schemeName, String systemId) {
@@ -838,16 +844,16 @@ public class SchemeIdService {
                 schemeIdRecords.get(0).setExpirationDate(null);
                 schemeIdRecords.get(0).setComment(request.getComment());
                 schemeIdRecords.get(0).setJobId(null);
-                // outputSchemeRec = bulkSchemeIdRepository.save(schemeIdRecords.get(0));
-                updatedrecord = updateSchemeIdRecord(schemeIdRecords.get(0), schemeName);
+                updatedrecord = bulkSchemeIdRepository.save(schemeIdRecords.get(0));
+                //updatedrecord = updateSchemeIdRecord(schemeIdRecords.get(0), schemeName);
                 return updatedrecord;
             } else {
-                counterModeGen(schemeName, request, generate);
+                updatedrecord = counterModeGen(schemeName, request, generate);
             }
         }
         else if(schemeIdRecords.size() ==0)
         {
-            counterModeGen(schemeName, request, generate);
+            return counterModeGen(schemeName,request,generate);
         }
         else {
             throw new APIException(HttpStatus.ACCEPTED,"error getting available schemeId for:" + schemeName  + ", err: " );
@@ -857,10 +863,10 @@ public class SchemeIdService {
     }
 
     public SchemeId counterModeGen(String schemeName, SchemeIdGenerateRequest request, String reserve) throws APIException {
-        SchemeId newSchemeId = getNextSchemeIdGen(schemeName, request);
+        String newSchemeId = getNextSchemeIdGen(schemeName, request);
+        SchemeId updatedrecord = null;
         if (newSchemeId != null) {
             SchemeId schemeIdRecord = getSchemeIdsByschemeIdList(schemeName, newSchemeId.toString());
-            SchemeId updatedrecord;
             if (schemeIdRecord != null) {
                 var newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(), reserve);
                 if (null!=newStatus) {
@@ -875,25 +881,30 @@ public class SchemeIdService {
                     schemeIdRecord.setExpirationDate(null);
                     schemeIdRecord.setComment(request.getComment());
                     schemeIdRecord.setJobId(null);
-                    // outputSchemeRec = bulkSchemeIdRepository.save(schemeIdRecords.get(0));
-                    updatedrecord = updateSchemeIdRecord(schemeIdRecord, schemeName.toString());
-                    return updatedrecord;
+                    updatedrecord = bulkSchemeIdRepository.save(schemeIdRecord);
+                    //updatedrecord = updateSchemeIdRecord(schemeIdRecord, schemeName.toString());
                 } else {
                     counterModeGen(schemeName, request, reserve);
                 }
             }
         }
-        return newSchemeId;
+        return updatedrecord;
     }
 
-    public SchemeId getNextSchemeIdGen(String schemeName, SchemeIdGenerateRequest request) {
+    public String getNextSchemeIdGen(String schemeName, SchemeIdGenerateRequest request) {
         Optional<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeName.toString());
-        //var nextId = schemeName.toUpperCase().getNextId(schemaIdBaseRecord.idBase);
+        String nextId="";
+        if(schemeName.toUpperCase().equalsIgnoreCase("SNOMEDID"))
+        nextId = SNOMEDID.getNextId(schemeIdBaseList.get().getIdBase());
+        else if(schemeName.toUpperCase().equalsIgnoreCase("CTV3ID"))
+            nextId = CTV3ID.getNextId(schemeIdBaseList.get().getIdBase());
        // schemaIdBaseRecord.idBase = nextId;
-        SchemeIdBase schemeIdBase = null;
-        schemeIdBase.setIdBase(schemeIdBaseList.get().getIdBase());
-        schemeIdBaseRepository.save(schemeIdBase);
-        return null;//List<SchmeId>
+        SchemeIdBase schemeIdBase = new SchemeIdBase(schemeName.toUpperCase(),nextId);
+        SchemeIdBase schemeId = schemeIdBaseRepository.save(schemeIdBase);
+if(null!=schemeId)
+        return nextId;
+else
+    return null;
     }
 
     //registerSchemeId
@@ -925,7 +936,7 @@ public class SchemeIdService {
             registerRequest.setComment(request.getComment());
 
             if (request.getSystemId() != null || request.getSystemId() == "") {
-                registerRequest.setSystemId(schemeIdHelper.guid());
+                registerRequest.setSystemId(sctIdHelper.guid());
                 registerRequest.setAutoSysId(true);
                 registerRequest.setAuthor(registerRequest.getAuthor());
                 if (!registerRequest.isAutoSysId()) {
