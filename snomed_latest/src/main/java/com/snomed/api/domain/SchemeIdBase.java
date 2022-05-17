@@ -1,39 +1,25 @@
 package com.snomed.api.domain;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "schemeidbase")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class SchemeIdBase {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @NotNull
     private String scheme;
 
-private String idBase;
+    private String idBase;
 
-    public SchemeIdBase(String scheme, String idBase) {
-        this.scheme = scheme;
-        this.idBase = idBase;
-    }
-
-    public SchemeIdBase() {
-    }
-
-    public String getScheme() {
-        return scheme;
-    }
-
-    public void setScheme(String scheme) {
-        this.scheme = scheme;
-    }
-
-    public String getIdBase() {
-        return idBase;
-    }
-
-    public void setIdBase(String idBase) {
-        this.idBase = idBase;
-    }
 }

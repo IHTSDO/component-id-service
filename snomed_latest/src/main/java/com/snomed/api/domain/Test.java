@@ -1,31 +1,21 @@
 package com.snomed.api.domain;
 
+import lombok.*;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name="testtbl")
+@Table(name = "testtbl")
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class Test {
     @Id
     private String testid;
     private String testName;
-
-    public String getTestid() {
-        return testid;
-    }
-
-    public void setTestid(String testid) {
-        this.testid = testid;
-    }
-
-    public String getTestName() {
-        return testName;
-    }
-
-    public void setTestName(String testName) {
-        this.testName = testName;
-    }
 
     @Override
     public String toString() {
@@ -35,10 +25,4 @@ public class Test {
                 '}';
     }
 
-    public Test(String testid, String testName) {
-        this.testid = testid;
-        this.testName = testName;
-    }
-
-    protected Test(){}
 }

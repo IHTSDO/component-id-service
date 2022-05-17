@@ -1,6 +1,10 @@
 package com.snomed.api.domain;
 
 import com.sun.istack.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -9,9 +13,14 @@ import javax.persistence.Table;
 import java.io.Serializable;
 
 @Entity
-@Table(name="permissionsnamespace")
+@Table(name = "permissionsnamespace")
 @IdClass(PermissionsNamespacePK.class)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class PermissionsNamespace implements Serializable {
+
     @Id
     private Integer namespace;
 
@@ -22,39 +31,4 @@ public class PermissionsNamespace implements Serializable {
     @NotNull
     private String role;
 
-    public PermissionsNamespace() {
-    }
-
-    public PermissionsNamespace(Integer namespace, String username, String role) {
-        this.namespace = namespace;
-        this.username = username;
-        this.role = role;
-    }
-
-    public Integer getNamespace() {
-        return namespace;
-    }
-
-    public PermissionsNamespace setNamespace(Integer namespace) {
-        this.namespace = namespace;
-        return this;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public PermissionsNamespace setUsername(String username) {
-        this.username = username;
-        return this;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public PermissionsNamespace setRole(String role) {
-        this.role = role;
-        return this;
-    }
 }

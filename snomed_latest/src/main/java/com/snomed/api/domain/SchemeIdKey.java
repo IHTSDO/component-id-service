@@ -1,19 +1,16 @@
 package com.snomed.api.domain;
 
-import java.io.Serializable;
-import java.util.Date;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
+@NoArgsConstructor
+@AllArgsConstructor
 public class SchemeIdKey implements Serializable {
 
     private String scheme;
+
     private String schemeId;
 
-    public SchemeIdKey() {
-    }
-
-    public SchemeIdKey(String scheme, String schemeId) {
-        this.scheme = scheme;
-        this.schemeId = schemeId;
-
-    }
 }

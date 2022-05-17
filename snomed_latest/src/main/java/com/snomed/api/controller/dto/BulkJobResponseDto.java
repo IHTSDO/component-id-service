@@ -36,7 +36,7 @@ public class BulkJobResponseDto {
         this.status = bulkJob.getStatus();
         this.request = bulkJob.getRequest();
         this.created_at = bulkJob.getCreated_at();
-        this.requested_at = bulkJob.getRequested_at();
+        this.requested_at = bulkJob.getModified_at();
         //this.log = bulkJob.getLog();
     }
 

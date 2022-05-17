@@ -293,7 +293,7 @@ public class BulkSctidService {
                         bulk.setStatus("0");
                         bulk.setRequest(regString);
                         bulk.setCreated_at(new Date());
-                        bulk.setRequested_at(new Date());
+                        bulk.setModified_at(new Date());
                     } catch (JsonProcessingException e) {
                         throw new APIException(HttpStatus.BAD_REQUEST, e.getMessage());
                     }
@@ -612,7 +612,7 @@ public class BulkSctidService {
                             bulk.setStatus("0");
                             bulk.setRequest(regString);
                             bulk.setCreated_at(new Date());
-                            bulk.setRequested_at(new Date());
+                            bulk.setModified_at(new Date());
                         } catch (JsonProcessingException e) {
                             throw new APIException(HttpStatus.BAD_REQUEST, e.getMessage());
                         }
@@ -687,7 +687,7 @@ public class BulkSctidService {
                             bulk.setStatus("0");
                             bulk.setRequest(regString);
                             bulk.setCreated_at(new Date());
-                            bulk.setRequested_at(new Date());
+                            bulk.setModified_at(new Date());
                         } catch (JsonProcessingException e) {
                             throw new APIException(HttpStatus.BAD_REQUEST, e.getMessage());
                         }
@@ -764,7 +764,7 @@ public class BulkSctidService {
                             bulk.setStatus("0");
                             bulk.setRequest(regString);
                             bulk.setCreated_at(new Date());
-                            bulk.setRequested_at(new Date());
+                            bulk.setModified_at(new Date());
                         } catch (JsonProcessingException e) {
                             throw new APIException(HttpStatus.BAD_REQUEST, e.getMessage());
                         }
@@ -843,7 +843,7 @@ public class BulkSctidService {
                     bulkJob.setStatus("0");
                     bulkJob.setRequest(regString);
                     bulkJob.setCreated_at(new Date());
-                    bulkJob.setRequested_at(new Date());
+                    bulkJob.setModified_at(new Date());
                 } catch (JsonProcessingException e) {
                     throw new APIException(HttpStatus.BAD_REQUEST, e.getMessage());
                 }

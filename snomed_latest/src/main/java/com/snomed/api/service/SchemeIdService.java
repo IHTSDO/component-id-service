@@ -624,7 +624,7 @@ public class SchemeIdService {
     public SchemeId counterMode(SchemeName schemeName, SchemeIdReserveRequest request, String reserve) throws APIException {
         SchemeId newSchemeId = getNextSchemeId(schemeName, request);
         if (newSchemeId != null) {
-            SchemeId schemeIdRecord = getSchemeIdsByschemeIdList(schemeName.schemeName, newSchemeId.toString());
+            SchemeId schemeIdRecord = getSchemeIdsByschemeIdList(schemeName.toString(), newSchemeId.toString());
             SchemeId updatedrecord;
             if (schemeIdRecord != null) {
                 var newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(), reserve);
