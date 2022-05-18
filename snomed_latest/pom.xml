@@ -8,17 +8,13 @@
 		<version>2.6.4</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.example</groupId>
-	<artifactId>snomed</artifactId>
+	<groupId>org.snomed</groupId>
+	<artifactId>cis</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>war</packaging>
-	<name>snomed</name>
-	<description>Demo project for Spring Boot snomed</description>
+	<name>cis</name>
+	<description>Snomed Component Identifier Service</description>
 	<properties>
 		<java.version>11</java.version>
-		<start-class>
-			com.snomed.api.SnomedApplication
-		</start-class>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -81,14 +77,6 @@
 			<groupId>io.springfox</groupId>
 			<artifactId>springfox-swagger-ui</artifactId>
 			<version>2.9.2</version>
-		</dependency>
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-entitymanager</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.github.jknack</groupId>
