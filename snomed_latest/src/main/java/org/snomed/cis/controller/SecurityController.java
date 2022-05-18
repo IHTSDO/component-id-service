@@ -11,6 +11,7 @@ import org.snomed.cis.exception.CisException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponses;
+import org.snomed.cis.pojo.Config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
@@ -34,16 +35,7 @@ public class SecurityController {
     private HttpServletResponse servletResponse;
 
     @Autowired
-    private UserProperties userProperties;
-
-    @Value("${snomed.devIms.authenticate}")
-    String authenticateUrl;
-
-    @Value("${snomed.devIms.logout}")
-    String logoutUrl;
-
-    @Value("${snomed.devIms.account}")
-    String accountUrl;
+    private Config config;
 
     @ApiOperation(
             value="Authentication & Authorization",
@@ -143,11 +135,10 @@ return this.authenticate();
     @GetMapping("/login")
     public @ResponseBody LoginResponseDto validateUser(LoginCredentialsDto credentialsDto, HttpServletResponse resp) throws JsonProcessingException, CisException {
         LoginResponseDto responseDto = new LoginResponseDto();
-        String uri = authenticateUrl;
+        String uri = config.getIms().getUrl().getBase()+config.getIms().getUrl().getAuthenticate();
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        System.out.println("roles from Prop:"+userProperties.getRoles().get(0));
         UserDTO dto = new UserDTO(credentialsDto.getUsername(),credentialsDto.getPassword(),"","","","", new ArrayList<>());
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String userAsJson = ow.writeValueAsString(dto);
@@ -198,7 +189,7 @@ throw new CisException(HttpStatus.UNAUTHORIZED,"Account with name <"+ credential
     @GetMapping("/isValidUser")
     @ResponseBody
     public ResponseEntity<UserDTO> isValidUser(HttpServletRequest request) throws CisException {
-        String uri = accountUrl;
+        String uri = config.getIms().getUrl().getBase()+config.getIms().getUrl().getAccount();
         Cookie[] cookieAr = request.getCookies();
         Cookie cookie= cookieAr[0];
         System.out.println("Cookie from REQUEST Name:"+cookie.getName());
@@ -221,7 +212,7 @@ throw new CisException(HttpStatus.UNAUTHORIZED,"Account with name <"+ credential
 @ResponseBody
     public String logoutUser(HttpServletRequest request,HttpServletResponse logoutResp)
 {
-    String uri = logoutUrl;
+    String uri = config.getIms().getUrl().getBase()+config.getIms().getUrl().getLogout();
     Cookie[] logoutCookieAr = request.getCookies();
     Cookie logoutCookie= logoutCookieAr[0];
     RestTemplate restTemplate = new RestTemplate();

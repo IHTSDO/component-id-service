@@ -1,0 +1,21 @@
+{
+  "ims": {
+    "url": {
+      "base": "https://dev-ims.ihtsdotools.org/api",
+      "authenticate": "/authenticate",
+      "logout": "/account/logout",
+      "account": "/account"
+    },
+    "creds": {
+      "login": "keerthika",
+      "password": "Crowd@3392",
+      "firstName": "keerthika",
+      "lastName": "santhanam",
+      "email": "keerthika.s@telliant.net",
+      "langKey": "en",
+      "roles": [
+        "user"
+      ]
+    }
+  }
+}

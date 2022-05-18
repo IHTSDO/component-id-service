@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:mysql://192.168.1.161:3306/idservice?useUnicode=true&useJDBCCompliantTimezone
+    username: Telliant
+    password: Telliant@345
+  jpa:
+    properties:
+      hibernate:
+        dialect:  org.hibernate.dialect.MySQL5InnoDBDialect
