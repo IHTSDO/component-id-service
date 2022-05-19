@@ -1,6 +1,8 @@
 package org.snomed.cis.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snomed.cis.controller.dto.CleanUpServiceResponse;
 import org.snomed.cis.domain.BulkJob;
 import org.snomed.cis.exception.CisException;
@@ -16,6 +18,9 @@ import java.util.List;
 @RestController
 @RequestMapping(path = "/api")
 public class BulkJobsController {
+
+    private final Logger logger = LoggerFactory.getLogger(BulkJobsController.class);
+
     @Autowired
     BulkJobService bulkJobService;
 
@@ -33,6 +38,7 @@ public class BulkJobsController {
     @GetMapping("/bulk/jobs")
     @ResponseBody
     public List<BulkJob> getJobs(@RequestParam String token) throws CisException {
+        logger.info("Request received - token :: {}", token);
         return bulkJobService.getJobs(token);
     }
 
