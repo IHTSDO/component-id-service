@@ -3,6 +3,9 @@ spring:
     url: jdbc:mysql://192.168.1.161:3306/idservice?useUnicode=true&useJDBCCompliantTimezone
     username: Telliant
     password: Telliant@345
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
   jpa:
     properties:
       hibernate:
