@@ -130,7 +130,7 @@
                         <configuration>
                             <sourceType>json</sourceType>
                             <sourcePaths>
-                                <sourcePath>${basedir}/src/main/resources/${activeProfile}/json/config.json</sourcePath>
+                                <sourcePath>${basedir}/src/main/resources/json/config.json</sourcePath>
                             </sourcePaths>
                             <targetPackage>org.snomed.cis.pojo</targetPackage>
                             <includeAdditionalProperties>false</includeAdditionalProperties>
@@ -145,48 +145,4 @@
         </plugins>
     </build>
 
-    <profiles>
-        <profile>
-            <id>dev</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <activeProfile>dev</activeProfile>
-            </properties>
-            <build>
-                <resources>
-                    <resource>
-                        <directory>src/main/resources/${activeProfile}</directory>
-                    </resource>
-                </resources>
-            </build>
-        </profile>
-        <profile>
-            <id>stage</id>
-            <properties>
-                <activeProfile>stage</activeProfile>
-            </properties>
-            <build>
-                <resources>
-                    <resource>
-                        <directory>src/main/resources/${activeProfile}</directory>
-                    </resource>
-                </resources>
-            </build>
-        </profile>
-        <profile>
-            <id>prod</id>
-            <properties>
-                <activeProfile>prod</activeProfile>
-            </properties>
-            <build>
-                <resources>
-                    <resource>
-                        <directory>src/main/resources/${activeProfile}</directory>
-                    </resource>
-                </resources>
-            </build>
-        </profile>
-    </profiles>
 </project>
