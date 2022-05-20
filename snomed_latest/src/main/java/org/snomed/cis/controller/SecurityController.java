@@ -1,13 +1,8 @@
 package org.snomed.cis.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponses;
-import org.snomed.cis.controller.dto.LoginCredentialsDto;
-import org.snomed.cis.controller.dto.LoginResponseDto;
 import org.snomed.cis.controller.dto.UserDTO;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.pojo.Config;
@@ -124,15 +119,15 @@ public class SecurityController {
     }
 
     //@PostMapping("/api/login")
-    @RequestMapping(value = "/loginUI", method = RequestMethod.POST,
+    /*@RequestMapping(value = "/loginUI", method = RequestMethod.POST,
             consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
             produces = {MediaType.APPLICATION_JSON_VALUE})
     public @ResponseBody
     LoginResponseDto loginFromUI(LoginCredentialsDto credentialsDto) throws JsonProcessingException, CisException {
         return this.validateUser(credentialsDto, servletResponse);
-    }
+    }*/
 
-    @Cacheable(value = "token-cache")
+   /* @Cacheable(value = "token-cache")
     @GetMapping("/login")
     public @ResponseBody
     LoginResponseDto validateUser(LoginCredentialsDto credentialsDto, HttpServletResponse resp) throws JsonProcessingException, CisException {
@@ -158,7 +153,7 @@ public class SecurityController {
         resp.addCookie(cookie);
         responseDto.setToken(response.getHeaders().get("set-cookie").get(0).split(";")[0].split("=")[1]);
         return responseDto;
-    }
+    }*/
 
     /*@Cacheable(value="token-cache")
     @GetMapping("/login")
@@ -189,7 +184,7 @@ public class SecurityController {
     @GetMapping("/isValidUser")
     @ResponseBody
     public ResponseEntity<UserDTO> isValidUser(HttpServletRequest request) throws CisException {
-        String uri = config.getIms().getUrl().getBase() + config.getIms().getUrl().getAccount();
+        String uri = config.getIms().getUrl().getBase() + config.getIms().getUrl().getAuthenticate();
         Cookie[] cookieAr = request.getCookies();
         Cookie cookie = cookieAr[0];
         System.out.println("Cookie from REQUEST Name:" + cookie.getName());

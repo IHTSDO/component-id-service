@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import java.io.IOException;
 
 @Controller
+@RequestMapping("/ui")
 public class ViewsController {
    // @Autowired
     //HandlebarsViewResolver handlebarsViewResolver;

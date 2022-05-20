@@ -8,7 +8,7 @@ import org.snomed.cis.domain.BulkJob;
 import org.snomed.cis.domain.SchemeId;
 import org.snomed.cis.domain.Sctid;
 import org.snomed.cis.exception.CisException;
-import org.snomed.cis.helper.ModelsConstants;
+import org.snomed.cis.util.ModelsConstants;
 import org.snomed.cis.repository.BulkJobRepository;
 import org.snomed.cis.repository.SctidRepository;
 import org.json.JSONObject;

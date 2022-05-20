@@ -1,4 +1,4 @@
-package org.snomed.cis.helper;
+package org.snomed.cis.util;
 
 import org.springframework.stereotype.Component;
 
