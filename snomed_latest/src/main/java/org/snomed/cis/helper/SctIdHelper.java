@@ -401,8 +401,14 @@ public class SctIdHelper {
                 status = (String) it.getValue();
             }
         }
-        sctidRepository.insertWithQuery(sctid, sequence, namespace, partitionId, checkDigit, systemId, status);
-        Sctid sct = sctidRepository.getSctidsById(sctid);
+        //refactor changes
+        Sctid sctid1 = Sctid.builder().sctid(sctid).sequence(sequence).namespace(namespace)
+                .partitionId(partitionId).checkDigit(checkDigit).systemId(systemId).status(status)
+                .build();
+        sctidRepository.save(sctid1);
+       // sctidRepository.insertWithQuery(sctid, sequence, namespace, partitionId, checkDigit, systemId, status);
+        Sctid sct = sctidRepository.findById(sctid).get();
+        //refactor changes
         return sct;
     }
 

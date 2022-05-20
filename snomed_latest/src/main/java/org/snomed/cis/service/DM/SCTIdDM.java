@@ -96,7 +96,10 @@ public class SCTIdDM {
         if (!sctIdHelper.validSCTId(sctId)) {
             throw new CisException(HttpStatus.ACCEPTED, "Not valid SCTID.");
         } else {
-            Sctid sctRec = sctidRepository.getSctidsById(sctId);
+            //refactor Changes
+           Optional<Sctid> sctid = sctidRepository.findById(sctId);
+            Sctid sctRec = !(sctid.isEmpty()) ? sctid.get() : null;
+            //refactor Changes
             if (null != sctRec) {
                 newSct = sctRec;
             } else {

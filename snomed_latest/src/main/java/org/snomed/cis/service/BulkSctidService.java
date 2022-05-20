@@ -39,9 +39,6 @@ public class BulkSctidService {
     private PermissionsSchemeRepository permissionsSchemeRepository;
 
     @Autowired
-    private TestRepository testRepo;
-
-    @Autowired
     private SctIdHelper sctIdHelper;
 
     @Autowired
@@ -55,18 +52,6 @@ public class BulkSctidService {
 
     @Autowired
     private SecurityController securityController;
-
-    public List<Sctid> getAllSct() {
-        return repo.getAllSctidsUsingQL();
-    }
-
-    public Sctid getSctById(String id) {
-        return repo.getSctidsById(id);
-    }
-
-    public List<Sctid> getAllTest() {
-        return repo.getAllSctidsUsingQL();
-    }
 
     public List<Sctid> postSctByIds(String token, SctIdRequest ids) throws CisException {
         if (authenticateToken(token))
@@ -193,17 +178,20 @@ public class BulkSctidService {
                 status = (String) it.getValue();
             }
         }
-        Sctid sctObj = new Sctid();
+        //refactor changes
+        /*Sctid sctObj = new Sctid();
         sctObj.setSctid(sctid);
         sctObj.setSequence(sequence);
         sctObj.setNamespace(namespace);
         sctObj.setPartitionId(partitionId);
         sctObj.setCheckDigit(checkDigit);
         sctObj.setSystemId(systemId);
-        sctObj.setStatus(status);
+        sctObj.setStatus(status);*/
+        Sctid sctObj = Sctid.builder().sctid(sctid).sequence(sequence).namespace(namespace)
+                .partitionId(partitionId).checkDigit(checkDigit).systemId(systemId).status(status)
+                .build();
+        //refactor changes
         Sctid sct = repo.save(sctObj);
-        //repo.insertWithQuery(sctid, sequence, namespace, partitionId, checkDigit, systemId, status);
-        // Sctid sct = this.getSctById(sctid);
         return sct;
     }
 
@@ -229,8 +217,9 @@ public class BulkSctidService {
         String[] systemIdsArray = systemIdStr.replaceAll("\\s+", "").split(",");
 
         /* fetch the sctid id record with systemId and namespaceId */
-        return repo.findSctidBySystemIds(Arrays.asList(systemIdsArray), namespaceId);
-        // return repo.findBySystemIdAndNamespace(systemIdStr, namespaceId);
+
+       // return repo.findSctidBySystemIds(Arrays.asList(systemIdsArray), namespaceId);
+         return repo.findBySystemIdInAndNamespace(Arrays.asList(systemIdsArray), namespaceId);
 
     }
 

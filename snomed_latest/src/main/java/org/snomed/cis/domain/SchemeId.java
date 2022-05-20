@@ -15,14 +15,14 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@IdClass(SchemeIdKey.class)
 public class SchemeId implements Serializable {
-
+    @Id
     @NotNull
     private String scheme;
 
     @NotNull
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private String schemeId;
 
     private Integer sequence;

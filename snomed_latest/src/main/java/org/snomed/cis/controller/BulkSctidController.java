@@ -65,11 +65,6 @@ public class BulkSctidController {
 
     }
 
-    @GetMapping("/getAllTest")
-    public List<Sctid> getAllTestLst() {
-        return service.getAllTest();
-    }
-
     @GetMapping("sct/namespace/{namespaceId}/systemIds")
     public ResponseEntity<List<Sctid>> getSctidBySystemIds(@RequestParam String token, @PathVariable Integer namespaceId, @RequestParam("systemIds") String systemIdStr) {
         return ResponseEntity.ok(service.getSctidBySystemIds(token, systemIdStr, namespaceId));

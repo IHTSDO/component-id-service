@@ -313,11 +313,12 @@ public class SchemeIdService {
                     }
                 }
             }
-            SchemeId schemeIdObj = new SchemeId(scheme, schemeId.toString(), sequence, checkDigit, systemId, status, author, software, expirationDate, jobId, created_at, modified_at);
+            //refactor changes
+            SchemeId schemeIdObj = SchemeId.builder().scheme(scheme).schemeId(schemeId).sequence(sequence).checkDigit(checkDigit).systemId(systemId).status(status).author(author).software(software).expirationDate(expirationDate).jobId(jobId).build();
             //SchemeId schemeIdObj=new SchemeId("SNOMEDID","A-22335", 0, 0, "systemId0op0o0o0k0k0", "Available", null, null, null, null, null, null);
-
-            //  bulkSchemeIdRepository.save(schemeIdObj);
-            bulkSchemeIdRepository.insertWithQuery(scheme, schemeId.toString(), sequence, checkDigit, systemId, status, author, software, expirationDate, jobId, created_at, modified_at);
+              bulkSchemeIdRepository.save(schemeIdObj);
+            //bulkSchemeIdRepository.insertWithQuery(scheme, schemeId.toString(), sequence, checkDigit, systemId, status, author, software, expirationDate, jobId, created_at, modified_at);
+            //refactor changes
             schemeIdBulk = bulkSchemeIdRepository.findBySchemeAndSchemeId(scheme.toString(), schemeId.toString());
             return schemeIdBulk.get();
         } catch (Exception e) {

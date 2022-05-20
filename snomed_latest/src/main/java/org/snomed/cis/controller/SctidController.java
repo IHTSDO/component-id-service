@@ -33,12 +33,6 @@ public class SctidController {
             // @ApiResponse(code = 404, message = "Branch not found", response = RestApiError.class)
     })
 
-    @GetMapping("/test/getsct")
-    @ResponseBody
-    public Sctid getTestSct(@RequestParam String sctId) {
-        return sctidService.getTestSct(sctId);
-    }
-
     @GetMapping("/sct/ids")
     @ResponseBody
     public List<Sctid> getSct(@RequestParam String token, @RequestParam(name = "limit", required = false) String limit, @RequestParam(name = "skip", required = false) String skip, @RequestParam(name = "namespace", required = false) String namespace) throws CisException, JsonProcessingException {

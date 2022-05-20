@@ -235,10 +235,6 @@ public class SctidService {
         return sctWithSchemeResponseDTO;
     }
 
-    public Sctid getTestSct(String sctId) {
-        return sctidRepository.findById(sctId).get();
-    }
-
     public List<Sctid> findSctWithIndexAndLimit(Map<String, Object> queryObject, String limit, String skip) {
         List<Sctid> sctList;
         var limitR = 100;
@@ -296,7 +292,9 @@ public class SctidService {
 
     public SctWithSchemeResponseDTO getSctCommon(SctWithSchemeResponseDTO output, String sctid, String includeAdditionalIds) throws CisException {
         if (sctIdHelper.validSCTId(sctid)) {
-            Sctid sctRec = sctidRepository.getSctidsById(sctid);
+            //refactor changes
+            Sctid sctRec = sctidRepository.findById(sctid).get();
+            //refactor changes
             List<SchemeId> respSchemeList = new ArrayList<>();
             Sctid newSct = new Sctid();
             if (null != sctRec) {
