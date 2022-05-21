@@ -11,17 +11,17 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CisException.class)
     public ResponseEntity<?> handleCisException(CisException exception) {
-        return new ResponseEntity<>(ErrorResponse.builder().message(exception.getErrorMessage()).build(), exception.getStatus());
+        return new ResponseEntity<>(ErrorResponse.builder().statusCode(exception.getStatus().value()).message(exception.getErrorMessage()).build(), exception.getStatus());
     }
 
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
     public ResponseEntity<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException exception) {
-        return new ResponseEntity<>(ErrorResponse.builder().message(exception.getFieldError().getDefaultMessage()).build(), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(ErrorResponse.builder().statusCode(HttpStatus.BAD_REQUEST.value()).message(exception.getFieldError().getDefaultMessage()).build(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleException(Exception exception) {
-        return new ResponseEntity<>(ErrorResponse.builder().message(exception.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(ErrorResponse.builder().statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value()).message(exception.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 }

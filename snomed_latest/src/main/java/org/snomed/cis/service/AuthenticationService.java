@@ -1,8 +1,9 @@
 package org.snomed.cis.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONObject;
-import org.snomed.cis.controller.dto.LoginRequestDto;
-import org.snomed.cis.controller.dto.LoginResponseDto;
+import org.snomed.cis.controller.dto.*;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.pojo.Config;
 import org.snomed.cis.util.CookieUtil;
@@ -35,12 +36,57 @@ public class AuthenticationService {
         payload.put("password", loginRequestDto.getPassword());
         ResponseEntity<String> imsResponse = requestManager.postRequest(url, null, payload.toString());
 
-        //fetch cookie value, cookie string with updated domain
+        //token response value
         String token = cookieUtil.fetchTokenCookieValue(imsResponse);
+
+        //set token value in cookie - Uncomment below block if set-cookie header has to be set in response
+        /*
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.add(HttpHeaders.SET_COOKIE, cookieUtil.updateDomain(cookieUtil.fetchTokenCookie(imsResponse), httpRequest.getServerName()));
+         */
 
-        return ResponseEntity.status(HttpStatus.OK).headers(responseHeaders).body(LoginResponseDto.builder().token(token).build());
+        return ResponseEntity.status(HttpStatus.OK)/*.headers(responseHeaders)*/.body(LoginResponseDto.builder().token(token).build());
+    }
+
+    public ResponseEntity<EmptyDto> logout(LogoutRequestDto logoutRequestDto) throws CisException {
+        String token = logoutRequestDto.getToken();
+        String url = config.getIms().getUrl().getBase() + config.getIms().getUrl().getLogout();
+
+        requestManager.postRequestWithoutPayload(url, getHttpHeaders(token));
+
+        return new ResponseEntity<>(new EmptyDto(), HttpStatus.OK);
+    }
+
+    public ResponseEntity<AuthenticateResponseDto> authenticate(AuthenticateRequestDto authenticateRequestDto) throws CisException {
+        String token = authenticateRequestDto.getToken();
+        String url = config.getIms().getUrl().getBase() + config.getIms().getUrl().getAuthenticate();
+
+        ResponseEntity<String> imsResponse = requestManager.getRequest(url, getHttpHeaders(token));
+
+        ImsGetAccountResponseDto imsGetAccountResponseDto = null;
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            imsGetAccountResponseDto = objectMapper.readValue(imsResponse.getBody(), ImsGetAccountResponseDto.class);
+        } catch (JsonProcessingException e) {
+            throw new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "error while parsing ims get account response");
+        }
+
+        AuthenticateResponseDto authenticateResponseDto = AuthenticateResponseDto.builder()
+                .email(imsGetAccountResponseDto.getEmail())
+                .name(imsGetAccountResponseDto.getLogin())
+                .displayName(imsGetAccountResponseDto.getLogin())
+                .firstName(imsGetAccountResponseDto.getFirstName())
+                .lastName(imsGetAccountResponseDto.getLastName())
+                .langKey(imsGetAccountResponseDto.getLangKey())
+                .roles(imsGetAccountResponseDto.getRoles())
+                .build();
+        return new ResponseEntity<>(authenticateResponseDto, HttpStatus.OK);
+    }
+
+    private HttpHeaders getHttpHeaders(String token) {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Cookie", config.getIms().getCookieName() + "=" + token);
+        return httpHeaders;
     }
 
 }

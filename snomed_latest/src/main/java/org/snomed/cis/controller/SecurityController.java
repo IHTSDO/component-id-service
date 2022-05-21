@@ -64,11 +64,11 @@ public class SecurityController {
         return result;
     }
 
-    @PostMapping("/authenticate")
+   /* @PostMapping("/authenticate")
     @ResponseBody
     public UserDTO getUserFromToken(@RequestBody String token) throws CisException {
         return this.authenticate();
-    }
+    }*/
 
     @GetMapping("/users/{username}/groups/")
     @ResponseBody

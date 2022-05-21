@@ -28,17 +28,19 @@ public class RequestManager {
     /*
      POST request without payload
      */
-    public ResponseEntity<String> postRequestWithoutPayload(String url) throws CisException {
-        logger.debug("RequestManager.postRequestWithoutPayload() {}", url);
+    public ResponseEntity<String> postRequestWithoutPayload(String url, MultiValueMap<String, String> headers) throws CisException {
+        logger.debug("RequestManager.postRequestWithoutPayload() {} :: {}", url, headers);
 
         try {
             ResponseEntity<String> response = WebClient.builder().baseUrl(url).build().post()
+                    .headers(httpHeaders -> Optional.ofNullable(headers).ifPresent(h -> h.forEach(httpHeaders::addAll)))
                     .retrieve()
                     .toEntity(String.class)
                     .block();
             logger.info("RequestManager.postRequestWithoutPayload() - Response :: {}", response);
             return response;
         } catch (WebClientResponseException e) {
+            logger.error("error postRequestWithoutPayload()", e);
             throw new CisException(e.getStatusCode(), e.getResponseBodyAsString());
         }
     }
@@ -48,9 +50,7 @@ public class RequestManager {
 
         try {
             ResponseEntity<String> response = WebClient.builder().baseUrl(url).build().post()
-                    .headers(httpHeaders -> {
-                        Optional.ofNullable(headers).ifPresent(h -> h.forEach(httpHeaders::addAll));
-                    })
+                    .headers(httpHeaders -> Optional.ofNullable(headers).ifPresent(h -> h.forEach(httpHeaders::addAll)))
                     .header("Content-Type", "application/json")
                     .header("accept", "application/json")
                     .bodyValue(payload)
@@ -60,19 +60,22 @@ public class RequestManager {
             logger.info("RequestManager.postRequest() - Response :: {}", response);
             return response;
         } catch (WebClientResponseException e) {
+            logger.error("error postRequest()", e);
             throw new CisException(HttpStatus.INTERNAL_SERVER_ERROR, e.getResponseBodyAsString());
         }
     }
 
-    public ResponseEntity<String> getRequest(String url) throws CisException {
+    public ResponseEntity<String> getRequest(String url, MultiValueMap<String, String> headers) throws CisException {
         try {
             ResponseEntity<String> response = WebClient.builder().baseUrl(url).build().get()
+                    .headers(httpHeaders -> Optional.ofNullable(headers).ifPresent(h -> h.forEach(httpHeaders::addAll)))
                     .retrieve()
                     .toEntity(String.class)
                     .block();
             logger.info("RequestManager.getRequest() - Response :: {}", response);
             return response;
         } catch (WebClientResponseException e) {
+            logger.error("error getRequest()", e);
             throw new CisException(e.getStatusCode(), e.getResponseBodyAsString());
         }
     }

@@ -1,5 +1,6 @@
 package org.snomed.cis.security;
 
+import org.json.JSONObject;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,10 +23,23 @@ public class TokenAuthenticationFilter extends AbstractAuthenticationProcessingF
     @Override
     public Authentication attemptAuthentication(
             HttpServletRequest request, HttpServletResponse response) {
-        Optional<String> tokenOptional = Optional.ofNullable(request.getParameter("token"));
-
-        Token authToken =
-                tokenOptional.map(Token::new).orElse(new Token());
+        String uri = request.getRequestURI();
+        Optional<String> tokenOptional = Optional.empty();
+        if (uri.equalsIgnoreCase("/api/authenticate") || uri.equalsIgnoreCase("/api/logout")) {
+            String requestBody = "";
+            try {
+                requestBody = new String(request.getInputStream().readAllBytes());//.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+                JSONObject requestBodyJson = new JSONObject(requestBody);
+                if (requestBodyJson.has("token")) {
+                    tokenOptional = Optional.ofNullable(requestBodyJson.getString("token"));
+                }
+            } catch (IOException e) {
+                tokenOptional = Optional.empty();
+            }
+        } else {
+            tokenOptional = Optional.ofNullable(request.getParameter("token"));
+        }
+        Token authToken = tokenOptional.map(Token::new).orElse(new Token());
 
         return getAuthenticationManager().authenticate(authToken);
     }

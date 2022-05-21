@@ -9,6 +9,8 @@ import lombok.Setter;
 @Builder
 public class ErrorResponse {
 
+    private Integer statusCode;
+
     private String message;
 
 }

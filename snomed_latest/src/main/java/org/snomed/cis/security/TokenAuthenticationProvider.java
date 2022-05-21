@@ -1,8 +1,16 @@
 package org.snomed.cis.security;
 
+import org.snomed.cis.controller.dto.AuthenticateRequestDto;
+import org.snomed.cis.controller.dto.AuthenticateResponseDto;
+import org.snomed.cis.exception.CisException;
 import org.snomed.cis.pojo.Config;
+import org.snomed.cis.service.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -23,35 +31,32 @@ public class TokenAuthenticationProvider implements AuthenticationProvider {
     @Autowired
     private HttpServletRequest httpRequest;
 
+    @Autowired
+    private AuthenticationService authenticationService;
+
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
 
         String token = (String) authentication.getPrincipal();
 
-        if("tPy_xQFRWN7Cw6Ra3BuhPwAAAAAAAIACa2VlcnRoaWth".equals(token)){
-            List<GrantedAuthority> authorities = new LinkedList<>();
-            authorities.add(new SimpleGrantedAuthority("USER"));
-            authorities.add(new SimpleGrantedAuthority("ADMIN"));
-            return new Token(token, "ABCD", true, authorities);
-        }else{
-            throw new BadCredentialsException("API Key is invalid");
+        if (token == null) {
+            throw new AuthenticationCredentialsNotFoundException("token not provided");
         }
-        /*
-        if (ObjectUtils.isEmpty(apiKey)) {
-            throw new InsufficientAuthenticationException("No API key in request");
-        } else {
-            if (config.getApiKey().getAdmin().equals(apiKey)) {
-                List<GrantedAuthority> authorities = new LinkedList<>();
-                authorities.add(new SimpleGrantedAuthority("ADMIN"));
-                return new ApiKeyAuthenticationToken(apiKey, -1L, true, authorities);
+        ResponseEntity<AuthenticateResponseDto> authenticateResponse;
+        try {
+            authenticateResponse = authenticationService.authenticate(new AuthenticateRequestDto(token));
+        } catch (CisException e) {
+            if (HttpStatus.INTERNAL_SERVER_ERROR.equals(e.getStatus())) {
+                throw new AuthenticationServiceException(e.getErrorMessage());
             }
-            Optional<ApiKeys> apiKeysOptional = apiKeysRepository.findFirstByApiKey(apiKey);
-            if (apiKeysOptional.isPresent()) {
-                return new ApiKeyAuthenticationToken(apiKey, apiKeysOptional.get().getUser().getId(), true, AuthorityUtils.NO_AUTHORITIES);
-            }
-            throw new BadCredentialsException("API Key is invalid");
+            throw new BadCredentialsException(e.getErrorMessage());
         }
-        */
+        AuthenticateResponseDto authenticateResponseDto = authenticateResponse.getBody();
+        List<GrantedAuthority> authorities = new LinkedList<>();
+        for (String role : authenticateResponseDto.getRoles()) {
+            authorities.add(new SimpleGrantedAuthority(role));
+        }
+        return new Token(token, authenticateResponseDto.getName(), true, authorities);
     }
 
     @Override
