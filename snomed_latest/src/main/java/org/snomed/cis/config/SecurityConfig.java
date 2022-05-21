@@ -13,6 +13,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.Collections;
 
 @Configuration
@@ -38,7 +39,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             "/ui/**", //ViewController
             "/admin/**", //UI resource
             "/info/**", //UI resource
-            "/api/login"
+            "/login"
     };
 
     @Override
@@ -55,7 +56,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .addFilterBefore(
                         new TokenAuthenticationFilter(authenticationManager()),
-                        AnonymousAuthenticationFilter.class);
+                        AnonymousAuthenticationFilter.class)
+                .logout(logout -> logout.permitAll()
+                        .logoutSuccessHandler((request, response, authentication) -> response.setStatus(HttpServletResponse.SC_OK)));
         httpSecurity.cors().and().csrf().disable();
     }
 
