@@ -1,5 +1,6 @@
 package org.snomed.cis.controller;
 
+import io.swagger.annotations.Api;
 import org.snomed.cis.controller.dto.*;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.service.AuthenticationService;
@@ -7,14 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
+@Api(tags = "Authentication", value = "Authentication")
 @RestController
-@RequestMapping("/api")
 public class AuthenticationController {
 
     @Autowired
@@ -34,5 +34,5 @@ public class AuthenticationController {
     public ResponseEntity<AuthenticateResponseDto> authenticate(@RequestBody @Valid AuthenticateRequestDto authenticateRequestDto) throws CisException {
         return authenticationService.authenticate(authenticateRequestDto);
     }
-    
+
 }
