@@ -39,7 +39,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             "/ui/**", //ViewController
             "/admin/**", //UI resource
             "/info/**", //UI resource
-            "/login"
+            "/users/login"
     };
 
     @Override
@@ -57,8 +57,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .addFilterBefore(
                         new TokenAuthenticationFilter(authenticationManager()),
                         AnonymousAuthenticationFilter.class)
-                .logout(logout -> logout.permitAll()
-                        .logoutSuccessHandler((request, response, authentication) -> response.setStatus(HttpServletResponse.SC_OK)));
+                /*.logout(logout -> logout.permitAll()
+                        .logoutSuccessHandler((request, response, authentication) -> response.setStatus(HttpServletResponse.SC_OK)))*/;
         httpSecurity.cors().and().csrf().disable();
     }
 
