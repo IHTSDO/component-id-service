@@ -23,8 +23,8 @@ public class AppConfig {
 
     @Bean
     public Config getConfig() throws IOException {
-        String fileName = "config-" + activeProfile + ".json";
-        InputStream configFileInputStream = new ClassPathResource("json/" + fileName).getInputStream();
+        String fileName = "config.json";
+        InputStream configFileInputStream = new ClassPathResource("json/" + activeProfile + "/" + fileName).getInputStream();
         String configFileContents = "";
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(configFileInputStream))) {
