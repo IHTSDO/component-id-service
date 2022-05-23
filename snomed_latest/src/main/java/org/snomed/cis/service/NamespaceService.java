@@ -278,15 +278,16 @@ public class NamespaceService {
 
         Namespace namespace = new Namespace();
         Optional<Namespace> namespaces = namespaceRepository.findById(namespaceId);
-        Namespace namespaceGet = namespaces.get();
+        Namespace namespaceGet = namespaces.isPresent()?namespaces.get():null;
 
-
-        namespaceGet.setOrganizationName(namespaceObj.getOrganizationName());
-        namespaceGet.setOrganizationAndContactDetails(namespaceObj.getOrganizationAndContactDetails());
-        namespaceGet.setDateIssued(null != namespaceObj.getDateIssued() ? LocalDateTime.parse(namespaceObj.getDateIssued(),dateTimeFormatter) : null);
-        namespaceGet.setEmail(namespaceObj.getEmail());
-        namespaceGet.setNotes(namespaceObj.getNotes());
-        namespaceGet.setIdPregenerate(namespaceObj.getIdPregenerate());
+if(null!=namespaceGet) {
+    namespaceGet.setOrganizationName(namespaceObj.getOrganizationName());
+    namespaceGet.setOrganizationAndContactDetails(namespaceObj.getOrganizationAndContactDetails());
+    namespaceGet.setDateIssued(null != namespaceObj.getDateIssued() ? LocalDateTime.parse(namespaceObj.getDateIssued(), dateTimeFormatter) : null);
+    namespaceGet.setEmail(namespaceObj.getEmail());
+    namespaceGet.setNotes(namespaceObj.getNotes());
+    namespaceGet.setIdPregenerate(namespaceObj.getIdPregenerate());
+}
 
        /* namespaceGet.setOrganizationName("test");
         namespaceGet.setOrganizationAndContactDetails("test");
@@ -443,6 +444,7 @@ public class NamespaceService {
         if (this.isAbletoEdit(Integer.valueOf(namespaceId), userObj)) {
 
             Optional<Partitions> partitions = partitionsRepository.findById(new PartitionsPk(namespaceIdint, partitionId));
+            if(partitions.isPresent())
             partitions.get().setSequence(Integer.parseInt(value));
             Partitions partResult = partitionsRepository.save(partitions.get());
             if ((partResult.getSequence()).equals(Integer.parseInt(value)))

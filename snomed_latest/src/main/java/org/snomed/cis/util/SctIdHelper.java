@@ -336,7 +336,7 @@ public class SctIdHelper {
 
         if (isValid == "true" && namespaceId != null) {
             Optional<Namespace> namespaceObj = namespaceRepository.findById(namespaceId);
-           if(null!=namespaceObj) {
+           if(namespaceObj.isPresent()) {
                checkResp.setNamespaceOrganization(namespaceObj.get().getOrganizationName());
                checkResp.setNamespaceContactEmail(namespaceObj.get().getEmail());
            }
@@ -405,11 +405,8 @@ public class SctIdHelper {
         Sctid sctid1 = Sctid.builder().sctid(sctid).sequence(sequence).namespace(namespace)
                 .partitionId(partitionId).checkDigit(checkDigit).systemId(systemId).status(status)
                 .build();
-        sctidRepository.save(sctid1);
-       // sctidRepository.insertWithQuery(sctid, sequence, namespace, partitionId, checkDigit, systemId, status);
-        Sctid sct = sctidRepository.findById(sctid).get();
+        return sctidRepository.save(sctid1);
         //refactor changes
-        return sct;
     }
 
     public Map<String,Object> getNewRecord(String sctIdInput)

@@ -98,7 +98,7 @@ public class SCTIdDM {
         } else {
             //refactor Changes
            Optional<Sctid> sctid = sctidRepository.findById(sctId);
-            Sctid sctRec = !(sctid.isEmpty()) ? sctid.get() : null;
+            Sctid sctRec = (sctid.isPresent()) ? sctid.get() : null;
             //refactor Changes
             if (null != sctRec) {
                 newSct = sctRec;
@@ -161,7 +161,9 @@ public class SCTIdDM {
 
     public Integer getNextNumber(SCTIDReserveRequest operation) throws CisException {
         Optional<Partitions> partitionsList = partitionsRepository.findById(new PartitionsPk(operation.getNamespace(), operation.getPartitionId()));
-        Integer nextNumber = ((partitionsList.get().getSequence()) + 1);
+        Integer nextNumber = null;
+        if(partitionsList.isPresent())
+            nextNumber = ((partitionsList.get().getSequence()) + 1);
         return nextNumber;
     }
 //requestbody change
@@ -211,13 +213,19 @@ public class SCTIdDM {
 
     public Integer getNextNumber(SctidGenerate operation) throws CisException {
         Optional<Partitions> partitionsList = partitionsRepository.findById(new PartitionsPk(operation.getNamespace(), operation.getPartitionId()));
-        Integer nextNumber = ((partitionsList.get().getSequence()) + 1);
-        Partitions partitions = new Partitions(operation.getNamespace(), operation.getPartitionId(), nextNumber);
-        Partitions partOutput = partitionsRepository.save(partitions);
-        if (null != partOutput)
-            return nextNumber;
+        if(partitionsList.isPresent()) {
+            Integer nextNumber = ((partitionsList.get().getSequence()) + 1);
+            Partitions partitions = new Partitions(operation.getNamespace(), operation.getPartitionId(), nextNumber);
+            Partitions partOutput = partitionsRepository.save(partitions);
+            if (null != partOutput)
+                return nextNumber;
+            else
+                return null;
+        }
         else
+        {
             return null;
+        }
     }
 
     public String computeSCTID(SctidGenerate operation, Integer sequence) {

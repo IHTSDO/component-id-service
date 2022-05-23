@@ -21,6 +21,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.servlet.http.HttpServletRequest;
+import java.io.ObjectInputFilter;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -66,6 +67,9 @@ public class SctidService {
     @Autowired
     static
     private BulkSchemeIdRepository bulkSchemeIdRepository;
+
+    @Autowired
+    private ObjectInputFilter.Config config;
 
     @Autowired
     private SchemeIdBaseRepository schemeIdBaseRepository;
@@ -293,7 +297,8 @@ public class SctidService {
     public SctWithSchemeResponseDTO getSctCommon(SctWithSchemeResponseDTO output, String sctid, String includeAdditionalIds) throws CisException {
         if (sctIdHelper.validSCTId(sctid)) {
             //refactor changes
-            Sctid sctRec = sctidRepository.findById(sctid).get();
+           // Sctid sctRec = sctidRepository.findById(sctid);
+            Sctid sctRec = ((sctidRepository.findById(sctid)).isPresent())?((sctidRepository.findById(sctid))).get():null;
             //refactor changes
             List<SchemeId> respSchemeList = new ArrayList<>();
             Sctid newSct = new Sctid();
@@ -826,6 +831,7 @@ public class SctidService {
     private SchemeId getNextSchemeId(SchemeName schemeName, SctidGenerate request) {
         Optional<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeName.toString());
         SchemeIdBase schemeIdBase = null;
+        if(schemeIdBaseList.isPresent())
         schemeIdBase.setIdBase(schemeIdBaseList.get().getIdBase());
         schemeIdBaseRepository.save(schemeIdBase);
         return null;//List<SchmeId>

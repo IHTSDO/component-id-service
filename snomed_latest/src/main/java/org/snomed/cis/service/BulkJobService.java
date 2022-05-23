@@ -151,9 +151,11 @@ public class BulkJobService {
     public BulkJob getJob(String token, Integer jobId) throws CisException {
         BulkJob result = null;
         if (bulkSctidService.authenticateToken(token)) {
-            BulkJob bulkJob = bulkJobRepository.findById(jobId).get();
-            if(bulkJob.getId() == jobId)
-                result = bulkJob;
+            BulkJob bulkJob = (bulkJobRepository.findById(jobId).isPresent())?bulkJobRepository.findById(jobId).get() : null;
+            if(null!=bulkJob) {
+                if (bulkJob.getId() == jobId)
+                    result = bulkJob;
+            }
             else
                 throw new CisException(HttpStatus.NOT_FOUND,"There is no result from Database for jobId"+jobId);
         }
@@ -167,7 +169,7 @@ public class BulkJobService {
         var t2 = new Date().getTime();
         List<Object> list = new ArrayList<>();
         if (bulkSctidService.authenticateToken(token)) {
-            BulkJob jobRecord = bulkJobRepository.findById(jobId).get();
+            BulkJob jobRecord = (bulkJobRepository.findById(jobId).isPresent())?(bulkJobRepository.findById(jobId).get()): null;
             if (null != jobRecord) {
                 JSONObject request = new JSONObject(jobRecord.getRequest());
                 if ((request.getString("model")).equalsIgnoreCase(ModelsConstants.SCHEME_ID)) {

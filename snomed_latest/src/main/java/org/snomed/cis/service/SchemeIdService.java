@@ -316,11 +316,9 @@ public class SchemeIdService {
             //refactor changes
             SchemeId schemeIdObj = SchemeId.builder().scheme(scheme).schemeId(schemeId).sequence(sequence).checkDigit(checkDigit).systemId(systemId).status(status).author(author).software(software).expirationDate(expirationDate).jobId(jobId).build();
             //SchemeId schemeIdObj=new SchemeId("SNOMEDID","A-22335", 0, 0, "systemId0op0o0o0k0k0", "Available", null, null, null, null, null, null);
-              bulkSchemeIdRepository.save(schemeIdObj);
-            //bulkSchemeIdRepository.insertWithQuery(scheme, schemeId.toString(), sequence, checkDigit, systemId, status, author, software, expirationDate, jobId, created_at, modified_at);
             //refactor changes
-            schemeIdBulk = bulkSchemeIdRepository.findBySchemeAndSchemeId(scheme.toString(), schemeId.toString());
-            return schemeIdBulk.get();
+           // schemeIdBulk = bulkSchemeIdRepository.findBySchemeAndSchemeId(scheme.toString(), schemeId.toString());
+            return bulkSchemeIdRepository.save(schemeIdObj);
         } catch (Exception e) {
             error = e.toString();
         }
@@ -649,6 +647,7 @@ public class SchemeIdService {
     private SchemeId getNextSchemeId(SchemeName schemeName, SchemeIdReserveRequest request) {
         Optional<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeName.toString());
         SchemeIdBase schemeIdBase = null;
+        if(schemeIdBaseList.isPresent())
         schemeIdBase.setIdBase(schemeIdBaseList.get().getIdBase());
         schemeIdBaseRepository.save(schemeIdBase);
         return null;//List<SchmeId>
@@ -886,10 +885,14 @@ public class SchemeIdService {
     public String getNextSchemeIdGen(String schemeName, SchemeIdGenerateRequest request) {
         Optional<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeName.toString());
         String nextId = "";
-        if (schemeName.toUpperCase().equalsIgnoreCase("SNOMEDID"))
+        if (schemeName.toUpperCase().equalsIgnoreCase("SNOMEDID")) {
+            if(schemeIdBaseList.isPresent())
             nextId = SNOMEDID.getNextId(schemeIdBaseList.get().getIdBase());
-        else if (schemeName.toUpperCase().equalsIgnoreCase("CTV3ID"))
+        }
+        else if (schemeName.toUpperCase().equalsIgnoreCase("CTV3ID")) {
+            if(schemeIdBaseList.isPresent())
             nextId = CTV3ID.getNextId(schemeIdBaseList.get().getIdBase());
+        }
         // schemaIdBaseRecord.idBase = nextId;
         SchemeIdBase schemeIdBase = new SchemeIdBase(schemeName.toUpperCase(), nextId);
         SchemeIdBase schemeId = schemeIdBaseRepository.save(schemeIdBase);

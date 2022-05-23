@@ -205,13 +205,14 @@ public class BulkSchemeIdService {
             //bulkSchemeIdRepository.insertWithQuery(String.valueOf(scheme), schemeId.toString(), sequence, checkDigit, systemId, status, author, software, expirationDate, jobId, created_at, modified_at);
             //refactor changes
             Optional<SchemeId> schemeDB = bulkSchemeIdRepository.findBySchemeAndSchemeId(String.valueOf(scheme), schemeId.toString());
-            schemeIdBulk = schemeDB.get();
+            schemeIdBulk = schemeDB.isPresent()?schemeDB.get():null;
             return schemeIdBulk;
         } catch (Exception e) {
             error = e.toString();
         }
         if (error != null) {
             Optional<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeIdBulk.getScheme().toString());
+
             if (error.indexOf("ER_DUP_ENTRY") > -1) {
                 if (error.indexOf("'PRIMARY'") > -1 /*&& ()*/) {
                     System.out.println("Trying to solve the primary key error during scheme id insert.");
