@@ -5,14 +5,15 @@ import org.snomed.cis.controller.SecurityController;
 import org.snomed.cis.controller.dto.*;
 import org.snomed.cis.domain.*;
 import org.snomed.cis.exception.CisException;
-import org.snomed.cis.util.SctIdHelper;
-import org.snomed.cis.util.StateMachine;
+import org.snomed.cis.pojo.Config;
 import org.snomed.cis.repository.BulkSchemeIdRepository;
 import org.snomed.cis.repository.NamespaceRepository;
 import org.snomed.cis.repository.SchemeIdBaseRepository;
 import org.snomed.cis.repository.SctidRepository;
 import org.snomed.cis.service.DM.SCTIdDM;
 import org.snomed.cis.service.DM.SchemeIdDM;
+import org.snomed.cis.util.SctIdHelper;
+import org.snomed.cis.util.StateMachine;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.servlet.http.HttpServletRequest;
-import java.io.ObjectInputFilter;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -69,7 +69,7 @@ public class SctidService {
     private BulkSchemeIdRepository bulkSchemeIdRepository;
 
     @Autowired
-    private ObjectInputFilter.Config config;
+    private Config config;
 
     @Autowired
     private SchemeIdBaseRepository schemeIdBaseRepository;
@@ -297,8 +297,8 @@ public class SctidService {
     public SctWithSchemeResponseDTO getSctCommon(SctWithSchemeResponseDTO output, String sctid, String includeAdditionalIds) throws CisException {
         if (sctIdHelper.validSCTId(sctid)) {
             //refactor changes
-           // Sctid sctRec = sctidRepository.findById(sctid);
-            Sctid sctRec = ((sctidRepository.findById(sctid)).isPresent())?((sctidRepository.findById(sctid))).get():null;
+            // Sctid sctRec = sctidRepository.findById(sctid);
+            Sctid sctRec = ((sctidRepository.findById(sctid)).isPresent()) ? ((sctidRepository.findById(sctid))).get() : null;
             //refactor changes
             List<SchemeId> respSchemeList = new ArrayList<>();
             Sctid newSct = new Sctid();
@@ -831,8 +831,8 @@ public class SctidService {
     private SchemeId getNextSchemeId(SchemeName schemeName, SctidGenerate request) {
         Optional<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeName.toString());
         SchemeIdBase schemeIdBase = null;
-        if(schemeIdBaseList.isPresent())
-        schemeIdBase.setIdBase(schemeIdBaseList.get().getIdBase());
+        if (schemeIdBaseList.isPresent())
+            schemeIdBase.setIdBase(schemeIdBaseList.get().getIdBase());
         schemeIdBaseRepository.save(schemeIdBase);
         return null;//List<SchmeId>
     }
