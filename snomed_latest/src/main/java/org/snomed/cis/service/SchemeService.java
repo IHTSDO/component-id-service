@@ -155,7 +155,7 @@ public class SchemeService {
         }*/
 
         logger.info("Get All Scheme - ", schemeIdBase);
-if(null!=schemeIdBase.get())
+if(null!=(schemeIdBase.isPresent()?schemeIdBase.get():null))
         return schemeIdBase.get();
 else
     return new SchemeIdBase();

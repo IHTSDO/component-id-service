@@ -5,14 +5,15 @@ import org.snomed.cis.controller.SecurityController;
 import org.snomed.cis.controller.dto.*;
 import org.snomed.cis.domain.*;
 import org.snomed.cis.exception.CisException;
-import org.snomed.cis.util.SctIdHelper;
-import org.snomed.cis.util.StateMachine;
+import org.snomed.cis.pojo.Config;
 import org.snomed.cis.repository.BulkSchemeIdRepository;
 import org.snomed.cis.repository.NamespaceRepository;
 import org.snomed.cis.repository.SchemeIdBaseRepository;
 import org.snomed.cis.repository.SctidRepository;
 import org.snomed.cis.service.DM.SCTIdDM;
 import org.snomed.cis.service.DM.SchemeIdDM;
+import org.snomed.cis.util.SctIdHelper;
+import org.snomed.cis.util.StateMachine;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -66,6 +67,9 @@ public class SctidService {
     @Autowired
     static
     private BulkSchemeIdRepository bulkSchemeIdRepository;
+
+    @Autowired
+    private Config config;
 
     @Autowired
     private SchemeIdBaseRepository schemeIdBaseRepository;
@@ -235,10 +239,6 @@ public class SctidService {
         return sctWithSchemeResponseDTO;
     }
 
-    public Sctid getTestSct(String sctId) {
-        return sctidRepository.findById(sctId).get();
-    }
-
     public List<Sctid> findSctWithIndexAndLimit(Map<String, Object> queryObject, String limit, String skip) {
         List<Sctid> sctList;
         var limitR = 100;
@@ -296,7 +296,10 @@ public class SctidService {
 
     public SctWithSchemeResponseDTO getSctCommon(SctWithSchemeResponseDTO output, String sctid, String includeAdditionalIds) throws CisException {
         if (sctIdHelper.validSCTId(sctid)) {
-            Sctid sctRec = sctidRepository.getSctidsById(sctid);
+            //refactor changes
+            // Sctid sctRec = sctidRepository.findById(sctid);
+            Sctid sctRec = ((sctidRepository.findById(sctid)).isPresent()) ? ((sctidRepository.findById(sctid))).get() : null;
+            //refactor changes
             List<SchemeId> respSchemeList = new ArrayList<>();
             Sctid newSct = new Sctid();
             if (null != sctRec) {
@@ -828,7 +831,8 @@ public class SctidService {
     private SchemeId getNextSchemeId(SchemeName schemeName, SctidGenerate request) {
         Optional<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeName.toString());
         SchemeIdBase schemeIdBase = null;
-        schemeIdBase.setIdBase(schemeIdBaseList.get().getIdBase());
+        if (schemeIdBaseList.isPresent())
+            schemeIdBase.setIdBase(schemeIdBaseList.get().getIdBase());
         schemeIdBaseRepository.save(schemeIdBase);
         return null;//List<SchmeId>
     }

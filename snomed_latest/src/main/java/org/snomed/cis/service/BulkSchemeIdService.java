@@ -126,10 +126,10 @@ public class BulkSchemeIdService {
                         Set<String> rqSet = new HashSet<>(respSchemeIdArray);
                         Set<String> respSet = new HashSet<>(schemeIdsArrayList);
                         Set<String> resultDiff = new HashSet<>(rqSet);
-                        resultDiff.removeAll(respSet);
-                        if (resultDiff.size() > 0) {
+                        respSet.removeAll(resultDiff);
+                        if (respSet.size() > 0) {
                             for (String diffSchemeId :
-                                    resultDiff) {
+                                    respSet) {
                                 SchemeId schemeIdBulkObj = getFreeRecord(String.valueOf(schemeName)/*.toString()*/, diffSchemeId, null, "true");
                                 resSchemeArrayList.add(schemeIdBulkObj);
                             }
@@ -155,8 +155,8 @@ public class BulkSchemeIdService {
     private SchemeId insertSchemeIdRecord(Map<String, Object> schemeIdRecord) throws CisException {
         String error;
         SchemeId schemeIdBulk = null;
-        SchemeName scheme = null;
-        String[] schemeId = null;
+        String scheme = null;
+        String schemeId = null;
         Integer sequence = 0;
         Integer checkDigit = 0;
         String systemId = null;
@@ -172,9 +172,9 @@ public class BulkSchemeIdService {
         try {
             for (Map.Entry<String, Object> mapObj : s) {
                 if (mapObj.getKey() == "scheme") {
-                    scheme = (SchemeName) mapObj.getValue();
+                    scheme = (String) mapObj.getValue();
                 } else if (mapObj.getKey() == "schemeId") {
-                    schemeId = new String[]{(String) mapObj.getValue()};
+                    schemeId = (String) mapObj.getValue();
                 } else if (mapObj.getKey() == "sequence") {
                     sequence = (Integer) mapObj.getValue();
                 } else if (mapObj.getKey() == "checkDigit") {
@@ -197,15 +197,22 @@ public class BulkSchemeIdService {
                     modified_at = (LocalDateTime) mapObj.getValue();
                 }
             }
-            bulkSchemeIdRepository.insertWithQuery(String.valueOf(scheme), schemeId.toString(), sequence, checkDigit, systemId, status, author, software, expirationDate, jobId, created_at, modified_at);
+            //refactor changes
+            SchemeId schemeId1 = SchemeId.builder().scheme(String.valueOf(scheme)).schemeId(String.valueOf(schemeId))
+                    .sequence(sequence).checkDigit(checkDigit).systemId(systemId).status(status).author(author).software(software).jobId(jobId)
+                    .build();
+            bulkSchemeIdRepository.save(schemeId1);
+            //bulkSchemeIdRepository.insertWithQuery(String.valueOf(scheme), schemeId.toString(), sequence, checkDigit, systemId, status, author, software, expirationDate, jobId, created_at, modified_at);
+            //refactor changes
             Optional<SchemeId> schemeDB = bulkSchemeIdRepository.findBySchemeAndSchemeId(String.valueOf(scheme), schemeId.toString());
-            schemeIdBulk = schemeDB.get();
+            schemeIdBulk = schemeDB.isPresent()?schemeDB.get():null;
             return schemeIdBulk;
         } catch (Exception e) {
             error = e.toString();
         }
         if (error != null) {
             Optional<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeIdBulk.getScheme().toString());
+
             if (error.indexOf("ER_DUP_ENTRY") > -1) {
                 if (error.indexOf("'PRIMARY'") > -1 /*&& ()*/) {
                     System.out.println("Trying to solve the primary key error during scheme id insert.");
