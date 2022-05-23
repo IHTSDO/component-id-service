@@ -16,7 +16,6 @@ import javax.validation.Valid;
 
 @Api(tags = "Authentication", value = "Authentication")
 @RestController
-@RequestMapping("/users")
 public class AuthenticationController {
 
     @Autowired
@@ -27,7 +26,7 @@ public class AuthenticationController {
         return authenticationService.login(loginRequestDto, httpRequest);
     }
 
-    @PostMapping("/logout")
+    @PostMapping("/users/logout")
     public ResponseEntity<EmptyDto> logout(@RequestBody @Valid LogoutRequestDto logoutRequestDto) throws CisException {
         return authenticationService.logout(logoutRequestDto);
     }

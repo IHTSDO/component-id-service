@@ -15,6 +15,7 @@
     <description>Snomed Component Identifier Service</description>
     <properties>
         <java.version>11</java.version>
+        <profile>dev</profile>
     </properties>
     <dependencies>
         <dependency>
@@ -131,14 +132,14 @@
             <plugin>
                 <groupId>org.jsonschema2pojo</groupId>
                 <artifactId>jsonschema2pojo-maven-plugin</artifactId>
-                <version>1.0.2</version>
+                <version>1.1.2</version>
                 <executions>
                     <execution>
                         <id>generateClassesFromJson</id>
                         <configuration>
                             <sourceType>json</sourceType>
                             <sourcePaths>
-                                <sourcePath>${basedir}/src/main/resources/json/config.json</sourcePath>
+                                <sourcePath>${basedir}/src/main/resources/json/${profile}/config.json</sourcePath>
                             </sourcePaths>
                             <targetPackage>org.snomed.cis.pojo</targetPackage>
                             <includeAdditionalProperties>false</includeAdditionalProperties>

@@ -25,7 +25,7 @@ public class TokenAuthenticationFilter extends AbstractAuthenticationProcessingF
             HttpServletRequest request, HttpServletResponse response) {
         String uri = request.getRequestURI();
         Optional<String> tokenOptional = Optional.empty();
-        if (uri.equalsIgnoreCase("/api/users/authenticate") || uri.equalsIgnoreCase("/api/users/logout")) {
+        if (uri.equalsIgnoreCase("/api/authenticate") || uri.equalsIgnoreCase("/api/users/logout")) {
             String requestBody = "";
             try {
                 requestBody = new String(request.getInputStream().readAllBytes());//.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
