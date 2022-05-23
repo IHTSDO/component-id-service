@@ -1,4 +1,4 @@
-package org.snomed.cis.helper;
+package org.snomed.cis.util;
 
 import org.snomed.cis.controller.dto.CheckSctidResponseDTO;
 import org.snomed.cis.domain.Namespace;

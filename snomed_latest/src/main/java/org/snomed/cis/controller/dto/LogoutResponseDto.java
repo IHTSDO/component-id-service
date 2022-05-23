@@ -7,8 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class LoginResponseDto {
+public class LogoutResponseDto {
 
-    private String token;
 
 }

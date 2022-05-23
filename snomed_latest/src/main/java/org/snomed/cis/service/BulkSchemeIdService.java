@@ -6,7 +6,7 @@ import org.snomed.cis.controller.SecurityController;
 import org.snomed.cis.controller.dto.*;
 import org.snomed.cis.domain.*;
 import org.snomed.cis.exception.CisException;
-import org.snomed.cis.helper.*;
+import org.snomed.cis.util.*;
 import org.snomed.cis.repository.BulkJobRepository;
 import org.snomed.cis.repository.BulkSchemeIdRepository;
 import org.snomed.cis.repository.PermissionsSchemeRepository;

@@ -7,7 +7,7 @@ import org.snomed.cis.domain.SchemeId;
 import org.snomed.cis.domain.SchemeIdBase;
 import org.snomed.cis.domain.SchemeName;
 import org.snomed.cis.exception.CisException;
-import org.snomed.cis.helper.*;
+import org.snomed.cis.util.*;
 import org.snomed.cis.repository.BulkSchemeIdRepository;
 import org.snomed.cis.repository.PermissionsSchemeRepository;
 import org.snomed.cis.repository.SchemeIdBaseRepository;

@@ -2,9 +2,9 @@
   "ims": {
     "url": {
       "base": "https://dev-ims.ihtsdotools.org/api",
-      "authenticate": "/authenticate",
+      "login": "/authenticate",
       "logout": "/account/logout",
-      "account": "/account"
+      "authenticate": "/account"
     },
     "creds": {
       "login": "keerthika",
@@ -16,6 +16,7 @@
       "roles": [
         "user"
       ]
-    }
+    },
+    "cookieName": "dev-ims-ihtsdo"
   }
 }

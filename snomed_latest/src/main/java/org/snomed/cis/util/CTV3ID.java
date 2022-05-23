@@ -1,8 +1,7 @@
-package org.snomed.cis.helper;
+package org.snomed.cis.util;
 
 import org.springframework.stereotype.Component;
 
-import java.util.Locale;
 @Component
 public class CTV3ID {
 
