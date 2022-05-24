@@ -39,7 +39,7 @@ public class AuthenticationController {
         try {
             formStr = new String(httpRequest.getInputStream().readAllBytes());
         } catch (IOException e) {
-            throw new CisException(HttpStatus.BAD_REQUEST, "invlaid form data submitted");
+            throw new CisException(HttpStatus.BAD_REQUEST, "invalid form data submitted");
         }
         List<NameValuePair> formEntityList = URLEncodedUtils.parse(formStr, StandardCharsets.UTF_8);
         LoginRequestDto loginRequestDto = new LoginRequestDto();
