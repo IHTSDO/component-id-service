@@ -39,7 +39,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             "/ui/**", //ViewController
             "/admin/**", //UI resource
             "/info/**", //UI resource
-            "/login"
+            "/login",
+            "/loginUI"
     };
 
     @Override
