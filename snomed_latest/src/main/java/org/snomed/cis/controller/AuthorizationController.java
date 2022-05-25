@@ -35,6 +35,21 @@ public class AuthorizationController {
         return new ResponseEntity<>(authorizationService.getUserGroups(token.getAuthenticateResponseDto()), HttpStatus.OK);
     }
 
+    @GetMapping("/groups/{groupName}/users")
+    public ResponseEntity<List<String>> getGroupUsers(Authentication authentication) throws CisException {
+        Token token = (Token) authentication;
+        return new ResponseEntity<>(authorizationService.getGroupUsers(token.getAuthenticateResponseDto()), HttpStatus.OK);
+    }
+
+    @GetMapping("/groups")
+    @ResponseBody
+    public ResponseEntity<List<String>> getGroups(Authentication authentication) throws CisException {
+        Token token = (Token) authentication;
+        return new ResponseEntity<>(authorizationService.getGroups(token.getAuthenticateResponseDto()), HttpStatus.OK);
+    }
+
+
+
     @GetMapping(value = "/sct/namespaces/{namespaceId}/permissions")
     @ResponseBody
     public List<PermissionsNamespace> getPermissionForNS(@RequestParam String token, @PathVariable String namespaceId) throws CisException {

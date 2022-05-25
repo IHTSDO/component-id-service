@@ -1,6 +1,5 @@
 package org.snomed.cis.controller;
 
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponses;
 import org.snomed.cis.controller.dto.UserDTO;
@@ -46,23 +45,9 @@ public class SecurityController {
             // @ApiResponse(code = 404, message = "Branch not found", response = RestApiError.class)
     })
 
-    @GetMapping("/groups/{groupName}/users")
-    @ResponseBody
-    public List getAllGroups(@RequestParam String token, @PathVariable String groupName) throws CisException {
-        List result = new ArrayList();
-        result.add("component-identifier-service-user");
-        result.add("component-identifier-service-admin");
-        return result;
-    }
 
-    @GetMapping("/groups")
-    @ResponseBody
-    public List getGroupUsers(@RequestParam String token) throws CisException {
-        List result = new ArrayList();
-        result.add("keerthika");
-        result.add("lakshmana");
-        return result;
-    }
+
+
 
    /* @PostMapping("/authenticate")
     @ResponseBody

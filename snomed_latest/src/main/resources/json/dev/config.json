@@ -18,5 +18,11 @@
       ]
     },
     "cookieName": "dev-ims-ihtsdo"
-  }
+  },
+  "securityAdmins": [
+    "keerthika"
+  ],
+  "securityUsers": [
+    "lakshmana"
+  ]
 }

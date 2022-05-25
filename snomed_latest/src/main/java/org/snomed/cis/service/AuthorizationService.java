@@ -13,4 +13,12 @@ public class AuthorizationService {
         return authenticateResponseDto.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
     }
 
+    public List<String> getGroupUsers(AuthenticateResponseDto authenticateResponseDto) {
+        return List.of(authenticateResponseDto.getName());
+    }
+
+    public List<String> getGroups(AuthenticateResponseDto authenticateResponseDto) {
+        return authenticateResponseDto.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
+    }
+
 }

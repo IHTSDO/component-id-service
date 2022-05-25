@@ -7,12 +7,12 @@ import javax.transaction.Transactional;
 import java.util.List;
 
 @Transactional
-public interface PermissionsNamespaceRepository extends JpaRepository<PermissionsNamespace,Integer> {
+public interface PermissionsNamespaceRepository extends JpaRepository<PermissionsNamespace, Integer> {
 
- List<PermissionsNamespace> findByNamespace(Integer namespace);
+    List<PermissionsNamespace> findByNamespace(Integer namespace);
 
- List<PermissionsNamespace> findByUsernameIn(List<String> user);
+    List<PermissionsNamespace> findByUsernameIn(List<String> usernames);
 
- long deleteByNamespaceAndUsername(Integer namespace, String username);
+    long deleteByNamespaceAndUsername(Integer namespace, String username);
 
 }

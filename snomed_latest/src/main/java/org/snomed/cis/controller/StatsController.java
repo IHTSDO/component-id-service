@@ -1,26 +1,33 @@
 package org.snomed.cis.controller;
 
-import org.snomed.cis.controller.dto.ResultDto;
-import org.snomed.cis.exception.CisException;
-import org.snomed.cis.service.SctidService;
 import io.swagger.annotations.Api;
+import org.snomed.cis.controller.dto.GetStatsResponseDto;
+import org.snomed.cis.exception.CisException;
+import org.snomed.cis.security.Token;
+import org.snomed.cis.service.StatsService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 @Api(tags = "Stats", value = "Stats")
 @RestController
-@RequestMapping(path = "/api")
 public class StatsController {
 
-        @Autowired
-        SctidService sctidService;
+    @Autowired
+    StatsService statsService;
 
 
-        @GetMapping("/stats")
-        @ResponseBody
-        public ResultDto getStats(@RequestParam String token, @RequestParam String username) throws CisException {
-            return sctidService.getStats(token,username);
-        }
+    @GetMapping("/stats")
+    @ResponseBody
+    public ResponseEntity<GetStatsResponseDto> getStats(@RequestParam String username, Authentication authentication) throws CisException {
+        Token token = (Token) authentication;
+        return new ResponseEntity<>(statsService.getStats(username, token.getAuthenticateResponseDto()), HttpStatus.OK);
+    }
 
 
 }

@@ -8,11 +8,15 @@ import javax.transaction.Transactional;
 import java.util.List;
 
 public interface PermissionsSchemeRepository extends JpaRepository<PermissionsScheme, Long> {
+
     List<PermissionsScheme> findByScheme(String scheme);
 
-     List<PermissionsScheme> findByUsername(String username);
+    List<PermissionsScheme> findByUsername(String username);
+
     @Modifying
     @Transactional
-    void deleteBySchemeAndUsername(String scheme,String username);
+    void deleteBySchemeAndUsername(String scheme, String username);
+
+    long countByUsernameIn(List<String> usernames);
 
 }
