@@ -70,8 +70,7 @@ public class SecurityController {
         return this.authenticate();
     }*/
 
-    @GetMapping("/users/{username}/groups/")
-    @ResponseBody
+
     public List<String> getUserGroup(@PathVariable String username, @RequestParam(name = "token", required = false) String token) throws CisException {
         UserDTO user = new UserDTO();
         List<String> role = new ArrayList<>();
