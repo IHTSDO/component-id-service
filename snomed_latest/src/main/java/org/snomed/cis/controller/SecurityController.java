@@ -21,7 +21,6 @@ import java.util.List;
 //@Api(tags = "Authentication", value = "Authentication")
 //This class is under modification, code is under Draft version. Null or empty checks will be handled in next version.
 @RestController
-@RequestMapping(path = "/api")
 public class SecurityController {
 
     @Autowired

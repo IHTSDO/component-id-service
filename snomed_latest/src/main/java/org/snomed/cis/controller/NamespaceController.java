@@ -1,10 +1,10 @@
 package org.snomed.cis.controller;
 
+import io.swagger.annotations.Api;
 import org.snomed.cis.controller.dto.NamespaceDto;
 import org.snomed.cis.domain.Namespace;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.service.NamespaceService;
-import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +14,6 @@ import java.util.List;
 
 @Api(tags = "Namespaces", value = "Namespaces")
 @RestController
-@RequestMapping(path = "/api")
 public class NamespaceController {
 
     @Autowired

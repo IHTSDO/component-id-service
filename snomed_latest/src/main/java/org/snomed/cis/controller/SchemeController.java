@@ -1,13 +1,13 @@
 package org.snomed.cis.controller;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponses;
 import org.snomed.cis.controller.dto.Scheme;
 import org.snomed.cis.domain.SchemeIdBase;
 import org.snomed.cis.domain.SchemeName;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.service.SchemeService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 @Api(tags = "Scheme", value = "Scheme")
 @RestController
-@RequestMapping(path = "/api")
 public class SchemeController {
 
     @Autowired

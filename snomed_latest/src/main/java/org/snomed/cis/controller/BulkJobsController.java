@@ -1,22 +1,21 @@
 package org.snomed.cis.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponses;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.cis.controller.dto.CleanUpServiceResponse;
 import org.snomed.cis.domain.BulkJob;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.service.BulkJobService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 @Api(tags = "Bulk Jobs", value = "Bulk Jobs")
 @RestController
-@RequestMapping(path = "/api")
 public class BulkJobsController {
 
     private final Logger logger = LoggerFactory.getLogger(BulkJobsController.class);

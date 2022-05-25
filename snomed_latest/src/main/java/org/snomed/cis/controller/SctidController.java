@@ -15,7 +15,6 @@ import java.util.List;
 
 @Api(tags = "SCTIDS", value = "SCTIDS")
 @RestController
-@RequestMapping(path = "/api")
 public class SctidController {
     //Test Comment
     @Autowired

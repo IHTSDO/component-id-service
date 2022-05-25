@@ -21,7 +21,6 @@ import java.util.List;
 
 @Api(tags = "SCTIDS - Bulk Operations", value = "SCTIDS - Bulk Operations")
 @RestController
-@RequestMapping(path = "/api")
 public class BulkSctidController {
     @Autowired
     private BulkSctidService service;

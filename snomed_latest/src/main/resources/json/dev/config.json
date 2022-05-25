@@ -19,10 +19,21 @@
     },
     "cookieName": "dev-ims-ihtsdo"
   },
-  "securityAdmins": [
-    "keerthika"
-  ],
-  "securityUsers": [
-    "lakshmana"
-  ]
+  "stats": {
+    "securityAdmins": [
+      "keerthika"
+    ],
+    "securityUsers": [
+      "lakshmana"
+    ]
+  },
+  "authorization": {
+    "users": [
+      "keerthika"
+    ],
+    "groups": [
+      "component-identifier-service-admin",
+      "component-identifier-service-user"
+    ]
+  }
 }

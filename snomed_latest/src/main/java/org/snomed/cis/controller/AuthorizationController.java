@@ -1,6 +1,7 @@
 package org.snomed.cis.controller;
 
 import io.swagger.annotations.Api;
+import org.snomed.cis.controller.dto.EmptyDto;
 import org.snomed.cis.domain.PermissionsNamespace;
 import org.snomed.cis.domain.PermissionsScheme;
 import org.snomed.cis.exception.CisException;
@@ -29,65 +30,75 @@ public class AuthorizationController {
     @Autowired
     private AuthorizationService authorizationService;
 
+
+    @GetMapping("/users")
+    public ResponseEntity<List<String>> getUsers() {
+        return new ResponseEntity<>(authorizationService.getUsers(), HttpStatus.OK);
+    }
+
     @GetMapping("/users/{username}/groups")
     public ResponseEntity<List<String>> getUserGroups(Authentication authentication) {
         Token token = (Token) authentication;
         return new ResponseEntity<>(authorizationService.getUserGroups(token.getAuthenticateResponseDto()), HttpStatus.OK);
     }
 
-    @GetMapping("/groups/{groupName}/users")
-    public ResponseEntity<List<String>> getGroupUsers(Authentication authentication) throws CisException {
+    @DeleteMapping("/users/{username}/groups/{groupName}")
+    public ResponseEntity<EmptyDto> deleteMember(@PathVariable String groupName, Authentication authentication) {
         Token token = (Token) authentication;
-        return new ResponseEntity<>(authorizationService.getGroupUsers(token.getAuthenticateResponseDto()), HttpStatus.OK);
+        authorizationService.deleteMember(token.getUserName(), groupName);
+        return new ResponseEntity<>(new EmptyDto(), HttpStatus.OK);
+    }
+
+    @PostMapping("/users/{username}/groups/{groupName}")
+    public ResponseEntity<EmptyDto> addMember(@PathVariable String groupName, Authentication authentication) {
+        Token token = (Token) authentication;
+        authorizationService.addMember(token.getUserName(), groupName);
+        return new ResponseEntity<>(new EmptyDto(), HttpStatus.OK);
     }
 
     @GetMapping("/groups")
-    @ResponseBody
-    public ResponseEntity<List<String>> getGroups(Authentication authentication) throws CisException {
-        Token token = (Token) authentication;
-        return new ResponseEntity<>(authorizationService.getGroups(token.getAuthenticateResponseDto()), HttpStatus.OK);
+    public ResponseEntity<List<String>> getGroups() throws CisException {
+        return new ResponseEntity<>(authorizationService.getGroups(), HttpStatus.OK);
     }
 
-
+    @GetMapping("/groups/{groupName}/users")
+    public ResponseEntity<List<String>> getGroupUsers(@PathVariable String groupName) {
+        return new ResponseEntity<>(authorizationService.getGroupUsers(groupName), HttpStatus.OK);
+    }
 
     @GetMapping(value = "/sct/namespaces/{namespaceId}/permissions")
-    @ResponseBody
-    public List<PermissionsNamespace> getPermissionForNS(@RequestParam String token, @PathVariable String namespaceId) throws CisException {
-        return namespaceService.getPermissionForNS(token, namespaceId);
-    }
-
-    @GetMapping(value = "/schemes/{schemeName}/permissions")
-    @ResponseBody
-    public List<PermissionsScheme> getPermissionForScheme(@RequestParam String token, @PathVariable String schemeName) throws CisException {
-        return schemeService.getPermissionForScheme(token, schemeName);
+    public ResponseEntity<List<PermissionsNamespace>> getNamespacePermissions(@PathVariable String namespaceId) {
+        return new ResponseEntity<>(namespaceService.getNamespacePermissions(namespaceId), HttpStatus.OK);
     }
 
     @DeleteMapping("/sct/namespaces/{namespaceId}/permissions/{username}")
-    @ResponseBody
-    public String deleteNamespacePermissions(@RequestParam String token, @PathVariable String namespaceId, @PathVariable String username) throws CisException {
-        return namespaceService.deleteNamespacePermissions(token, namespaceId, username);
-    }
-
-    @DeleteMapping("/schemes/{schemeName}/permissions/{username}")
-    @ResponseBody
-    public String deleteSchemesPermissions(@RequestParam String token, @PathVariable String schemeName, @PathVariable String username) throws CisException {
-        return schemeService.deleteSchemesPermissions(token, schemeName, username);
+    public ResponseEntity<String> deleteNamespacePermissionsOfUser(@PathVariable String namespaceId, Authentication authentication) throws CisException {
+        Token token = (Token) authentication;
+        return new ResponseEntity<>(namespaceService.deleteNamespacePermissionsOfUser(namespaceId, token.getAuthenticateResponseDto()), HttpStatus.OK);
     }
 
     @PostMapping("/sct/namespaces/{namespaceId}/permissions/{username}")
-    @ResponseBody
-    public String createNamespacePermissions(@RequestParam String token, @PathVariable String namespaceId,
-                                             @PathVariable String username, @RequestParam String role) throws CisException {
-        return namespaceService.createNamespacePermissions(token, namespaceId,
-                username, role);
+    public ResponseEntity<String> createNamespacePermissionsOfUser(@PathVariable String namespaceId, @RequestParam String role, Authentication authentication) throws CisException {
+        Token token = (Token) authentication;
+        return new ResponseEntity<>(namespaceService.createNamespacePermissionsOfUser(namespaceId, token.getUserName(), role, token.getAuthenticateResponseDto()), HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/schemes/{schemeName}/permissions")
+    public ResponseEntity<List<PermissionsScheme>> getPermissionsForScheme(@PathVariable String schemeName) throws CisException {
+        return new ResponseEntity<>(schemeService.getPermissionsForScheme(schemeName), HttpStatus.OK);
+    }
+
+
+    @DeleteMapping("/schemes/{schemeName}/permissions/{username}")
+    public ResponseEntity<String> deleteSchemePermissions(@PathVariable String schemeName, @PathVariable String username, Authentication authentication) throws CisException {
+        Token token = (Token) authentication;
+        return new ResponseEntity<>(schemeService.deleteSchemePermissions(schemeName, username, token.getAuthenticateResponseDto()), HttpStatus.OK);
     }
 
     @PostMapping("/schemes/{schemeName}/permissions/{username}")
-    @ResponseBody
-    public String createSchemesPermissions(@RequestParam String token, @PathVariable String schemeName,
-                                           @PathVariable String username, @RequestParam String role) throws CisException {
-        return schemeService.createSchemesPermissions(token, schemeName,
-                username, role);
+    public ResponseEntity<String> createSchemePermissions(@PathVariable String schemeName, @RequestParam String role, Authentication authentication) throws CisException {
+        Token token = (Token) authentication;
+        return new ResponseEntity<>(schemeService.createSchemePermissions(schemeName, role, token.getAuthenticateResponseDto()), HttpStatus.OK);
     }
 
 }

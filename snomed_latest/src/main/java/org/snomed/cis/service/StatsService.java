@@ -42,8 +42,8 @@ public class StatsService {
         GetStatsResponseDto getStatsResponseDto = new GetStatsResponseDto();
 
         List<String> users = new LinkedList<>();
-        List<String> securityAdmins = config.getSecurityAdmins();
-        List<String> securityUsers = config.getSecurityUsers();
+        List<String> securityAdmins = config.getStats().getSecurityAdmins();
+        List<String> securityUsers = config.getStats().getSecurityUsers();
         boolean adminU = false;
         for (String admin : securityAdmins) {
             if (admin.equalsIgnoreCase(userName))

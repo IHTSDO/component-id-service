@@ -17,7 +17,6 @@ import java.util.List;
 
 @Api(tags = "SchemeIds", value="SchemeIds")
 @RestController
-@RequestMapping(path = "/api")
 public class SchemeIdController {
 
     @Autowired
