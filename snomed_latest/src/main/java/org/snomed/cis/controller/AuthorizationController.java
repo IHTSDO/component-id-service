@@ -5,16 +5,16 @@ import org.snomed.cis.domain.PermissionsNamespace;
 import org.snomed.cis.domain.PermissionsScheme;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.security.Token;
+import org.snomed.cis.service.AuthorizationService;
 import org.snomed.cis.service.NamespaceService;
 import org.snomed.cis.service.SchemeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Api(tags = "Authorization", value = "Authorization")
 @RestController
@@ -26,11 +26,13 @@ public class AuthorizationController {
     @Autowired
     SchemeService schemeService;
 
+    @Autowired
+    private AuthorizationService authorizationService;
+
     @GetMapping("/users/{username}/groups")
-    public List<String> getUserGroups(@PathVariable String username, Authentication authentication) {
+    public ResponseEntity<List<String>> getUserGroups(Authentication authentication) {
         Token token = (Token) authentication;
-        Collection<GrantedAuthority> authorities = token.getAuthorities();
-        return authorities.stream().map(GrantedAuthority::getAuthority).map(s -> s.split("_")[1]).collect(Collectors.toList());
+        return new ResponseEntity<>(authorizationService.getUserGroups(token.getAuthenticateResponseDto()), HttpStatus.OK);
     }
 
     @GetMapping(value = "/sct/namespaces/{namespaceId}/permissions")
