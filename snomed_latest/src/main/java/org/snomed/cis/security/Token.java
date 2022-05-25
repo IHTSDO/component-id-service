@@ -1,6 +1,8 @@
 package org.snomed.cis.security;
 
 
+import lombok.Getter;
+import org.snomed.cis.controller.dto.AuthenticateResponseDto;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.Transient;
@@ -9,16 +11,20 @@ import org.springframework.security.core.authority.AuthorityUtils;
 import java.util.List;
 
 @Transient
+@Getter
 public class Token extends AbstractAuthenticationToken {
 
     private String token;
 
     private String userName;
 
-    public Token(String token, String userName, boolean authenticated, List<GrantedAuthority> authorities) {
+    private AuthenticateResponseDto authenticateResponseDto;
+
+    public Token(String token, String userName, boolean authenticated, List<GrantedAuthority> authorities, AuthenticateResponseDto authenticateResponseDto) {
         super(authorities);
         this.token = token;
         this.userName = userName;
+        this.authenticateResponseDto = authenticateResponseDto;
         setAuthenticated(authenticated);
     }
 
@@ -43,11 +49,4 @@ public class Token extends AbstractAuthenticationToken {
         return token;
     }
 
-    public String getToken() {
-        return token;
-    }
-
-    public String getUserName() {
-        return userName;
-    }
 }

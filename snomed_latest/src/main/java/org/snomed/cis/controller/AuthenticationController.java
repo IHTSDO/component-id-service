@@ -5,12 +5,14 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.snomed.cis.controller.dto.*;
 import org.snomed.cis.exception.CisException;
+import org.snomed.cis.security.Token;
 import org.snomed.cis.service.AuthenticationService;
 import org.snomed.cis.util.ValidationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -59,8 +61,9 @@ public class AuthenticationController {
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<AuthenticateResponseDto> authenticate(@RequestBody @Valid AuthenticateRequestDto authenticateRequestDto) throws CisException {
-        return authenticationService.authenticate(authenticateRequestDto);
+    public ResponseEntity<AuthenticateResponseDto> authenticate(Authentication authentication) throws CisException {
+        Token token = (Token) authentication;
+        return new ResponseEntity<>(token.getAuthenticateResponseDto(), HttpStatus.OK);
     }
 
 }

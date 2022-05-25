@@ -56,7 +56,7 @@ public class TokenAuthenticationProvider implements AuthenticationProvider {
         for (String role : authenticateResponseDto.getRoles()) {
             authorities.add(new SimpleGrantedAuthority(role));
         }
-        return new Token(token, authenticateResponseDto.getName(), true, authorities);
+        return new Token(token, authenticateResponseDto.getName(), true, authorities, authenticateResponseDto);
     }
 
     @Override

@@ -26,11 +26,11 @@ public class AuthorizationController {
     @Autowired
     SchemeService schemeService;
 
-    @GetMapping("/users/{username}/groups/")
-    public List<String> getUserGroups(@PathVariable String username, Authentication authentication) throws CisException {
+    @GetMapping("/users/{username}/groups")
+    public List<String> getUserGroups(@PathVariable String username, Authentication authentication) {
         Token token = (Token) authentication;
         Collection<GrantedAuthority> authorities = token.getAuthorities();
-        return authorities.stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
+        return authorities.stream().map(GrantedAuthority::getAuthority).map(s -> s.split("_")[1]).collect(Collectors.toList());
     }
 
     @GetMapping(value = "/sct/namespaces/{namespaceId}/permissions")
