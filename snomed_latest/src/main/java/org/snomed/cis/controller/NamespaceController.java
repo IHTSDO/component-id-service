@@ -4,9 +4,11 @@ import io.swagger.annotations.Api;
 import org.snomed.cis.controller.dto.NamespaceDto;
 import org.snomed.cis.domain.Namespace;
 import org.snomed.cis.exception.CisException;
+import org.snomed.cis.security.Token;
 import org.snomed.cis.service.NamespaceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
@@ -26,18 +28,21 @@ public class NamespaceController {
     }
 
     @GetMapping("/sct/namespaces")
+    @ResponseBody
     public List<NamespaceDto> getNamespaces(@RequestParam String token) throws CisException {
     return namespaceService.getNamespaces(token);
     }
 
     @PostMapping("/sct/namespaces")
-    public ResponseEntity<String> createNamespace(@RequestParam String token, @RequestBody NamespaceDto namespace) throws CisException,ParseException {
-        return ResponseEntity.ok(namespaceService.createNamespace(token,namespace));
+    public ResponseEntity<String> createNamespace(@RequestParam String token, @RequestBody NamespaceDto namespace,Authentication authentication) throws CisException,ParseException {
+        Token authToken = (Token) authentication;
+        return ResponseEntity.ok(namespaceService.createNamespace(authToken.getAuthenticateResponseDto(),namespace));
     }
 
     @PutMapping("/sct/namespaces")
-    public ResponseEntity<String> updateNamespace(@RequestParam String token, @RequestBody NamespaceDto namespace) throws Exception {
-        return ResponseEntity.ok(namespaceService.updateNamespace(token,namespace));
+    public ResponseEntity<String> updateNamespace(@RequestParam String token, @RequestBody NamespaceDto namespace, Authentication authentication) throws Exception {
+        Token authToken = (Token) authentication;
+        return ResponseEntity.ok(namespaceService.updateNamespace(authToken.getAuthenticateResponseDto(),namespace));
     }
 
     @GetMapping("/sct/namespaces/{namespaceId}")
@@ -46,13 +51,15 @@ public class NamespaceController {
     }
 
     @DeleteMapping("/sct/namespaces/{namespaceId}")
-    public ResponseEntity<String> deleteNamespace(@RequestParam String token,@PathVariable String namespaceId) throws CisException {
-        return ResponseEntity.ok(namespaceService.deleteNamespace(token,namespaceId));
+    public ResponseEntity<String> deleteNamespace(@RequestParam String token,@PathVariable String namespaceId,Authentication authentication) throws CisException {
+        Token authToken = (Token) authentication;
+        return ResponseEntity.ok(namespaceService.deleteNamespace(authToken.getAuthenticateResponseDto(),namespaceId));
     }
 
 
     @PutMapping("/sct/namespaces/{namespaceId}/partition/{partitionId}")
-    public ResponseEntity<String> updatePartitionSequence(@RequestParam String token, @PathVariable String namespaceId,@PathVariable String partitionId, @RequestParam String value ) throws CisException {
-        return ResponseEntity.ok(namespaceService.updatePartitionSequence(token,namespaceId,partitionId,value));
+    public ResponseEntity<String> updatePartitionSequence(@RequestParam String token, @PathVariable String namespaceId,@PathVariable String partitionId, @RequestParam String value,Authentication authentication ) throws CisException {
+        Token authToken = (Token) authentication;
+        return ResponseEntity.ok(namespaceService.updatePartitionSequence(authToken.getAuthenticateResponseDto(),namespaceId,partitionId,value));
     }
 }

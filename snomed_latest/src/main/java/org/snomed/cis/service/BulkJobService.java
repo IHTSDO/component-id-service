@@ -1,6 +1,7 @@
 package org.snomed.cis.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.snomed.cis.controller.dto.AuthenticateResponseDto;
 import org.snomed.cis.controller.dto.BulkJobsListResponse;
 import org.snomed.cis.controller.dto.CleanUpServiceResponse;
 import org.snomed.cis.controller.dto.UserDTO;
@@ -8,6 +9,7 @@ import org.snomed.cis.domain.BulkJob;
 import org.snomed.cis.domain.SchemeId;
 import org.snomed.cis.domain.Sctid;
 import org.snomed.cis.exception.CisException;
+import org.snomed.cis.security.Token;
 import org.snomed.cis.util.ModelsConstants;
 import org.snomed.cis.repository.BulkJobRepository;
 import org.snomed.cis.repository.SctidRepository;
@@ -20,6 +22,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class BulkJobService {
@@ -47,7 +50,6 @@ public class BulkJobService {
 
     public List<BulkJob> getJobs(String token) throws CisException {
         List<BulkJob> result = null;
-        if (bulkSctidService.authenticateToken(token)) {
             Map<String, Object> queryObject = new HashMap();
             Map<String, Integer> fields = new LinkedHashMap<>();
             fields.put("id", 1);
@@ -58,10 +60,6 @@ public class BulkJobService {
             Map<String, String> orderBy = new HashMap();
             orderBy.put("created_at","D");
             result = this.findFieldSelect(queryObject,fields,100,null,orderBy);
-        }
-            else {
-            throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
-        }
         return result;
     }
 
@@ -150,7 +148,6 @@ public class BulkJobService {
 
     public BulkJob getJob(String token, Integer jobId) throws CisException {
         BulkJob result = null;
-        if (bulkSctidService.authenticateToken(token)) {
             BulkJob bulkJob = (bulkJobRepository.findById(jobId).isPresent())?bulkJobRepository.findById(jobId).get() : null;
             if(null!=bulkJob) {
                 if (bulkJob.getId() == jobId)
@@ -158,17 +155,12 @@ public class BulkJobService {
             }
             else
                 throw new CisException(HttpStatus.NOT_FOUND,"There is no result from Database for jobId"+jobId);
-        }
-        else {
-            throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
-        }
         return result;
     }
 
     public List<Object> getJobRecords(String token,Integer jobId) throws CisException, JsonProcessingException {
         var t2 = new Date().getTime();
         List<Object> list = new ArrayList<>();
-        if (bulkSctidService.authenticateToken(token)) {
             BulkJob jobRecord = (bulkJobRepository.findById(jobId).isPresent())?(bulkJobRepository.findById(jobId).get()): null;
             if (null != jobRecord) {
                 JSONObject request = new JSONObject(jobRecord.getRequest());
@@ -188,10 +180,6 @@ public class BulkJobService {
             {
                 list = null;
             }
-        }
-        else{
-                    throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
-                }
         return list;
             }
 
@@ -246,11 +234,10 @@ public class BulkJobService {
         return cleanRows;
     }
 
-        public List<CleanUpServiceResponse> cleanUpExpiredIds(String token) throws CisException {
+        public List<CleanUpServiceResponse> cleanUpExpiredIds(Token token) throws CisException {
             List<CleanUpServiceResponse> result = null;
-            if (bulkSctidService.authenticateToken(token)) {
-                UserDTO userObj = bulkSctidService.getAuthenticatedUser();
-                if (this.isAbleUser(userObj.getLogin())) {
+              //  UserDTO userObj = bulkSctidService.getAuthenticatedUser();
+                if (this.isAbleUser(token.getAuthenticateResponseDto())) {
                     String strErr="";
                     String strData="";
                     String strMsg="";
@@ -330,28 +317,15 @@ public class BulkJobService {
                 } else {
                     throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
                 }
-            } else {
-                throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
-            }
             return result;
         }
 
-        public boolean isAbleUser(String username) throws CisException {
-            List<String> groups = authenticateToken.getGroupsList();
-            boolean able = false;
-            for(String group:groups)
-            {
-                if(group.equalsIgnoreCase("component-identifier-service-admin"))
-                {
-                    able = true;
-                }
+        public boolean isAbleUser(AuthenticateResponseDto authenticateResponseDto) throws CisException {
+            List<String> groups = authenticateResponseDto.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
+            boolean isAble = false;
+            if (groups.contains("component-identifier-service-admin")) {
+                isAble = true;
             }
-       /* List<String> admins = Arrays.asList("keerthika", "lakshmana", "c");
-        for (String admin : admins) {
-            if (admin.equalsIgnoreCase(username)) {
-                able = true;
-            }
-        }*/
-        return able;
+            return isAble;
     }
     }

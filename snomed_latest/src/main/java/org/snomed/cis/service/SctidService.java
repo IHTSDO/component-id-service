@@ -10,6 +10,7 @@ import org.snomed.cis.repository.BulkSchemeIdRepository;
 import org.snomed.cis.repository.NamespaceRepository;
 import org.snomed.cis.repository.SchemeIdBaseRepository;
 import org.snomed.cis.repository.SctidRepository;
+import org.snomed.cis.security.Token;
 import org.snomed.cis.service.DM.SCTIdDM;
 import org.snomed.cis.service.DM.SchemeIdDM;
 import org.snomed.cis.util.SctIdHelper;
@@ -173,12 +174,10 @@ public class SctidService {
         return schemeList;
     }
 
-    public List<Sctid> getSct(String token, String limit, String skip, String namespace) throws CisException, JsonProcessingException {
+    public List<Sctid> getSct(Token authToken, String limit, String skip, String namespace) throws CisException, JsonProcessingException {
         List<Sctid> sctList = new ArrayList<>();
-//List<Sctid> sc = new ArrayList<>();
-        if (bulkSctidService.authenticateToken(token)) {
-            UserDTO userObj = bulkSctidService.getAuthenticatedUser();
-            if (bulkSctidService.isAbleUser("false", userObj)) {
+           // UserDTO userObj = bulkSctidService.getAuthenticatedUser();
+            if (bulkSctidService.isAbleUser("false", authToken.getAuthenticateResponseDto())) {
                 Map<String, Object> queryObject = new HashMap();
                 if (null != namespace) {
                     queryObject.put("namespace", namespace);
@@ -212,20 +211,18 @@ public class SctidService {
             } else {
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
-        } else {
-            throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
-        }
+
     }
 
-    public SctWithSchemeResponseDTO getSctWithId(String token, String sctid, String includeAdditionalIds) throws CisException {
+    public SctWithSchemeResponseDTO getSctWithId(Token authToken, String sctid, String includeAdditionalIds) throws CisException {
         Sctid sctResult = new Sctid();
         SctWithSchemeResponseDTO output = new SctWithSchemeResponseDTO();
         SctWithSchemeResponseDTO sctWithSchemeResponseDTO = new SctWithSchemeResponseDTO();
-        if (bulkSctidService.authenticateToken(token)) {
-            UserDTO userObj = bulkSctidService.getAuthenticatedUser();
+
+           // UserDTO userObj = bulkSctidService.getAuthenticatedUser();
             var namespace = sctIdHelper.getNamespace(sctid);
             if (null != namespace) {
-                if (bulkSctidService.isAbleUser(String.valueOf(namespace), userObj)) {
+                if (bulkSctidService.isAbleUser(String.valueOf(namespace), authToken.getAuthenticateResponseDto())) {
                     sctWithSchemeResponseDTO = this.getSctCommon(output, sctid, includeAdditionalIds);
                 } else {
                     throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
@@ -233,9 +230,7 @@ public class SctidService {
             } else {
                 sctWithSchemeResponseDTO = this.getSctCommon(output, sctid, includeAdditionalIds);
             }
-        } else {
-            throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
-        }
+
         return sctWithSchemeResponseDTO;
     }
 
@@ -350,12 +345,12 @@ public class SctidService {
         return SctIdHelper.checkSctid(sctid);
     }
 
-    public Sctid getSctWithSystemId(String token, Integer namespaceId, String systemId) throws CisException {
+    public Sctid getSctWithSystemId(Token authToken, Integer namespaceId, String systemId) throws CisException {
         //  SctWithSchemeResponseDTO output = new SctWithSchemeResponseDTO();
         Sctid sct = new Sctid();
-        if (bulkSctidService.authenticateToken(token)) {
-            UserDTO userObj = bulkSctidService.getAuthenticatedUser();
-            if (bulkSctidService.isAbleUser(String.valueOf(namespaceId), userObj)) {
+
+            //UserDTO userObj = bulkSctidService.getAuthenticatedUser();
+            if (bulkSctidService.isAbleUser(String.valueOf(namespaceId), authToken.getAuthenticateResponseDto())) {
                 List<Sctid> result = sctidRepository.findBySystemIdAndNamespace(systemId, namespaceId);
                 sct = result.get(0);
                 /*output.setSctid(sct.getSctid());
@@ -372,28 +367,14 @@ public class SctidService {
             } else {
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
-        } else {
-            throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
-        }
+
         return sct;
     }
 
-    public Sctid deprecateSct(String token, DeprecateSctRequestDTO request) throws CisException {
-
-        /*
-        *   /*
-    * {
-  "sctid": "string",
-  "namespace": 0,
-  "software": "string",
-  "comment": "string"
-}
-    * */
+    public Sctid deprecateSct(Token authToken, DeprecateSctRequestDTO request) throws CisException {
         // request body change
 
         Sctid output = new Sctid();
-
-        if (bulkSctidService.authenticateToken(token)) {
             DeprecateSctRequest deprecateSctRequest = new DeprecateSctRequest();
             deprecateSctRequest.setSctid(request.getSctid());
             deprecateSctRequest.setNamespace(request.getNamespace());
@@ -401,13 +382,13 @@ public class SctidService {
             deprecateSctRequest.setComment(request.getComment());
 
 
-            UserDTO userObj = bulkSctidService.getAuthenticatedUser();
+            //UserDTO userObj = bulkSctidService.getAuthenticatedUser();
             Integer returnedNamespace = sctIdHelper.getNamespace(request.getSctid());
             if (!returnedNamespace.equals(request.getNamespace())) {
                 throw new CisException(HttpStatus.BAD_REQUEST, "Namespaces differences between sctId and parameter");
             } else {
-                if (bulkSctidService.isAbleUser(String.valueOf(returnedNamespace), userObj)) {
-                    deprecateSctRequest.setAuthor(userObj.getLogin());
+                if (bulkSctidService.isAbleUser(String.valueOf(returnedNamespace), authToken.getAuthenticateResponseDto())) {
+                    deprecateSctRequest.setAuthor(authToken.getUserName());
                     Sctid sctRec = sctIdHelper.getSctid(deprecateSctRequest.getSctid());
                     if (sctRec.getSctid().isEmpty()) {
                         throw new CisException(HttpStatus.ACCEPTED, "No Sctid Rec Found");
@@ -429,39 +410,27 @@ public class SctidService {
                     throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
                 }
             }
-        } else {
-            throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
-        }
+
         return output;
     }
 
-    public Sctid releaseSct(String token, DeprecateSctRequestDTO request) throws CisException {
-          /*
-        *   /*
-    * {
-  "sctid": "string",
-  "namespace": 0,
-  "software": "string",
-  "comment": "string"
-}
-    * */
+    public Sctid releaseSct(Token authToken, DeprecateSctRequestDTO request) throws CisException {
+
         // request body change
         Sctid output = new Sctid();
-
-        if (bulkSctidService.authenticateToken(token)) {
             DeprecateSctRequest deprecateSctRequest = new DeprecateSctRequest();
             deprecateSctRequest.setSctid(request.getSctid());
             deprecateSctRequest.setNamespace(request.getNamespace());
             deprecateSctRequest.setSoftware(request.getSoftware());
             deprecateSctRequest.setComment(request.getComment());
 
-            UserDTO userObj = bulkSctidService.getAuthenticatedUser();
+            //UserDTO userObj = bulkSctidService.getAuthenticatedUser();
             Integer returnedNamespace = sctIdHelper.getNamespace(request.getSctid());
             if (!returnedNamespace.equals(request.getNamespace())) {
                 throw new CisException(HttpStatus.ACCEPTED, "Namespaces differences between sctId and parameter");
             } else {
-                if (bulkSctidService.isAbleUser(String.valueOf(returnedNamespace), userObj)) {
-                    deprecateSctRequest.setAuthor(userObj.getLogin());
+                if (bulkSctidService.isAbleUser(String.valueOf(returnedNamespace), authToken.getAuthenticateResponseDto())) {
+                    deprecateSctRequest.setAuthor(authToken.getUserName());
                     Sctid sctRec = sctIdHelper.getSctid(request.getSctid());
                     if (sctRec.getSctid().isEmpty()) {
                         throw new CisException(HttpStatus.ACCEPTED, "No Sctid Rec Found");
@@ -484,39 +453,26 @@ public class SctidService {
                     throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
                 }
             }
-        } else {
-            throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
-        }
+
         return output;
     }
 
-    public Sctid publishSct(String token, DeprecateSctRequestDTO request) throws CisException {
-
-          /*
-        *   /*
-    * {
-  "sctid": "string",
-  "namespace": 0,
-  "software": "string",
-  "comment": "string"
-}
-    * */
+    public Sctid publishSct(Token authToken, DeprecateSctRequestDTO request) throws CisException {
         // request body change
         Sctid output = new Sctid();
-        if (bulkSctidService.authenticateToken(token)) {
             DeprecateSctRequest deprecateSctRequest = new DeprecateSctRequest();
             deprecateSctRequest.setSctid(request.getSctid());
             deprecateSctRequest.setNamespace(request.getNamespace());
             deprecateSctRequest.setSoftware(request.getSoftware());
             deprecateSctRequest.setComment(request.getComment());
 
-            UserDTO userObj = bulkSctidService.getAuthenticatedUser();
+            //UserDTO userObj = bulkSctidService.getAuthenticatedUser();
             Integer returnedNamespace = sctIdHelper.getNamespace(request.getSctid());
             if (!returnedNamespace.equals(request.getNamespace())) {
                 throw new CisException(HttpStatus.ACCEPTED, "Namespaces differences between sctId and parameter");
             } else {
-                if (bulkSctidService.isAbleUser(String.valueOf(returnedNamespace), userObj)) {
-                    deprecateSctRequest.setAuthor(userObj.getLogin());
+                if (bulkSctidService.isAbleUser(String.valueOf(returnedNamespace), authToken.getAuthenticateResponseDto())) {
+                    deprecateSctRequest.setAuthor(authToken.getUserName());
                     Sctid sctRec = sctIdHelper.getSctid(request.getSctid());
                     if (sctRec.getSctid().isEmpty()) {
                         throw new CisException(HttpStatus.ACCEPTED, "No Sctid Rec Found");
@@ -540,13 +496,11 @@ public class SctidService {
                     throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
                 }
             }
-        } else {
-            throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
-        }
+
         return output;
     }
 
-    public SctWithSchemeResponseDTO generateSctid(String token, SctidsGenerateRequestDto generationData) throws CisException {
+    public SctWithSchemeResponseDTO generateSctid(Token authToken, SctidsGenerateRequestDto generationData) throws CisException {
         SctWithSchemeResponseDTO sctResponse = new SctWithSchemeResponseDTO();
         //change for reqBody match begins
         SctidGenerate generate = new SctidGenerate();
@@ -557,9 +511,8 @@ public class SctidService {
         generate.setComment(generationData.getComment());
         generate.setGenerateLegacyIds(generationData.isGenerateLegacyIds());
         //change for reqBody match begins
-        if (bulkSctidService.authenticateToken(token)) {
-            UserDTO userObj = bulkSctidService.getAuthenticatedUser();
-            if (bulkSctidService.isAbleUser((generationData.getNamespace()).toString(), userObj)) {
+            //UserDTO userObj = bulkSctidService.getAuthenticatedUser();
+            if (bulkSctidService.isAbleUser((generationData.getNamespace()).toString(), authToken.getAuthenticateResponseDto())) {
                 if ((generationData.getNamespace() == 0 && (!generationData.getPartitionId().substring(0, 1).equalsIgnoreCase("0")))
                         || (generationData.getNamespace() != 0 && !generationData.getPartitionId().substring(0, 1).equalsIgnoreCase("1"))) {
                     throw new CisException(HttpStatus.ACCEPTED, "Namespace and partitionId parameters are not consistent.");
@@ -570,16 +523,16 @@ public class SctidService {
                     generate.setAutoSysId(true);
                 }
                 // generationData.setAuthor(userObj.getLogin());
-                generate.setAuthor(userObj.getLogin());
+                generate.setAuthor(authToken.getUserName());
                 Sctid sctRec1 = this.generateSctidSubFun(generate);
                 var sctIdRecordArray = new ArrayList<SchemeId>();
                 if (generationData.isGenerateLegacyIds() &&
                         generationData.getPartitionId().substring(1, 1).equalsIgnoreCase("0")) {
-                    if (bulkSctidService.isSchemeAbleUser(SchemeName.CTV3ID.schemeName, userObj)) {
+                    if (bulkSctidService.isSchemeAbleUser(SchemeName.CTV3ID.schemeName, authToken)) {
                         SchemeId schemeId = this.generateSchemeId(SchemeName.valueOf(SchemeName.CTV3ID.schemeName), generate);
                         sctIdRecordArray.add(schemeId);
                     }
-                    if (bulkSctidService.isSchemeAbleUser(SchemeName.SNOMEDID.schemeName, userObj)) {
+                    if (bulkSctidService.isSchemeAbleUser(SchemeName.SNOMEDID.schemeName, authToken)) {
                         SchemeId schemeId = this.generateSchemeId(SchemeName.valueOf(SchemeName.SNOMEDID.schemeName), generate);
                         sctIdRecordArray.add(schemeId);
                     }
@@ -599,9 +552,7 @@ public class SctidService {
             } else {
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
-        } else {
-            throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
-        }
+
         return sctResponse;
     }
 
@@ -837,29 +788,9 @@ public class SctidService {
         return null;//List<SchmeId>
     }
 
-    public Sctid registerSctid(String token, SCTIDRegistrationRequest registrationData) throws CisException {
+    public Sctid registerSctid(Token authToken, SCTIDRegistrationRequest registrationData) throws CisException {
         Sctid result = new Sctid();
-         /*
-    *
-    * {
-  "sctid": "string",
-  "namespace": 0,
-  "systemId": "string",
-  "software": "string",
-  "comment": "string"
-  *
-  *
-  * {
-  "comment": "string",
-  "namespace": 0,
-  "sctid": "6538537023",
-  "software": "ji",
-  "systemId": "ec831da8-f2e9-0368-a1da-bbccdaad5118"
-}
-}*/
-
-        if (bulkSctidService.authenticateToken(token)) {
-            UserDTO userObj = bulkSctidService.getAuthenticatedUser();
+            //UserDTO userObj = bulkSctidService.getAuthenticatedUser();
             //requestbody change
             SCTIDRegisterRequest registerRequest = new SCTIDRegisterRequest();
             registerRequest.setSctid(registrationData.getSctid());
@@ -872,11 +803,11 @@ public class SctidService {
             if (!(returnedNamespace.equals(registrationData.getNamespace()))) {
                 throw new CisException(HttpStatus.ACCEPTED, "Namespaces differences between sctId and parameter");
             } else {
-                if (bulkSctidService.isAbleUser((registrationData.getNamespace()).toString(), userObj)) {
+                if (bulkSctidService.isAbleUser((registrationData.getNamespace()).toString(), authToken.getAuthenticateResponseDto())) {
                     if (registrationData.getSystemId().isBlank() || registrationData.getSystemId().isEmpty()) {
                         registerRequest.setAutoSysId(true);
                     }
-                    registerRequest.setAuthor(userObj.getLogin());
+                    registerRequest.setAuthor(authToken.getUserName());
                     //requestbody change
                     Sctid sct = sctIdDM.registerSctid(registerRequest, "SCTIDRegisterRequest");
                     if (null != (sct))
@@ -885,13 +816,11 @@ public class SctidService {
                     throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
                 }
             }
-        } else {
-            throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
-        }
+
         return result;
     }
 
-    public Sctid reserveSctid(String token, SCTIDReservationRequest reservationData) throws CisException {
+    public Sctid reserveSctid(Token token, SCTIDReservationRequest reservationData) throws CisException {
         Sctid result = null;
         /*
         *
@@ -905,8 +834,6 @@ public class SctidService {
 
         //requestbody change
 
-        if (bulkSctidService.authenticateToken(token)) {
-
             SCTIDReserveRequest reserveRequest = new SCTIDReserveRequest();
             reserveRequest.setNamespace(reservationData.getNamespace());
             reserveRequest.setPartitionId(reservationData.getPartitionId());
@@ -915,7 +842,7 @@ public class SctidService {
             reserveRequest.setComment(reservationData.getComment());
 
             UserDTO userObj = bulkSctidService.getAuthenticatedUser();
-            if (bulkSctidService.isAbleUser((reservationData.getNamespace()).toString(), userObj)) {
+            if (bulkSctidService.isAbleUser((reservationData.getNamespace()).toString(), token.getAuthenticateResponseDto())) {
                 if ((reservationData.getNamespace() == 0 && reservationData.getPartitionId().substring(0, 1) != "0")
                         || (reservationData.getNamespace() != 0 && reservationData.getPartitionId().substring(0, 1) != "1")) {
                     throw new CisException(HttpStatus.ACCEPTED, ("Namespace and partitionId parameters are not consistent."));
@@ -927,9 +854,7 @@ public class SctidService {
             } else {
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
-        } else {
-            throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
-        }
+
         return result;
     }
 

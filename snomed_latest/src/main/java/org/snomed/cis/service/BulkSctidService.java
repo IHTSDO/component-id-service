@@ -10,6 +10,7 @@ import org.snomed.cis.domain.PermissionsNamespace;
 import org.snomed.cis.domain.PermissionsScheme;
 import org.snomed.cis.domain.Sctid;
 import org.snomed.cis.exception.CisException;
+import org.snomed.cis.security.Token;
 import org.snomed.cis.util.JobTypeConstants;
 import org.snomed.cis.util.ModelsConstants;
 import org.snomed.cis.util.SctIdHelper;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class BulkSctidService {
@@ -54,17 +56,11 @@ public class BulkSctidService {
     private SecurityController securityController;
 
     public List<Sctid> postSctByIds(String token, SctIdRequest ids) throws CisException {
-        if (authenticateToken(token))
             return this.postValidScts(ids);
-        else
-            throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
     }
 
     public List<Sctid> getSctByIds(String token, String ids) throws CisException {
-        if (authenticateToken(token))
             return this.validScts(ids);
-        else
-            throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
     }
 
     public boolean authenticateToken(String userToken) throws CisException {
@@ -223,14 +219,11 @@ public class BulkSctidService {
 
     }
 
-    public BulkJob registerSctids(String token, RegistrationDataDTO request) throws CisException {
-        if (authenticateToken(token))
-            return this.registerScts(request);
-        else
-            throw new CisException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
+    public BulkJob registerSctids(Token token, RegistrationDataDTO request) throws CisException {
+            return this.registerScts(token,request);
     }
 
-    public BulkJob registerScts(RegistrationDataDTO registrationData) throws CisException {
+    public BulkJob registerScts(Token token,RegistrationDataDTO registrationData) throws CisException {
          /*
     * {
   "records": [
@@ -245,9 +238,9 @@ public class BulkSctidService {
 }
 * */
         //requestbody change
-        UserDTO userObj = this.getAuthenticatedUser();
+        //UserDTO userObj = this.getAuthenticatedUser();
         BulkJob resultJob = new BulkJob();
-        if (this.isAbleUser(registrationData.getNamespace().toString(), userObj)) {
+        if (this.isAbleUser(registrationData.getNamespace().toString(), token.getAuthenticateResponseDto())) {
             SctidBulkRegister sctidBulkRegister = new SctidBulkRegister();
             sctidBulkRegister.setRecords(registrationData.getRecords());
             sctidBulkRegister.setNamespace(registrationData.getNamespace());
@@ -268,7 +261,7 @@ public class BulkSctidService {
                     }
                 }
                 if (!error) {
-                    sctidBulkRegister.setAuthor(userObj.getLogin());
+                    sctidBulkRegister.setAuthor(token.getUserName());
                     sctidBulkRegister.setModel(modelsConstants.SCTID);
                     sctidBulkRegister.setType(jobType.REGISTER_SCTIDS);
                     /*RegistrationDataDTO registrationDataDTO = new RegistrationDataDTO(registrationData.getRecords(), registrationData.getNamespace(),
@@ -297,28 +290,67 @@ public class BulkSctidService {
         return resultJob;
     }
 
-    public boolean isAbleUser(String namespace, UserDTO user) throws CisException {
+    public boolean isAbleUser(String namespace, AuthenticateResponseDto authenticateResponseDto)
+    {
+        List<String> groups = authenticateResponseDto.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
+        boolean isAble = false;
+        if (groups.contains("component-identifier-service-admin") || hasNamespacePermission(namespace, authenticateResponseDto)) {
+            isAble = true;
+        }
+        return isAble;
+    }
+
+    public boolean hasNamespacePermission(String namespace,AuthenticateResponseDto authenticateResponseDto)
+    {
+        boolean able = false;
+        if (!"false".equalsIgnoreCase(namespace)) {
+            List<PermissionsNamespace> permissionsNamespaceList = permissionsNamespaceRepository.findByNamespace(Integer.valueOf(namespace));
+            List<String> possibleGroups = new ArrayList<>();
+            for (PermissionsNamespace perm : permissionsNamespaceList) {
+                if (("group").equalsIgnoreCase(perm.getRole())) {
+                    possibleGroups.add(perm.getUsername());
+                } else if ((authenticateResponseDto.getFirstName()).equalsIgnoreCase(perm.getUsername())) {
+                    able = true;
+                }
+            }
+            if (!able) {
+                List<String> roleAsGroups = authenticateResponseDto.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());;
+                for (String group : roleAsGroups) {
+                    if (group == "namespace-" + namespace)
+                        able = true;
+                    else if (possibleGroups.contains(group))
+                        able = true;
+                }
+            } else {
+                return able;
+            }
+        }
+        return able;
+
+    }
+
+    /*public boolean isAbleUser(String namespace, UserDTO user) throws CisException {
         List<String> groups = authenticateToken.getGroupsList();
         boolean able = false;
         for (String group : groups) {
             if (group.equalsIgnoreCase("component-identifier-service-admin")) {
                 able = true;
             }
-        }
+        }*/
         /*List<String> admins = Arrays.asList("keerthika", "b", "c");
         for (String admin : admins) {
             if (admin.equalsIgnoreCase(user.getLogin())) {
                 able = true;
             }
         }*/
-        if (!able) {
+        /*if (!able) {
             if (!"false".equalsIgnoreCase(namespace)) {
                 List<PermissionsNamespace> permissionsNamespaceList = permissionsNamespaceRepository.findByNamespace(Integer.valueOf(namespace));
                 List<String> possibleGroups = new ArrayList<>();
                 for (PermissionsNamespace perm : permissionsNamespaceList) {
                     if (("group").equalsIgnoreCase(perm.getRole())) {
                         possibleGroups.add(perm.getUsername());
-                    } else if ((user.getLogin()).equalsIgnoreCase(perm.getUsername())) {
+                    } else if ((user.getFirstName()).equalsIgnoreCase(perm.getUsername())) {
                         able = true;
                     }
                 }
@@ -335,12 +367,12 @@ public class BulkSctidService {
                 }
             }
             return able;
-        }// if(!able)
-        else
+        }// if(!able)*/
+        /*else
             return able;
-    }
+    }*/
 
-    public BulkJobResponseDto generateSctids(String token, SCTIDBulkGenerationRequestDto sctidBulkGenerationRequestDto) throws CisException, JsonProcessingException, CisException {
+    public BulkJobResponseDto generateSctids(Token token, SCTIDBulkGenerationRequestDto sctidBulkGenerationRequestDto) throws CisException, JsonProcessingException, CisException {
 /*
 * @NotNull
     private Integer namespace;
@@ -363,10 +395,8 @@ public class BulkSctidService {
         bulkGenerate.setComment(sctidBulkGenerationRequestDto.getComment());
         bulkGenerate.setGenerateLegacyIds(sctidBulkGenerationRequestDto.getGenerateLegacyIds());
 
-
-        if (authenticateToken(token)) {
-            UserDTO userObj = this.getAuthenticatedUser();
-            boolean able = isAbleUser(sctidBulkGenerationRequestDto.getNamespace().toString(), userObj);
+           // UserDTO userObj = this.getAuthenticatedUser();
+            boolean able = isAbleUser(sctidBulkGenerationRequestDto.getNamespace().toString(), token.getAuthenticateResponseDto());
             if (!able) {
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
@@ -381,7 +411,7 @@ public class BulkSctidService {
                 throw new CisException(HttpStatus.BAD_REQUEST, "SystemIds quantity is not equal to quantity requirement");
             }
 
-            bulkGenerate.setAuthor(userObj.getLogin());
+            bulkGenerate.setAuthor(token.getUserName());
             bulkGenerate.model = modelsConstants.SCTID;
 
             if ((sctidBulkGenerationRequestDto.getSystemIds() != null || sctidBulkGenerationRequestDto.getSystemIds().size() == 0) &&
@@ -412,7 +442,7 @@ public class BulkSctidService {
                 SctidBulkGenerate bulkGenerate1 = bulkGenerate.copy();
                 bulkGenerate.model = modelsConstants.SCHEME_ID;
 
-                if (isSchemeAbleUser("SNOMEDID", userObj)) {
+                if (isSchemeAbleUser("SNOMEDID", token)) {
                     if (able) {
                         bulkGenerate1.setScheme("SNOMEDID");
                         bulkGenerate1.setType(jobType.GENERATE_SCHEMEIDS);
@@ -424,7 +454,7 @@ public class BulkSctidService {
                         bulkJobScheme.setRequest(genAsStringFormat);
                         bulkJobScheme = bulkJobRepository.save(bulkJobScheme);
                         additionalJob.add(bulkJob.toString());
-                        if (isSchemeAbleUser("CTV3ID", userObj)) {
+                        if (isSchemeAbleUser("CTV3ID", token)) {
                             if (able) {
                                 //   SCTIDBulkGenerationRequestDto generationCTV3IDMetadata = generationMetaData.copy();
                                 SctidBulkGenerate generationCTV3IDMetadata = bulkGenerate1.copy();
@@ -450,7 +480,7 @@ public class BulkSctidService {
 
                         }// isSchemableUser
                     } else {
-                        if (isSchemeAbleUser("CTV3ID", userObj)) {
+                        if (isSchemeAbleUser("CTV3ID", token)) {
                             if (able) {
                                 SctidBulkGenerate generationCTV3IDMetadata = bulkGenerate1.copy();
                                 generationCTV3IDMetadata.setScheme("CTV3ID");
@@ -482,19 +512,49 @@ public class BulkSctidService {
 
             // }// if(able)
             return null;
-        } else {
-            throw new CisException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
-        }
     }
 
-    public boolean isSchemeAbleUser(String schemeName, UserDTO user) throws CisException {
+    public boolean isSchemeAbleUser(String schemeName, Token authToken)
+    {
+        List<String> groups = authToken.getAuthenticateResponseDto().getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
+        boolean isAble = false;
+        if (groups.contains("component-identifier-service-admin") || hasSchemePermission(schemeName, authToken)) {
+            isAble = true;
+        }
+        return isAble;
+    }
+    public boolean hasSchemePermission(String schemeName,Token authToken)
+    {
+        boolean able = false;
+        if (!"false".equalsIgnoreCase(schemeName)) {
+            List<PermissionsScheme> permissionsSchemesList = permissionsSchemeRepository.findByScheme(schemeName);
+            List<String> possibleGroups = new ArrayList<>();
+            for (PermissionsScheme perm : permissionsSchemesList) {
+                if (("group").equalsIgnoreCase(perm.getRole())) {
+                    possibleGroups.add(perm.getUsername());
+                } else if ((authToken.getUserName()).equalsIgnoreCase(perm.getUsername())) {
+                    able = true;
+                }
+            }// possible groups
+            if (!able) {
+                List<String> roleAsGroups = authToken.getAuthenticateResponseDto().getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
+                for (String group : roleAsGroups) {
+                    if (possibleGroups.contains(group))
+                        able = true;
+                }
+            }
+        }
+        return able;
+    }
+
+   /* public boolean isSchemeAbleUser(String schemeName, UserDTO user) throws CisException {
         List<String> groups = authenticateToken.getGroupsList();
         boolean able = false;
         for (String group : groups) {
             if (group.equalsIgnoreCase("component-identifier-service-admin")) {
                 able = true;
             }
-        }
+        }*/
        /* List<String> admins = Arrays.asList("a", "b", "c");
         for (String admin : admins) {
             if (admin.equalsIgnoreCase(user.getLogin())) {
@@ -502,7 +562,7 @@ public class BulkSctidService {
                 break;
             }
         }*/
-        if (!able) {
+        /*if (!able) {
             if (!"false".equalsIgnoreCase(schemeName)) {
                 List<PermissionsScheme> permissionsSchemesList = permissionsSchemeRepository.findByScheme(schemeName);
                 List<String> possibleGroups = new ArrayList<>();
@@ -526,10 +586,10 @@ public class BulkSctidService {
         }//if(!able)
 
         return able;
-    }
+    }*/
 
     //Deprecate API
-    public BulkJob deprecateSctid(String token, BulkSctRequestDTO deprecateBulkSctRequestDTO) throws CisException {
+    public BulkJob deprecateSctid(Token token, BulkSctRequestDTO deprecateBulkSctRequestDTO) throws CisException {
         BulkJob resultJob = new BulkJob();
 
     /*
@@ -553,15 +613,14 @@ public class BulkSctidService {
 }*/
         //requestbody change
 
-        if (authenticateToken(token)) {
-            UserDTO userObj = this.getAuthenticatedUser();
+            //UserDTO userObj = this.getAuthenticatedUser();
             BulkSctRequest bulkSctRequest = new BulkSctRequest();
             bulkSctRequest.setSctids(deprecateBulkSctRequestDTO.getSctids());
             bulkSctRequest.setNamespace(deprecateBulkSctRequestDTO.getNamespace());
             bulkSctRequest.setSoftware(deprecateBulkSctRequestDTO.getSoftware());
             bulkSctRequest.setComment(deprecateBulkSctRequestDTO.getComment());
 
-            boolean able = isAbleUser(deprecateBulkSctRequestDTO.getNamespace().toString(), userObj);
+            boolean able = isAbleUser(deprecateBulkSctRequestDTO.getNamespace().toString(), token.getAuthenticateResponseDto());
             if (!able) {
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             } else {
@@ -579,7 +638,7 @@ public class BulkSctidService {
                         }
                     }
                     if (!error) {
-                        bulkSctRequest.setAuthor(userObj.getLogin());
+                        bulkSctRequest.setAuthor(token.getUserName());
                         bulkSctRequest.setModel(modelsConstants.SCTID);
                         bulkSctRequest.setType(jobType.DEPRECATE_SCTIDS);
                         //BulkSctRequestDTO deprecateBulkSctRequestDTO = new RegistrationDataDTO(registrationData.getRecords(), registrationData.getNamespace(),
@@ -603,15 +662,11 @@ public class BulkSctidService {
                 }
 
             }
-
-        } else {
-            throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
-        }
         return resultJob;
     }
 
     //Publish API
-    public BulkJob publishSctid(String token, BulkSctRequestDTO publishBulkSctRequestDTO) throws CisException {
+    public BulkJob publishSctid(Token token, BulkSctRequestDTO publishBulkSctRequestDTO) throws CisException {
         BulkJob resultJob = new BulkJob();
         /*
     * {
@@ -623,14 +678,13 @@ public class BulkSctidService {
   "comment": "string"
 }*/
         //requestbody change
-        if (authenticateToken(token)) {
-            UserDTO userObj = this.getAuthenticatedUser();
+           // UserDTO userObj = this.getAuthenticatedUser();
             BulkSctRequest bulkSctRequest = new BulkSctRequest();
             bulkSctRequest.setSctids(publishBulkSctRequestDTO.getSctids());
             bulkSctRequest.setNamespace(publishBulkSctRequestDTO.getNamespace());
             bulkSctRequest.setSoftware(publishBulkSctRequestDTO.getSoftware());
             bulkSctRequest.setComment(publishBulkSctRequestDTO.getComment());
-            boolean able = isAbleUser(publishBulkSctRequestDTO.getNamespace().toString(), userObj);
+            boolean able = isAbleUser(publishBulkSctRequestDTO.getNamespace().toString(), token.getAuthenticateResponseDto());
             if (!able) {
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             } else {
@@ -648,7 +702,7 @@ public class BulkSctidService {
                         }
                     }
                     if (!error) {
-                        bulkSctRequest.setAuthor(userObj.getLogin());
+                        bulkSctRequest.setAuthor(token.getUserName());
                         bulkSctRequest.setModel(modelsConstants.SCTID);
                         bulkSctRequest.setType(jobType.PUBLISH_SCTIDS);
                         //BulkSctRequestDTO deprecateBulkSctRequestDTO = new RegistrationDataDTO(registrationData.getRecords(), registrationData.getNamespace(),
@@ -672,17 +726,12 @@ public class BulkSctidService {
                 }
 
             }
-
-        } else {
-            throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
-        }
         return resultJob;
     }
 
     //Release Sctid API
-    public BulkJob releaseSctid(String token, BulkSctRequestDTO releaseBulkSctRequestDTO) throws CisException {
+    public BulkJob releaseSctid(Token token, BulkSctRequestDTO releaseBulkSctRequestDTO) throws CisException {
         BulkJob resultJob = new BulkJob();
-        if (authenticateToken(token)) {
 
                     /*
     * {
@@ -700,8 +749,8 @@ public class BulkSctidService {
             bulkSctRequest.setSoftware(releaseBulkSctRequestDTO.getSoftware());
             bulkSctRequest.setComment(releaseBulkSctRequestDTO.getComment());
 
-            UserDTO userObj = this.getAuthenticatedUser();
-            boolean able = isAbleUser(releaseBulkSctRequestDTO.getNamespace().toString(), userObj);
+            //UserDTO userObj = this.getAuthenticatedUser();
+            boolean able = isAbleUser(releaseBulkSctRequestDTO.getNamespace().toString(), token.getAuthenticateResponseDto());
             if (!able) {
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             } else {
@@ -719,7 +768,7 @@ public class BulkSctidService {
                         }
                     }
                     if (!error) {
-                        bulkSctRequest.setAuthor(userObj.getLogin());
+                        bulkSctRequest.setAuthor(token.getUserName());
                         bulkSctRequest.setModel(modelsConstants.SCTID);
                         bulkSctRequest.setType(jobType.RELEASE_SCTIDS);
                         //BulkSctRequestDTO deprecateBulkSctRequestDTO = new RegistrationDataDTO(registrationData.getRecords(), registrationData.getNamespace(),
@@ -743,31 +792,23 @@ public class BulkSctidService {
                 }
 
             }
-
-        } else {
-            throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
-        }
         return resultJob;
     }
 
-    public BulkJob reserveSctids(String token, SCTIDBulkReservationRequestDto sctidBulkReservationRequestDto) throws CisException {
+    public BulkJob reserveSctids(Token authToken, SCTIDBulkReservationRequestDto sctidBulkReservationRequestDto) throws CisException {
         BulkJob output = new BulkJob();
-        if (authenticateToken(token)) {
-            UserDTO userObj = this.getAuthenticatedUser();
-            boolean able = isAbleUser(sctidBulkReservationRequestDto.getNamespace().toString(), userObj);
+            //UserDTO userObj = this.getAuthenticatedUser();
+            boolean able = isAbleUser(sctidBulkReservationRequestDto.getNamespace().toString(), authToken.getAuthenticateResponseDto());
             if (able)
-                output = bulkReserveSctids(sctidBulkReservationRequestDto);
+                output = bulkReserveSctids(sctidBulkReservationRequestDto,authToken.getUserName());
             else {
                 throw new CisException(HttpStatus.FORBIDDEN, "No permission for the selected operation");
             }
-
-        } else
-            throw new CisException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
         return output;
     }
 
-    private BulkJob bulkReserveSctids(SCTIDBulkReservationRequestDto sctidBulkReservationRequestDto) throws CisException {
-        UserDTO userObj = this.getAuthenticatedUser();
+    private BulkJob bulkReserveSctids(SCTIDBulkReservationRequestDto sctidBulkReservationRequestDto,String username) throws CisException {
+        //UserDTO userObj = this.getAuthenticatedUser();
 
         /*
         * {
@@ -798,7 +839,7 @@ public class BulkSctidService {
             throw new CisException(HttpStatus.UNAUTHORIZED, "Quantity property cannot be lower to 1.");
         }
         {
-            sctidBulkReserve.setAuthor(userObj.getLogin());
+            sctidBulkReserve.setAuthor(username);
             sctidBulkReserve.setModel(modelsConstants.SCTID);
             sctidBulkReserve.setType(JobTypeConstants.RESERVE_SCTIDS);
             BulkJob bulkJob = new BulkJob();

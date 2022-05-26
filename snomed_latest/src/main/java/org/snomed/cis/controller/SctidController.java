@@ -7,8 +7,10 @@ import io.swagger.annotations.ApiResponses;
 import org.snomed.cis.controller.dto.*;
 import org.snomed.cis.domain.Sctid;
 import org.snomed.cis.exception.CisException;
+import org.snomed.cis.security.Token;
 import org.snomed.cis.service.SctidService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,14 +36,16 @@ public class SctidController {
 
     @GetMapping("/sct/ids")
     @ResponseBody
-    public List<Sctid> getSct(@RequestParam String token, @RequestParam(name = "limit", required = false) String limit, @RequestParam(name = "skip", required = false) String skip, @RequestParam(name = "namespace", required = false) String namespace) throws CisException, JsonProcessingException {
-        return sctidService.getSct(token, limit, skip, namespace);
+    public List<Sctid> getSct(@RequestParam String token, @RequestParam(name = "limit", required = false) String limit, @RequestParam(name = "skip", required = false) String skip, @RequestParam(name = "namespace", required = false) String namespace,Authentication authentication) throws CisException, JsonProcessingException {
+        Token authToken = (Token) authentication;
+        return sctidService.getSct(authToken, limit, skip, namespace);
     }
 
     @GetMapping("/sct/ids/{sctid}")
     @ResponseBody
-    public SctWithSchemeResponseDTO getSctWithId(@RequestParam String token, @PathVariable String sctid, @RequestParam(name = "includeAdditionalIds", required = false) String includeAdditionalIds) throws CisException {
-        return sctidService.getSctWithId(token, sctid, includeAdditionalIds);
+    public SctWithSchemeResponseDTO getSctWithId(@RequestParam String token, @PathVariable String sctid, @RequestParam(name = "includeAdditionalIds", required = false) String includeAdditionalIds,Authentication authentication) throws CisException {
+        Token authToken = (Token) authentication;
+        return sctidService.getSctWithId(authToken, sctid, includeAdditionalIds);
     }
 
     @GetMapping("/sct/check/{sctid}")
@@ -52,43 +56,50 @@ public class SctidController {
 
     @GetMapping("/sct/namespaces/{namespaceId}/systemids/{systemId}")
     @ResponseBody
-    public Sctid getSctBySystemId(@RequestParam String token, @PathVariable Integer namespaceId, @PathVariable String systemId) throws CisException {
-        return sctidService.getSctWithSystemId(token, namespaceId, systemId);
+    public Sctid getSctBySystemId(@RequestParam String token, @PathVariable Integer namespaceId, @PathVariable String systemId,Authentication authentication) throws CisException {
+        Token authToken = (Token) authentication;
+        return sctidService.getSctWithSystemId(authToken, namespaceId, systemId);
     }
 
     @PutMapping("/sct/deprecate")
     @ResponseBody
-    public Sctid deprecateSctid(@RequestParam String token, @RequestBody DeprecateSctRequestDTO deprecateRequest) throws CisException {
-        return sctidService.deprecateSct(token, deprecateRequest);
+    public Sctid deprecateSctid(@RequestParam String token, @RequestBody DeprecateSctRequestDTO deprecateRequest,Authentication authentication) throws CisException {
+        Token authToken = (Token) authentication;
+        return sctidService.deprecateSct(authToken, deprecateRequest);
     }
 
     @PutMapping("/sct/release")
     @ResponseBody
-    public Sctid releaseSctid(@RequestParam String token, @RequestBody DeprecateSctRequestDTO deprecateRequest) throws CisException {
-        return sctidService.releaseSct(token, deprecateRequest);
+    public Sctid releaseSctid(@RequestParam String token, @RequestBody DeprecateSctRequestDTO deprecateRequest,Authentication authentication) throws CisException {
+        Token authToken = (Token) authentication;
+        return sctidService.releaseSct(authToken, deprecateRequest);
     }
 
     @PutMapping("/sct/publish")
     @ResponseBody
-    public Sctid publishSctid(@RequestParam String token, @RequestBody DeprecateSctRequestDTO deprecateRequest) throws CisException {
-        return sctidService.publishSct(token, deprecateRequest);
+    public Sctid publishSctid(@RequestParam String token, @RequestBody DeprecateSctRequestDTO deprecateRequest,Authentication authentication) throws CisException {
+        Token authToken = (Token) authentication;
+        return sctidService.publishSct(authToken, deprecateRequest);
     }
 
     @PostMapping("/sct/generate")
     @ResponseBody
-    public SctWithSchemeResponseDTO generateSctid(@RequestParam String token, @RequestBody SctidsGenerateRequestDto generationData) throws CisException {
-        return sctidService.generateSctid(token, generationData);
+    public SctWithSchemeResponseDTO generateSctid(@RequestParam String token, @RequestBody SctidsGenerateRequestDto generationData, Authentication authentication) throws CisException {
+        Token authToken = (Token) authentication;
+        return sctidService.generateSctid(authToken, generationData);
     }
 
     @PostMapping("/sct/register")
     @ResponseBody
-    public Sctid registerSctid(@RequestParam String token, @RequestBody SCTIDRegistrationRequest generationData) throws CisException {
-        return sctidService.registerSctid(token, generationData);
+    public Sctid registerSctid(@RequestParam String token, @RequestBody SCTIDRegistrationRequest generationData,Authentication authentication) throws CisException {
+        Token authToken = (Token) authentication;
+        return sctidService.registerSctid(authToken, generationData);
     }
 
     @PostMapping("/sct/reserve")
     @ResponseBody
-    public Sctid reserveSctid(@RequestParam String token, @RequestBody SCTIDReservationRequest reservationData) throws CisException {
-        return sctidService.reserveSctid(token, reservationData);
+    public Sctid reserveSctid(@RequestParam String token, @RequestBody SCTIDReservationRequest reservationData,Authentication authentication) throws CisException {
+        Token authToken = (Token) authentication;
+        return sctidService.reserveSctid(authToken, reservationData);
     }
 }

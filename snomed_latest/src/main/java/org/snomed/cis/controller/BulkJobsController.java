@@ -9,8 +9,10 @@ import org.slf4j.LoggerFactory;
 import org.snomed.cis.controller.dto.CleanUpServiceResponse;
 import org.snomed.cis.domain.BulkJob;
 import org.snomed.cis.exception.CisException;
+import org.snomed.cis.security.Token;
 import org.snomed.cis.service.BulkJobService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -55,7 +57,8 @@ public class BulkJobsController {
 
     @GetMapping("/bulk/jobs/cleanupExpired")
     @ResponseBody
-    public List<CleanUpServiceResponse> cleanUpExpiredIds(@RequestParam String token) throws CisException {
-        return bulkJobService.cleanUpExpiredIds(token);
+    public List<CleanUpServiceResponse> cleanUpExpiredIds(@RequestParam String token, Authentication authentication) throws CisException {
+        Token authToken = (Token)authentication;
+        return bulkJobService.cleanUpExpiredIds(authToken);
     }
 }

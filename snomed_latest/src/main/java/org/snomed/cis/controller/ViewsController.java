@@ -207,6 +207,6 @@ public class ViewsController {
     }
     @RequestMapping(value = "/docs", method = RequestMethod.GET)
     public String redirectSwagger() {
-        return "redirect:/swagger-ui.html";
+        return "redirect:/swagger-ui/";
     }
 }

@@ -67,7 +67,7 @@ public class AuthorizationController {
     }
 
     @GetMapping(value = "/sct/namespaces/{namespaceId}/permissions")
-    public ResponseEntity<List<PermissionsNamespace>> getNamespacePermissions(@PathVariable String namespaceId) {
+    public ResponseEntity<List<PermissionsNamespace>> getNamespacePermissions(@PathVariable String namespaceId) throws CisException {
         return new ResponseEntity<>(namespaceService.getNamespacePermissions(namespaceId), HttpStatus.OK);
     }
 

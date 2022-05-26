@@ -11,11 +11,15 @@ import org.snomed.cis.domain.Partitions;
 import org.snomed.cis.domain.PartitionsPk;
 import org.snomed.cis.domain.PermissionsNamespace;
 import org.snomed.cis.exception.CisException;
+import org.snomed.cis.pojo.Config;
 import org.snomed.cis.repository.NamespaceRepository;
 import org.snomed.cis.repository.PartitionsRepository;
 import org.snomed.cis.repository.PermissionsNamespaceRepository;
+import org.snomed.cis.security.Token;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityManager;
@@ -37,9 +41,10 @@ public class NamespaceService {
     AuthenticateToken authenticateToken;
 
     @Autowired
-    private SecurityController securityController;
-    @Autowired
     BulkSctidService bulkSctidService;
+
+    @Autowired
+    private Config config;
 
     @PersistenceContext
     EntityManager entityManager;
@@ -51,19 +56,13 @@ public class NamespaceService {
     private PartitionsRepository partitionsRepository;
 
 
-    public boolean authenticateToken() throws CisException {
-        UserDTO obj = this.securityController.authenticate();
-        if (null != obj) return true;
-        else return false;
-    }
-
-    public UserDTO getAuthenticatedUser() throws CisException {
-        return this.securityController.authenticate();
-    }
-
     public List<NamespaceDto> getNamespaces(String token) throws CisException {
-        if (bulkSctidService.authenticateToken(token)) return this.getNamespaceslist();
-        else throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
+        return this.getNamespaceslist();
+    }
+
+    public AuthenticateResponseDto getAuthenticatedResponse(Authentication authentication) {
+        Token token = (Token) authentication;
+        return token.getAuthenticateResponseDto();
     }
 
     public List<NamespaceDto> getNamespaceslist() {
@@ -122,16 +121,14 @@ public class NamespaceService {
 
     }
 
-    public String createNamespace(String token, NamespaceDto namespace) throws CisException, ParseException {
-        if (bulkSctidService.authenticateToken(token)) return this.createNamespaces(token, namespace);
-        else throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
+    public String createNamespace(AuthenticateResponseDto authenticateResponseDto, NamespaceDto namespace) throws CisException, ParseException {
+        return this.createNamespaces(authenticateResponseDto, namespace);
     }
 
-    public String createNamespaces(String token, NamespaceDto namespace) throws CisException, ParseException {
-        UserDTO userObj = this.getAuthenticatedUser();
+    public String createNamespaces(AuthenticateResponseDto authenticateResponseDto, NamespaceDto namespace) throws CisException, ParseException {
         String namespaceString = namespace.getNamespace() + "";
         NamespaceDto output = new NamespaceDto();
-        if (this.isAbleToEdit(namespace.getNamespace(), userObj)) {
+        if (this.isAbleToEdit(namespace.getNamespace(),authenticateResponseDto)) {
             if (namespaceString.length() != 7 && !namespaceString.equalsIgnoreCase("0")) {
                 throw new CisException(HttpStatus.BAD_REQUEST, "Invalid namespace");
             } else {
@@ -213,7 +210,7 @@ public class NamespaceService {
         return response.toString();
     }
 
-    private boolean isAbleToEdit(Integer namespace, UserDTO userObj) throws CisException {
+    /*private boolean isAbleToEdit(Integer namespace,String username) throws CisException {
         List<String> groups = authenticateToken.getGroupsList();
         boolean able = false;
         for (String group : groups) {
@@ -227,7 +224,7 @@ public class NamespaceService {
                 //
 
                 for (PermissionsNamespace perm : permissionsNamespaceList) {
-                    if (("manager").equalsIgnoreCase(perm.getRole()) && (perm.getUsername().equalsIgnoreCase(userObj.getFirstName()))) {
+                    if (("manager").equalsIgnoreCase(perm.getRole()) && (perm.getUsername().equalsIgnoreCase(username))) {
                         able = true;
                     }
                 }
@@ -240,7 +237,7 @@ public class NamespaceService {
             return able;
         }
         return able;
-    }//isAbleToEdit
+    }//isAbleToEdit*/
 
     private boolean isAbleToEdit(Integer namespace, AuthenticateResponseDto authenticateResponseDto) {
         List<String> groups = authenticateResponseDto.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
@@ -265,15 +262,12 @@ public class NamespaceService {
         return hasNamespacePermission;
     }
 
-    public String updateNamespace(String token, NamespaceDto namespace) throws Exception {
-        if (bulkSctidService.authenticateToken(token)) return this.updateNamespaces(token, namespace);
-        else throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
+    public String updateNamespace(AuthenticateResponseDto authenticateResponseDto, NamespaceDto namespace) throws Exception {
+        return this.updateNamespaces(authenticateResponseDto, namespace);
     }
 
-    public String updateNamespaces(String token, NamespaceDto namespace) throws Exception {
-        UserDTO userObj = this.getAuthenticatedUser();
-
-        if (this.isAbleToEdit(namespace.getNamespace(), userObj)) {
+    public String updateNamespaces(AuthenticateResponseDto authenticateResponseDto, NamespaceDto namespace) throws Exception {
+        if (this.isAbleToEdit(namespace.getNamespace(), authenticateResponseDto)) {
 
             return (editNamespace(namespace.getNamespace(), namespace));
 
@@ -323,19 +317,18 @@ public class NamespaceService {
 
 
     public List<Namespace> getNamespacesForUser(String token, String userName) throws CisException {
-        if (authenticateToken()) return this.getNamespacesListForUser(token, userName);
-        else throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
+        return this.getNamespacesListForUser(token, userName);
     }
 
     public List<Namespace> getNamespacesListForUser(String token, String userName) throws CisException {
-        UserDTO userObj = this.getAuthenticatedUser();
+       // UserDTO userObj = this.getAuthenticatedUser();
         List<String> roleAsGroups;
         List<Namespace> namespaceList;
         List<String> namespacesFromGroup = new ArrayList<>();
         List<String> namespaces = new ArrayList<>();
         List<String> otherGroup = new ArrayList<>();
 
-        List<String> groups = securityController.getUserGroup(userName, token);
+        List<String> groups = config.getAuthorization().getGroups();
 
         if (groups != null && !groups.isEmpty()) {
             for (String group : groups) {
@@ -377,8 +370,7 @@ public class NamespaceService {
     }
 
     public NamespaceDto getNamespace(String token, String namespaceId) throws CisException {
-        if (bulkSctidService.authenticateToken(token)) return this.getNamespaceId(token, namespaceId);
-        else throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
+        return this.getNamespaceId(token, namespaceId);
     }
 
     @Transactional
@@ -417,19 +409,17 @@ public class NamespaceService {
     }
 
 
-    public String deleteNamespace(String token, String namespaceId) throws CisException {
-        if (bulkSctidService.authenticateToken(token)) return this.deleteNamespaces(token, namespaceId);
-        else throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
+    public String deleteNamespace(AuthenticateResponseDto authenticateResponseDto, String namespaceId) throws CisException {
+        return this.deleteNamespaces(authenticateResponseDto, namespaceId);
     }
 
-    public String deleteNamespaces(String token, String namespaceId) throws CisException {
-        UserDTO userObj = this.getAuthenticatedUser();
+    public String deleteNamespaces(AuthenticateResponseDto authenticateResponseDto, String namespaceId) throws CisException {
         JSONObject response = new JSONObject();
         if (namespaceId.length() != 7 && namespaceId != "0")
             response.put("message", "Invalid Namespace");
         else {
             int deletedRows = 0;
-            if (this.isAbleToEdit(Integer.valueOf(namespaceId), userObj)) {
+            if (this.isAbleToEdit(Integer.valueOf(namespaceId), authenticateResponseDto)) {
                 Optional<Namespace> namespaceObj = namespaceRepository.findById(Integer.valueOf(namespaceId));
                 if (namespaceObj.isPresent()) {
                     namespaceRepository.delete(namespaceObj.get());
@@ -447,18 +437,15 @@ public class NamespaceService {
     }
 
 
-    public String updatePartitionSequence(String token, String namespaceId, String partitionId, String value) throws CisException {
-        if (bulkSctidService.authenticateToken(token))
-            return this.updatePartitionSequences(token, namespaceId, partitionId, value);
-        else throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
+    public String updatePartitionSequence(AuthenticateResponseDto authenticateResponseDto, String namespaceId, String partitionId, String value) throws CisException {
+        return this.updatePartitionSequences(authenticateResponseDto, namespaceId, partitionId, value);
     }
 
-    public String updatePartitionSequences(String token, String namespaceId, String partitionId, String value) throws CisException {
-        UserDTO userObj = this.getAuthenticatedUser();
+    public String updatePartitionSequences(AuthenticateResponseDto authenticateResponseDto, String namespaceId, String partitionId, String value) throws CisException {
         String out = "";
         Integer namespaceIdint = Integer.valueOf(namespaceId);
         JSONObject response = new JSONObject();
-        if (this.isAbleToEdit(Integer.valueOf(namespaceId), userObj)) {
+        if (this.isAbleToEdit(Integer.valueOf(namespaceId), authenticateResponseDto)) {
 
             Optional<Partitions> partitions = partitionsRepository.findById(new PartitionsPk(namespaceIdint, partitionId));
             if (partitions.isPresent())
@@ -473,8 +460,18 @@ public class NamespaceService {
         return response.toString();
     }
 
-    public List<PermissionsNamespace> getNamespacePermissions(String namespaceId) {
-        return permissionsNamespaceRepository.findByNamespace(Integer.valueOf(namespaceId));
+    public List<PermissionsNamespace> getNamespacePermissions(String namespaceId) throws CisException {
+        try{
+            List<PermissionsNamespace> permissionsNamespaceList = permissionsNamespaceRepository.findByNamespace(Integer.valueOf(namespaceId));
+            if((permissionsNamespaceList).size()>0)
+                return permissionsNamespaceList;
+            else
+                return null;
+        }
+        catch (Exception e)
+        {
+            throw new CisException(HttpStatus.BAD_REQUEST,e.getMessage());
+        }
     }
 
     public String deleteNamespacePermissionsOfUser(String namespaceId, AuthenticateResponseDto authenticateResponseDto) throws CisException {
