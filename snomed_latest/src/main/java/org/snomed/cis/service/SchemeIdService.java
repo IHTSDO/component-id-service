@@ -53,8 +53,8 @@ public class SchemeIdService {
 
     @Autowired
     StateMachine stateMachine;
-    public boolean isAbleUser(String schemeName, Token authToken) throws CisException {
-        List<String> groups = authToken.getAuthenticateResponseDto().getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
+    public boolean isAbleUser(String schemeName, AuthenticateResponseDto authToken) throws CisException {
+        List<String> groups = authToken.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
         boolean isAble = false;
         if (groups.contains("component-identifier-service-admin") || hasSchemePermission(schemeName, authToken)) {
             isAble = true;
@@ -62,7 +62,7 @@ public class SchemeIdService {
         return isAble;
     }
 
-    public boolean hasSchemePermission(String schemeName,Token authToken) throws CisException {
+    public boolean hasSchemePermission(String schemeName,AuthenticateResponseDto authToken) throws CisException {
         boolean able = false;
         if (!"false".equalsIgnoreCase(schemeName.toString())) {
             List<PermissionsScheme> permissionsSchemeList = permissionsSchemeRepository.findByScheme(schemeName.toString());
@@ -70,14 +70,14 @@ public class SchemeIdService {
             for (PermissionsScheme perm : permissionsSchemeList) {
                 if (("group").equalsIgnoreCase(perm.getRole())) {
                     possibleGroups.add(perm.getUsername());
-                } else if ((authToken.getUserName()).equalsIgnoreCase(perm.getUsername())) {
+                } else if ((authToken.getName()).equalsIgnoreCase(perm.getUsername())) {
                     able = true;
                 }
-            }//for
+            }
             if (!able && possibleGroups.size() > 0) {
                 List<String> roleAsGroups;
                 try {
-                    roleAsGroups = authToken.getAuthenticateResponseDto().getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
+                    roleAsGroups = authToken.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
                 } catch (Exception e) {
                     throw new CisException(HttpStatus.BAD_REQUEST, "Error accessing groups");
                 }
@@ -90,60 +90,15 @@ public class SchemeIdService {
         return able;
     }
 
-    /*public boolean isAbleUser(String schemeName, UserDTO user) throws CisException {
-        List<String> groups = authenticateToken.getGroupsList();
-        boolean able = false;
-        for (String group : groups) {
-            if (group.equalsIgnoreCase("component-identifier-service-admin")) {
-                able = true;
-            }
-        }*/
-       /* List<String> admins = Arrays.asList("keerthika", "b", "c");
-        for (String admin : admins) {
-            if (admin.equalsIgnoreCase(user.getLogin())) {
-                able = true;
-            }
-        }*/
-       /* if (!able) {
-            if (!"false".equalsIgnoreCase(schemeName.toString())) {
-                List<PermissionsScheme> permissionsSchemeList = permissionsSchemeRepository.findByScheme(schemeName.toString());
-                List<String> possibleGroups = new ArrayList<>();
-                for (PermissionsScheme perm : permissionsSchemeList) {
-                    if (("group").equalsIgnoreCase(perm.getRole())) {
-                        possibleGroups.add(perm.getUsername());
-                    } else if ((user.getLogin()).equalsIgnoreCase(perm.getUsername())) {
-                        able = true;
-                    }
-                }//for
-                if (!able && possibleGroups.size() > 0) {
-                    List<String> roleAsGroups;
-                    try {
-                        roleAsGroups = user.getRoles();
-                    } catch (Exception e) {
-                        throw new CisException(HttpStatus.BAD_REQUEST, "Error accessing groups");
-                    }
-                    for (String group : roleAsGroups) {
-                        if (possibleGroups.contains(group))
-                            able = true;
-                    }
-                } else {
-                    return able;
-                }
-            }
-        }
-        return able;
-    }*/
-
     public UserDTO getAuthenticatedUser() throws CisException {
         return this.securityController.authenticate();
     }
 
-    public List<SchemeId> getSchemeIds(Token authToken, String limit, String skip, SchemeName schemeName) throws CisException {
+    public List<SchemeId> getSchemeIds(AuthenticateResponseDto authToken, String limit, String skip, SchemeName schemeName) throws CisException {
             return this.getSchemeIdsList(limit, skip, schemeName,authToken);
     }
 
-    private List<SchemeId> getSchemeIdsList(String limit, String skip, SchemeName schemeName,Token authToken) throws CisException {
-        //UserDTO userObj = this.getAuthenticatedUser();
+    private List<SchemeId> getSchemeIdsList(String limit, String skip, SchemeName schemeName,AuthenticateResponseDto authToken) throws CisException {
         List<SchemeId> schemeidList = new ArrayList<>();
         if (this.isAbleUser("false", authToken)) {
             //ArrayList<String> schemeIdsArrayList = new ArrayList<String>(Arrays.asList(schemedIdArray));
@@ -222,15 +177,13 @@ public class SchemeIdService {
         return schemeidList;
     }
 
-    public SchemeId getSchemeId(Token authToken, SchemeName scheme, String schemeid) throws CisException {
+    public SchemeId getSchemeId(AuthenticateResponseDto authToken, SchemeName scheme, String schemeid) throws CisException {
             return this.getSchemeIdsByschemeIdList(scheme.toString(), schemeid);
     }
 
     public SchemeId getSchemeIdsByschemeIdList(String schemeName, String schemeid) throws CisException {
-        //UserDTO userObj = authenticateTokenService.getAuthenticatedUser();
         SchemeId record = new SchemeId();
         Optional<SchemeId> schemeIdObj = null;
-        //if (isAbleUser(schemeName, authToken)) {
             if (schemeid == null || schemeid == "") {
 
                 throw new CisException(HttpStatus.UNAUTHORIZED, "Not valid schemeId.");
@@ -252,11 +205,6 @@ public class SchemeIdService {
             } else {
                 return schemeIdObj.get();
             }
-
-       /* } else {
-            throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
-        }*/
-
     }
 
     private SchemeId getFreeRecords(String schemeName, String schemeid) throws CisException {
@@ -351,12 +299,11 @@ public class SchemeIdService {
     }
 
 
-    public SchemeId getSchemeIdsBySystemId(Token authToken, SchemeName scheme, String systemid) throws CisException {
+    public SchemeId getSchemeIdsBySystemId(AuthenticateResponseDto authToken, SchemeName scheme, String systemid) throws CisException {
             return this.getSchemeIdsBysystemList(scheme.toString(), systemid,authToken);
     }
 
-    private SchemeId getSchemeIdsBysystemList(String scheme, String systemid,Token authToken) throws CisException {
-       // UserDTO userObj = authenticateTokenService.getAuthenticatedUser();
+    private SchemeId getSchemeIdsBysystemList(String scheme, String systemid,AuthenticateResponseDto authToken) throws CisException {
         if (isAbleUser(scheme, authToken)) {
             List<SchemeId> schemeIdList = bulkSchemeIdRepository.findBySchemeAndSystemId(scheme, systemid);
 
@@ -372,34 +319,19 @@ public class SchemeIdService {
 
     }
 
-    public SchemeId deprecateSchemeIds(Token authToken, SchemeName schemeName, SchemeIdUpdateRequestDto request) throws CisException {
+    public SchemeId deprecateSchemeIds(AuthenticateResponseDto authToken, SchemeName schemeName, SchemeIdUpdateRequestDto request) throws CisException {
             return this.deprecateSchemeIdList(schemeName, request,authToken);
     }
 
-    private SchemeId deprecateSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request,Token authToken) throws CisException {
-       // UserDTO userObj = authenticateTokenService.getAuthenticatedUser();
+    private SchemeId deprecateSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request,AuthenticateResponseDto authToken) throws CisException {
         SchemeId schemeId = new SchemeId();
-
-        /*
-    *
-    * {
-  "schemeId": "string",
-  "software": "string",
-  "comment": "string"
-}
-    * */
-        //requestbody change
-
         if (isAbleUser(schemeName.toString(), authToken)) {
             SchemeIdUpdateRequest updateRequest = new SchemeIdUpdateRequest();
             updateRequest.setSchemeId(request.getSchemeId());
             updateRequest.setSoftware(request.getSoftware());
             updateRequest.setComment(request.getComment());
-
-            updateRequest.setAuthor(authToken.getUserName());
+            updateRequest.setAuthor(authToken.getName());
             SchemeId schemeIdrecord = getSchemeIdsByschemeIdList(schemeName.toString(), updateRequest.getSchemeId());
-
-            //
             if (schemeIdrecord.getSchemeId().isEmpty()) {
                 throw new CisException(HttpStatus.NOT_FOUND, "SchemeId record is empty");
             } else {
@@ -415,7 +347,6 @@ public class SchemeIdService {
                     throw new CisException(HttpStatus.BAD_REQUEST, "Cannot deprecate SchemeId:" + schemeIdrecord.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
                 }
             }
-            //
         } else {
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
@@ -424,34 +355,21 @@ public class SchemeIdService {
     }
     //releaseSchmeId
 
-    public SchemeId releaseSchemeIds(Token authToken, SchemeName schemeName, SchemeIdUpdateRequestDto request) throws CisException {
+    public SchemeId releaseSchemeIds(AuthenticateResponseDto authToken, SchemeName schemeName, SchemeIdUpdateRequestDto request) throws CisException {
             return this.releaseSchemeIdList(schemeName, request, authToken);
     }
 
-    private SchemeId releaseSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request,Token authToken) throws CisException {
-       // UserDTO userObj = authenticateTokenService.getAuthenticatedUser();
+    private SchemeId releaseSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request,AuthenticateResponseDto authToken) throws CisException {
         SchemeId schemeId = new SchemeId();
-     /*
-    *
-    * {
-  "schemeId": "string",
-  "software": "string",
-  "comment": "string"
-}
-    * */
-        //requestbody change
-
         if (isAbleUser(schemeName.toString(), authToken)) {
 
             SchemeIdUpdateRequest updateRequest = new SchemeIdUpdateRequest();
             updateRequest.setSchemeId(request.getSchemeId());
             updateRequest.setSoftware(request.getSoftware());
             updateRequest.setComment(request.getComment());
-
-            updateRequest.setAuthor(authToken.getUserName());
+            updateRequest.setAuthor(authToken.getName());
             SchemeId schemeIdrecord = getSchemeIdsByschemeIdList(schemeName.toString(), updateRequest.getSchemeId());
 
-            //
             if (schemeIdrecord.getSchemeId().isEmpty()) {
                 throw new CisException(HttpStatus.NOT_FOUND, "SchemeId record is empty");
             } else {
@@ -467,7 +385,6 @@ public class SchemeIdService {
                     throw new CisException(HttpStatus.BAD_REQUEST, "Cannot release SchemeId:" + schemeIdrecord.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
                 }
             }
-            //
         } else {
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
@@ -475,35 +392,23 @@ public class SchemeIdService {
         return schemeId;
     }
 
-    //pblish
+    //publish
 
-    public SchemeId publishSchemeId(Token authToken, SchemeName schemeName, SchemeIdUpdateRequestDto request) throws CisException {
+    public SchemeId publishSchemeId(AuthenticateResponseDto authToken, SchemeName schemeName, SchemeIdUpdateRequestDto request) throws CisException {
             return this.publishSchemeIdList(schemeName, request,authToken);
 
     }
 
-    private SchemeId publishSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request,Token authToken) throws CisException {
-        //UserDTO userObj = authenticateTokenService.getAuthenticatedUser();
+    private SchemeId publishSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request,AuthenticateResponseDto authToken) throws CisException {
         SchemeId schemeId = new SchemeId();
-/*
-    *
-    * {
-  "schemeId": "string",
-  "software": "string",
-  "comment": "string"
-}
-    * */
-        //requestbody change
         if (isAbleUser(schemeName.toString(), authToken)) {
             SchemeIdUpdateRequest updateRequest = new SchemeIdUpdateRequest();
             updateRequest.setSchemeId(request.getSchemeId());
             updateRequest.setSoftware(request.getSoftware());
             updateRequest.setComment(request.getComment());
-
-            updateRequest.setAuthor(authToken.getUserName());
+            updateRequest.setAuthor(authToken.getName());
             SchemeId schemeIdrecord = getSchemeIdsByschemeIdList(schemeName.toString(), updateRequest.getSchemeId());
 
-            //
             if (schemeIdrecord.getSchemeId().isEmpty()) {
                 throw new CisException(HttpStatus.NOT_FOUND, "SchemeId record is empty");
             } else {
@@ -519,7 +424,6 @@ public class SchemeIdService {
                     throw new CisException(HttpStatus.BAD_REQUEST, "Cannot publish SchemeId:" + schemeIdrecord.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
                 }
             }
-            //
         } else {
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
@@ -527,28 +431,18 @@ public class SchemeIdService {
         return schemeId;
     }
 
-    public SchemeId reserveSchemeId(Token authToken, SchemeName schemeName, SchemeIdReserveRequestDto request) throws CisException {
+    public SchemeId reserveSchemeId(AuthenticateResponseDto authToken, SchemeName schemeName, SchemeIdReserveRequestDto request) throws CisException {
             return this.reserveSchemeIdList(schemeName, request,authToken);
     }
 
-    private SchemeId reserveSchemeIdList(SchemeName schemeName, SchemeIdReserveRequestDto request,Token authToken) throws CisException {
-        //UserDTO userObj = authenticateTokenService.getAuthenticatedUser();
+    private SchemeId reserveSchemeIdList(SchemeName schemeName, SchemeIdReserveRequestDto request,AuthenticateResponseDto authToken) throws CisException {
 
         if (this.isAbleUser(schemeName.toString(), authToken)) {
-
-/*
-    {
-  "software": "string",
-  "expirationDate": "string",
-  "comment": "string"
-}
-    * */
-//requestbody change
             SchemeIdReserveRequest reserveRequest = new SchemeIdReserveRequest();
             reserveRequest.setSoftware(request.getSoftware());
             reserveRequest.setExpirationDate(request.getExpirationDate());
             reserveRequest.setComment(request.getComment());
-            reserveRequest.setAuthor(authToken.getUserName());
+            reserveRequest.setAuthor(authToken.getName());
             setNewSchemeIdRecord(schemeName, reserveRequest, stateMachine.actions.get("reserve"));
         } else {
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
@@ -588,7 +482,6 @@ public class SchemeIdService {
         }
 
         List<SchemeId> schemeIdRecords = findschemeRecord(objQuery, "1", null);
-        //no list so no size
         if (schemeIdRecords != null && schemeIdRecords.size() > 0) {
 
             var newStatus = stateMachine.getNewStatus(schemeIdRecords.get(0).getStatus(), reserve);
@@ -735,21 +628,11 @@ public class SchemeIdService {
     }
 
 
-    public SchemeId generateSchemeId(Token authToken, SchemeName schemeName, SchemeIdGenerateRequestDto request) throws CisException {
+    public SchemeId generateSchemeId(AuthenticateResponseDto authToken, SchemeName schemeName, SchemeIdGenerateRequestDto request) throws CisException {
             return this.generateSchemeIds(schemeName.toString(), request,authToken);
     }
 
-    public SchemeId generateSchemeIds(String schemeName, SchemeIdGenerateRequestDto request,Token authToken) throws CisException {
-
-        /*
-        * {
-  "systemId": "string",
-  "software": "string",
-  "comment": "string"
-}
-        * */
-        // requestbody change
-       // UserDTO userObj = authenticateTokenService.getAuthenticatedUser();
+    public SchemeId generateSchemeIds(String schemeName, SchemeIdGenerateRequestDto request,AuthenticateResponseDto authToken) throws CisException {
         SchemeId schemeIdRec = new SchemeId();
         if (this.isAbleUser(schemeName, authToken)) {
             SchemeIdGenerateRequest generateRequest = new SchemeIdGenerateRequest();
@@ -903,22 +786,11 @@ public class SchemeIdService {
     }
 
     //registerSchemeId
-    public SchemeId registerSchemeId(Token authToken, SchemeName schemeName, SchemeIdRegisterRequestDto request) throws CisException {
+    public SchemeId registerSchemeId(AuthenticateResponseDto authToken, SchemeName schemeName, SchemeIdRegisterRequestDto request) throws CisException {
             return this.registerSchemeIds(schemeName, request,authToken);
     }
 
-    public SchemeId registerSchemeIds(SchemeName schemeName, SchemeIdRegisterRequestDto request,Token authToken) throws CisException {
-       /*
-*
-* {
-  "schemeId": "string",
-  "systemId": "string",
-  "software": "string",
-  "comment": "string"
-}*/
-        //requestbody change
-
-        //UserDTO userObj = authenticateTokenService.getAuthenticatedUser();
+    public SchemeId registerSchemeIds(SchemeName schemeName, SchemeIdRegisterRequestDto request,AuthenticateResponseDto authToken) throws CisException {
         SchemeId schemeIdRec = null;
         if (this.isAbleUser(schemeName.toString(), authToken)) {
             SchemeIdRegisterRequest registerRequest = new SchemeIdRegisterRequest();
@@ -981,6 +853,5 @@ public class SchemeIdService {
         }
         return schemeId;
     }
-
 
 }

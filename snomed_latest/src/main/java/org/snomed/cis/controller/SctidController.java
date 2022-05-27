@@ -10,6 +10,7 @@ import org.snomed.cis.exception.CisException;
 import org.snomed.cis.security.Token;
 import org.snomed.cis.service.SctidService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,71 +36,61 @@ public class SctidController {
     })
 
     @GetMapping("/sct/ids")
-    @ResponseBody
-    public List<Sctid> getSct(@RequestParam String token, @RequestParam(name = "limit", required = false) String limit, @RequestParam(name = "skip", required = false) String skip, @RequestParam(name = "namespace", required = false) String namespace,Authentication authentication) throws CisException, JsonProcessingException {
+    public ResponseEntity<List<Sctid>> getSct( @RequestParam(name = "limit", required = false) String limit, @RequestParam(name = "skip", required = false) String skip, @RequestParam(name = "namespace", required = false) String namespace,Authentication authentication) throws CisException, JsonProcessingException {
         Token authToken = (Token) authentication;
-        return sctidService.getSct(authToken, limit, skip, namespace);
+        return ResponseEntity.ok(sctidService.getSct(authToken.getAuthenticateResponseDto(), limit, skip, namespace));
     }
 
     @GetMapping("/sct/ids/{sctid}")
-    @ResponseBody
-    public SctWithSchemeResponseDTO getSctWithId(@RequestParam String token, @PathVariable String sctid, @RequestParam(name = "includeAdditionalIds", required = false) String includeAdditionalIds,Authentication authentication) throws CisException {
+    public ResponseEntity<SctWithSchemeResponseDTO> getSctWithId( @PathVariable String sctid, @RequestParam(name = "includeAdditionalIds", required = false) String includeAdditionalIds,Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return sctidService.getSctWithId(authToken, sctid, includeAdditionalIds);
+        return ResponseEntity.ok(sctidService.getSctWithId(authToken.getAuthenticateResponseDto(), sctid, includeAdditionalIds));
     }
 
     @GetMapping("/sct/check/{sctid}")
-    @ResponseBody
-    public CheckSctidResponseDTO checkSctid(@PathVariable String sctid) throws CisException {
-        return sctidService.checkSctid(sctid);
+    public ResponseEntity<CheckSctidResponseDTO> checkSctid(@PathVariable String sctid) throws CisException {
+        return ResponseEntity.ok(sctidService.checkSctid(sctid));
     }
 
     @GetMapping("/sct/namespaces/{namespaceId}/systemids/{systemId}")
-    @ResponseBody
-    public Sctid getSctBySystemId(@RequestParam String token, @PathVariable Integer namespaceId, @PathVariable String systemId,Authentication authentication) throws CisException {
+    public ResponseEntity<Sctid> getSctBySystemId( @PathVariable Integer namespaceId, @PathVariable String systemId,Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return sctidService.getSctWithSystemId(authToken, namespaceId, systemId);
+        return ResponseEntity.ok(sctidService.getSctWithSystemId(authToken.getAuthenticateResponseDto(), namespaceId, systemId));
     }
 
     @PutMapping("/sct/deprecate")
-    @ResponseBody
-    public Sctid deprecateSctid(@RequestParam String token, @RequestBody DeprecateSctRequestDTO deprecateRequest,Authentication authentication) throws CisException {
+    public ResponseEntity<Sctid> deprecateSctid( @RequestBody DeprecateSctRequestDTO deprecateRequest,Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return sctidService.deprecateSct(authToken, deprecateRequest);
+        return ResponseEntity.ok(sctidService.deprecateSct(authToken.getAuthenticateResponseDto(), deprecateRequest));
     }
 
     @PutMapping("/sct/release")
-    @ResponseBody
-    public Sctid releaseSctid(@RequestParam String token, @RequestBody DeprecateSctRequestDTO deprecateRequest,Authentication authentication) throws CisException {
+    public ResponseEntity<Sctid> releaseSctid( @RequestBody DeprecateSctRequestDTO deprecateRequest,Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return sctidService.releaseSct(authToken, deprecateRequest);
+        return ResponseEntity.ok(sctidService.releaseSct(authToken.getAuthenticateResponseDto(), deprecateRequest));
     }
 
     @PutMapping("/sct/publish")
-    @ResponseBody
-    public Sctid publishSctid(@RequestParam String token, @RequestBody DeprecateSctRequestDTO deprecateRequest,Authentication authentication) throws CisException {
+    public ResponseEntity<Sctid> publishSctid( @RequestBody DeprecateSctRequestDTO deprecateRequest,Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return sctidService.publishSct(authToken, deprecateRequest);
+        return ResponseEntity.ok(sctidService.publishSct(authToken.getAuthenticateResponseDto(), deprecateRequest));
     }
 
     @PostMapping("/sct/generate")
-    @ResponseBody
-    public SctWithSchemeResponseDTO generateSctid(@RequestParam String token, @RequestBody SctidsGenerateRequestDto generationData, Authentication authentication) throws CisException {
+    public ResponseEntity<SctWithSchemeResponseDTO> generateSctid( @RequestBody SctidsGenerateRequestDto generationData, Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return sctidService.generateSctid(authToken, generationData);
+        return ResponseEntity.ok(sctidService.generateSctid(authToken.getAuthenticateResponseDto(), generationData));
     }
 
     @PostMapping("/sct/register")
-    @ResponseBody
-    public Sctid registerSctid(@RequestParam String token, @RequestBody SCTIDRegistrationRequest generationData,Authentication authentication) throws CisException {
+    public ResponseEntity<Sctid> registerSctid( @RequestBody SCTIDRegistrationRequest generationData,Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return sctidService.registerSctid(authToken, generationData);
+        return ResponseEntity.ok(sctidService.registerSctid(authToken.getAuthenticateResponseDto(), generationData));
     }
 
     @PostMapping("/sct/reserve")
-    @ResponseBody
-    public Sctid reserveSctid(@RequestParam String token, @RequestBody SCTIDReservationRequest reservationData,Authentication authentication) throws CisException {
+    public ResponseEntity<Sctid> reserveSctid( @RequestBody SCTIDReservationRequest reservationData,Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return sctidService.reserveSctid(authToken, reservationData);
+        return ResponseEntity.ok(sctidService.reserveSctid(authToken.getAuthenticateResponseDto(), reservationData));
     }
 }

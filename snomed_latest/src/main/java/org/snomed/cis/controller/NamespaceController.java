@@ -23,42 +23,41 @@ public class NamespaceController {
 
 
     @GetMapping("/users/{username}/namespaces/")
-    public ResponseEntity<List<Namespace>> getNamespacesForUser(@RequestParam String token,@PathVariable String username) throws CisException {
-        return ResponseEntity.ok(namespaceService.getNamespacesForUser(token,username));
+    public ResponseEntity<List<Namespace>> getNamespacesForUser(@PathVariable String username) throws CisException {
+        return ResponseEntity.ok(namespaceService.getNamespacesForUser(username));
     }
 
     @GetMapping("/sct/namespaces")
-    @ResponseBody
-    public List<NamespaceDto> getNamespaces(@RequestParam String token) throws CisException {
-    return namespaceService.getNamespaces(token);
+    public ResponseEntity<List<NamespaceDto>> getNamespaces(@RequestParam String token) throws CisException {
+    return ResponseEntity.ok(namespaceService.getNamespaces(token));
     }
 
     @PostMapping("/sct/namespaces")
-    public ResponseEntity<String> createNamespace(@RequestParam String token, @RequestBody NamespaceDto namespace,Authentication authentication) throws CisException,ParseException {
+    public ResponseEntity<String> createNamespace( @RequestBody NamespaceDto namespace,Authentication authentication) throws CisException,ParseException {
         Token authToken = (Token) authentication;
         return ResponseEntity.ok(namespaceService.createNamespace(authToken.getAuthenticateResponseDto(),namespace));
     }
 
     @PutMapping("/sct/namespaces")
-    public ResponseEntity<String> updateNamespace(@RequestParam String token, @RequestBody NamespaceDto namespace, Authentication authentication) throws Exception {
+    public ResponseEntity<String> updateNamespace( @RequestBody NamespaceDto namespace, Authentication authentication) throws Exception {
         Token authToken = (Token) authentication;
         return ResponseEntity.ok(namespaceService.updateNamespace(authToken.getAuthenticateResponseDto(),namespace));
     }
 
     @GetMapping("/sct/namespaces/{namespaceId}")
-    public ResponseEntity<NamespaceDto> getNamespace(@RequestParam String token, @PathVariable String namespaceId) throws CisException {
-        return ResponseEntity.ok(namespaceService.getNamespace(token,namespaceId));
+    public ResponseEntity<NamespaceDto> getNamespace( @PathVariable String namespaceId) throws CisException {
+        return ResponseEntity.ok(namespaceService.getNamespace(namespaceId));
     }
 
     @DeleteMapping("/sct/namespaces/{namespaceId}")
-    public ResponseEntity<String> deleteNamespace(@RequestParam String token,@PathVariable String namespaceId,Authentication authentication) throws CisException {
+    public ResponseEntity<String> deleteNamespace(@PathVariable String namespaceId,Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
         return ResponseEntity.ok(namespaceService.deleteNamespace(authToken.getAuthenticateResponseDto(),namespaceId));
     }
 
 
     @PutMapping("/sct/namespaces/{namespaceId}/partition/{partitionId}")
-    public ResponseEntity<String> updatePartitionSequence(@RequestParam String token, @PathVariable String namespaceId,@PathVariable String partitionId, @RequestParam String value,Authentication authentication ) throws CisException {
+    public ResponseEntity<String> updatePartitionSequence( @PathVariable String namespaceId,@PathVariable String partitionId, @RequestParam String value,Authentication authentication ) throws CisException {
         Token authToken = (Token) authentication;
         return ResponseEntity.ok(namespaceService.updatePartitionSequence(authToken.getAuthenticateResponseDto(),namespaceId,partitionId,value));
     }

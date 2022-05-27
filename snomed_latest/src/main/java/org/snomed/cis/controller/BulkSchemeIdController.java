@@ -11,9 +11,11 @@ import org.snomed.cis.domain.BulkJob;
 import org.snomed.cis.domain.SchemeId;
 import org.snomed.cis.domain.SchemeName;
 import org.snomed.cis.exception.CisException;
+import org.snomed.cis.security.Token;
 import org.snomed.cis.service.BulkSchemeIdService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,36 +38,43 @@ public class BulkSchemeIdController {
             // @ApiResponse(code = 404, message = "Branch not found", response = RestApiError.class)
     })
     @GetMapping("scheme/{schemeName}/bulk")
-    public ResponseEntity<List<SchemeId>> getSchemeIds(@RequestParam String token,@PathVariable SchemeName schemeName, @RequestParam String schemeIds) throws CisException {
-        return ResponseEntity.ok(bulkSchemeIdService.getSchemeIds(token,schemeName,schemeIds));
+    public ResponseEntity<List<SchemeId>> getSchemeIds(@PathVariable SchemeName schemeName, @RequestParam String schemeIds,Authentication authentication) throws CisException {
+        Token authToken = (Token) authentication;
+        return ResponseEntity.ok(bulkSchemeIdService.getSchemeIds(authToken.getAuthenticateResponseDto(),schemeName,schemeIds));
     }
 
     @PostMapping("scheme/{schemeName}/bulk/generate")
-    public ResponseEntity<BulkJob> generateSchemeIds(@RequestParam String token,@PathVariable SchemeName schemeName, @RequestBody SchemeIdBulkGenerationRequestDto schemeIdBulkDto) throws CisException {
-        return ResponseEntity.ok(bulkSchemeIdService.generateSchemeIds(token,schemeName,schemeIdBulkDto));
+    public ResponseEntity<BulkJob> generateSchemeIds(@PathVariable SchemeName schemeName, @RequestBody SchemeIdBulkGenerationRequestDto schemeIdBulkDto,Authentication authentication) throws CisException {
+        Token authToken = (Token) authentication;
+        return ResponseEntity.ok(bulkSchemeIdService.generateSchemeIds(authToken.getAuthenticateResponseDto(),schemeName,schemeIdBulkDto));
     }
 
     @PostMapping("scheme/{schemeName}/bulk/register")
-    public ResponseEntity<BulkJob> registerSchemeIds(@RequestParam String token,@PathVariable SchemeName schemeName,@RequestBody SchemeIdBulkRegisterRequestDto schemeIdBulkRegisterDto) throws CisException {
-        return ResponseEntity.ok(bulkSchemeIdService.registerSchemeIds(token,schemeName,schemeIdBulkRegisterDto));
+    public ResponseEntity<BulkJob> registerSchemeIds(@PathVariable SchemeName schemeName,@RequestBody SchemeIdBulkRegisterRequestDto schemeIdBulkRegisterDto,Authentication authentication) throws CisException {
+        Token authToken = (Token) authentication;
+        return ResponseEntity.ok(bulkSchemeIdService.registerSchemeIds(authToken.getAuthenticateResponseDto(),schemeName,schemeIdBulkRegisterDto));
     }
 
         @PostMapping("scheme/{schemeName}/bulk/reserve")
-    public ResponseEntity<BulkJob> reserveSchemeIds(@RequestParam String token,@PathVariable SchemeName schemeName,@RequestBody SchemeIdBulkReserveRequestDto schemeIdBulkReserveRequestDto) throws CisException {
-        return ResponseEntity.ok(bulkSchemeIdService.reserveSchemeIds(token,schemeName, schemeIdBulkReserveRequestDto));
+    public ResponseEntity<BulkJob> reserveSchemeIds(@PathVariable SchemeName schemeName,@RequestBody SchemeIdBulkReserveRequestDto schemeIdBulkReserveRequestDto,Authentication authentication) throws CisException {
+            Token authToken = (Token) authentication;
+        return ResponseEntity.ok(bulkSchemeIdService.reserveSchemeIds(authToken.getAuthenticateResponseDto(),schemeName, schemeIdBulkReserveRequestDto));
     }
     @PutMapping("scheme/{schemeName}/bulk/deprecate")
-    public ResponseEntity<BulkJob> deprecateSchemeIds(@RequestParam String token,@PathVariable SchemeName schemeName, @RequestBody SchemeIdBulkDeprecateRequestDto schemeIdBulkDeprecateRequestDto) throws CisException {
-        return ResponseEntity.ok(bulkSchemeIdService.deprecateSchemeIds(token,schemeName, schemeIdBulkDeprecateRequestDto));
+    public ResponseEntity<BulkJob> deprecateSchemeIds(@PathVariable SchemeName schemeName, @RequestBody SchemeIdBulkDeprecateRequestDto schemeIdBulkDeprecateRequestDto,Authentication authentication) throws CisException {
+        Token authToken = (Token) authentication;
+        return ResponseEntity.ok(bulkSchemeIdService.deprecateSchemeIds(authToken.getAuthenticateResponseDto(),schemeName, schemeIdBulkDeprecateRequestDto));
     }
 
     @PutMapping("scheme/{schemeName}/bulk/release")
-    public ResponseEntity<BulkJob> releaseSchemeIds(@RequestParam String token,@PathVariable SchemeName schemeName, @RequestBody SchemeIdBulkDeprecateRequestDto schemeIdBulkDeprecateRequestDto) throws CisException {
-        return ResponseEntity.ok(bulkSchemeIdService.releaseSchemeIds(token,schemeName, schemeIdBulkDeprecateRequestDto));
+    public ResponseEntity<BulkJob> releaseSchemeIds(@PathVariable SchemeName schemeName, @RequestBody SchemeIdBulkDeprecateRequestDto schemeIdBulkDeprecateRequestDto,Authentication authentication) throws CisException {
+        Token authToken = (Token) authentication;
+        return ResponseEntity.ok(bulkSchemeIdService.releaseSchemeIds(authToken.getAuthenticateResponseDto(),schemeName, schemeIdBulkDeprecateRequestDto));
     }
 
     @PutMapping("scheme/{schemeName}/bulk/publish")
-    public ResponseEntity<BulkJob> publishSchemeIds(@RequestParam String token,@PathVariable SchemeName schemeName, @RequestBody SchemeIdBulkDeprecateRequestDto schemeIdBulkDeprecateRequestDto) throws CisException {
-        return ResponseEntity.ok(bulkSchemeIdService.publishSchemeIds(token,schemeName, schemeIdBulkDeprecateRequestDto));
+    public ResponseEntity<BulkJob> publishSchemeIds( @PathVariable SchemeName schemeName, @RequestBody SchemeIdBulkDeprecateRequestDto schemeIdBulkDeprecateRequestDto, Authentication authentication) throws CisException {
+        Token authToken = (Token) authentication;
+        return ResponseEntity.ok(bulkSchemeIdService.publishSchemeIds(authToken.getAuthenticateResponseDto(),schemeName, schemeIdBulkDeprecateRequestDto));
     }
 }

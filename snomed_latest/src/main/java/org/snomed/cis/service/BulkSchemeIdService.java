@@ -28,8 +28,6 @@ public class BulkSchemeIdService {
     @Autowired
     private SchemeIdBaseRepository schemeIdBaseRepository;
     @Autowired
-    private SecurityController securityController;
-    @Autowired
     private BulkJobRepository bulkJobRepository;
     @Autowired
     private BulkSctidService bulkSctidService;
@@ -38,68 +36,18 @@ public class BulkSchemeIdService {
     private SctIdHelper sctIdHelper;
 
     @Autowired
+    private SchemeIdService schemeIdService;
+
+    @Autowired
     private PermissionsSchemeRepository permissionsSchemeRepository;
+
     private SchemeIdHelper schemeIdHelper;
     private SNOMEDID snomedid;
 
-    public boolean isAbleUser(SchemeName schemeName, UserDTO user) throws CisException {
-        List<String> groups = authenticateToken.getGroupsList();
-        boolean able = false;
-        for (String group : groups) {
-            if (group.equalsIgnoreCase("component-identifier-service-admin")) {
-                able = true;
-            }
-        }
-       /* List<String> admins = Arrays.asList("keerthika", "lakshmana", "c");
-        for (String admin : admins) {
-            if (admin.equalsIgnoreCase(user.getLogin())) {
-                able = true;
-            }
-        }*/
-        if (!able) {
-            if (!"false".equalsIgnoreCase(schemeName.toString())) {
-                List<PermissionsScheme> permissionsSchemeList = permissionsSchemeRepository.findByScheme(schemeName.toString());
-                List<String> possibleGroups = new ArrayList<>();
-                for (PermissionsScheme perm : permissionsSchemeList) {
-                    if (("group").equalsIgnoreCase(perm.getRole())) {
-                        possibleGroups.add(perm.getUsername());
-                    } else if ((user.getLogin()).equalsIgnoreCase(perm.getUsername())) {
-                        able = true;
-                    }
-                }//for
-                if (!able && possibleGroups.size() > 0) {
-                    List<String> roleAsGroups;
-                    try {
-                        roleAsGroups = user.getRoles();
-                    } catch (Exception e) {
-                        throw new CisException(HttpStatus.BAD_REQUEST, "Error accessing groups");
-                    }
-                    for (String group : roleAsGroups) {
-                        if (possibleGroups.contains(group))
-                            able = true;
-                    }
-                } else {
-                    return able;
-                }
-            }
-        }
-        return able;
-    }
-
-    public boolean authenticateToken() throws CisException {
-        UserDTO obj = this.securityController.authenticate();
-        if (null != obj)
-            return true;
-        else
-            return false;
-    }
-
-    public List<SchemeId> getSchemeIds(String token, SchemeName schemeName, String schemeIds) throws CisException {
+    public List<SchemeId> getSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, String schemeIds) throws CisException {
         String[] schemedIdArray = schemeIds.replaceAll("\\s+", "").split(",");
         List<SchemeId> resSchemeArrayList = new ArrayList<>();
-        if (bulkSctidService.authenticateToken(token)) {
-            UserDTO userObj = bulkSctidService.getAuthenticatedUser();
-            boolean able = isAbleUser(schemeName, userObj);
+            boolean able = schemeIdService.isAbleUser(String.valueOf(schemeName), token);
             if (able) {
                 for (String schemeId : schemedIdArray) {
                     if (schemeId == null || schemeId.isEmpty()) {
@@ -139,9 +87,6 @@ public class BulkSchemeIdService {
             } else {
                 throw new CisException(HttpStatus.BAD_REQUEST, "No permission for the selected operation");
             }
-        } else {
-            throw new CisException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
-        }
         return resSchemeArrayList;
     }
 
@@ -251,24 +196,8 @@ public class BulkSchemeIdService {
     }
 
 
-    public UserDTO getAuthenticatedUser() throws CisException {
-        return this.securityController.authenticate();
-    }
+    public BulkJob generateSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkGenerationRequestDto schemeIdBulkDto) throws CisException {
 
-    public BulkJob generateSchemeIds(String token, SchemeName schemeName, SchemeIdBulkGenerationRequestDto schemeIdBulkDto) throws CisException {
-
-        /*
-    * {
-  "quantity": 0,
-  "systemIds": [
-    "string"
-  ],
-  "software": "string",
-  "comment"
-    * */
-
-        //requestbody change
-        if (bulkSctidService.authenticateToken(token)) {
             SchemeIdBulkGenerate bulkGenerate = new SchemeIdBulkGenerate();
             bulkGenerate.setQuantity(schemeIdBulkDto.getQuantity());
             bulkGenerate.setSystemIds(schemeIdBulkDto.getSystemIds());
@@ -276,9 +205,7 @@ public class BulkSchemeIdService {
             bulkGenerate.setComment(schemeIdBulkDto.getComment());
 
 
-            UserDTO userObj = bulkSctidService.getAuthenticatedUser();
-
-            boolean able = isAbleUser(schemeName, userObj);
+            boolean able = schemeIdService.isAbleUser(String.valueOf(schemeName), token);
             if (!able) {
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
@@ -289,7 +216,7 @@ public class BulkSchemeIdService {
                 bulkGenerate.setAutoSysId(true);
             }
             bulkGenerate.setType(JobTypeConstants.GENERATE_SCHEMEIDS);
-            bulkGenerate.setAuthor(userObj.getLogin());
+            bulkGenerate.setAuthor(token.getName());
             bulkGenerate.setModel(ModelsConstants.SCHEME_ID);
             bulkGenerate.setScheme(schemeName);
             /*SchemeIdBulkGenerationRequestDto requestDto = new SchemeIdBulkGenerationRequestDto(schemeIdBulkDto.getQuantity(), schemeIdBulkDto.getSystemIds(),
@@ -311,53 +238,27 @@ public class BulkSchemeIdService {
             BulkJob resultJob = this.bulkJobRepository.save(bulk);
             System.out.println("result:" + resultJob);
             return resultJob;
-        } else {
-            throw new CisException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
-        }
-
     }
 
     // Register SchemeId
 
-    public BulkJob registerSchemeIds(String token, SchemeName schemeName, SchemeIdBulkRegisterRequestDto request) throws CisException {
-        if (bulkSctidService.authenticateToken(token))
-            return this.registerBulkSchemeIds(schemeName, request);
-        else
-            throw new CisException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
+    public BulkJob registerSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkRegisterRequestDto request) throws CisException {
+            return this.registerBulkSchemeIds(token,schemeName, request);
     }
 
-    public BulkJob registerBulkSchemeIds(SchemeName schemeName, SchemeIdBulkRegisterRequestDto schemeIdBulkRegisterDto) throws CisException {
+    public BulkJob registerBulkSchemeIds(AuthenticateResponseDto token,SchemeName schemeName, SchemeIdBulkRegisterRequestDto schemeIdBulkRegisterDto) throws CisException {
         BulkJob bulkJob = new BulkJob();
-        UserDTO userObj = bulkSctidService.getAuthenticatedUser();
-/*
-*
-* {
-  "records": [
-    {
-      "schemeId": "string",
-      "systemId": "string"
-    }
-  ],
-  "software": "string",
-  "comment": "string"
-}
-* */
-        //requestbody change
-        if (this.isAbleUser(schemeName, userObj)) {
+        if (schemeIdService.isAbleUser(String.valueOf(schemeName), token)) {
             SchemeIdBulkRegister bulkRegister = new SchemeIdBulkRegister();
             bulkRegister.setRecords(schemeIdBulkRegisterDto.getRecords());
             bulkRegister.setSoftware(schemeIdBulkRegisterDto.getSoftware());
             bulkRegister.setComment(schemeIdBulkRegisterDto.getComment());
 
-
-//requestbody change
-
-
             if (schemeIdBulkRegisterDto.getRecords() == null || schemeIdBulkRegisterDto.getRecords().size() == 0) {
                 throw new CisException(HttpStatus.BAD_REQUEST, "Records property cannot be empty.");
             }
             bulkRegister.setType(JobTypeConstants.REGISTER_SCHEMEIDS);
-            bulkRegister.setAuthor(userObj.getLogin());
+            bulkRegister.setAuthor(token.getName());
             bulkRegister.setModel(ModelsConstants.SCHEME_ID);
             bulkRegister.setScheme(schemeName.toString());
 
@@ -391,16 +292,12 @@ public class BulkSchemeIdService {
     // Reserve SchemeId bulk
 
 
-    public BulkJob reserveSchemeIds(String token, SchemeName schemeName, SchemeIdBulkReserveRequestDto request) throws CisException {
-        if (bulkSctidService.authenticateToken(token))
-            return this.reserveBulkSchemeIds(schemeName, request);
-        else
-            throw new CisException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
+    public BulkJob reserveSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkReserveRequestDto request) throws CisException {
+            return this.reserveBulkSchemeIds(token,schemeName, request);
     }
 
-    public BulkJob reserveBulkSchemeIds(SchemeName schemeName, SchemeIdBulkReserveRequestDto request) throws CisException {
+    public BulkJob reserveBulkSchemeIds(AuthenticateResponseDto token,SchemeName schemeName, SchemeIdBulkReserveRequestDto request) throws CisException {
         BulkJob bulkJob = new BulkJob();
-        UserDTO userObj = bulkSctidService.getAuthenticatedUser();
 /*
 * {
   "quantity": 0,
@@ -410,7 +307,7 @@ public class BulkSchemeIdService {
 }
 * */
         //request body change
-        if (this.isAbleUser(schemeName, userObj)) {
+        if (schemeIdService.isAbleUser(String.valueOf(schemeName), token)) {
 
             SchemeIdBulkReserve bulkReserve = new SchemeIdBulkReserve();
             bulkReserve.setQuantity(request.getQuantity());
@@ -423,7 +320,7 @@ public class BulkSchemeIdService {
             }
             bulkReserve.setType(JobTypeConstants.RESERVE_SCHEMEIDS);
             bulkReserve.setModel(ModelsConstants.SCHEME_ID);
-            bulkReserve.setAuthor(userObj.getLogin());
+            bulkReserve.setAuthor(token.getName());
             bulkReserve.setScheme(schemeName.toString());
 
           /*  SchemeIdBulkReserveRequestDto requestDto=new SchemeIdBulkReserveRequestDto(request.getQuantity(),
@@ -455,16 +352,12 @@ public class BulkSchemeIdService {
 
     //deprecateSchemeIds
 
-    public BulkJob deprecateSchemeIds(String token, SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
-        if (bulkSctidService.authenticateToken(token))
-            return this.deprecateBulkSchemeIds(schemeName, request);
-        else
-            throw new CisException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
+    public BulkJob deprecateSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
+            return this.deprecateBulkSchemeIds(token,schemeName, request);
     }
 
-    public BulkJob deprecateBulkSchemeIds(SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
+    public BulkJob deprecateBulkSchemeIds(AuthenticateResponseDto token,SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
         BulkJob bulkJob = new BulkJob();
-        UserDTO userObj = bulkSctidService.getAuthenticatedUser();
   /*
     *
     * {
@@ -477,7 +370,7 @@ public class BulkSchemeIdService {
 
         //requestbody change
 
-        if (this.isAbleUser(schemeName, userObj)) {
+        if (schemeIdService.isAbleUser(String.valueOf(schemeName), token)) {
             BulkSchemeIdUpdate bulkSchemeIdUpdate = new BulkSchemeIdUpdate();
             bulkSchemeIdUpdate.setSchemeIds(request.getSchemeIds());
             bulkSchemeIdUpdate.setSoftware(request.getSoftware());
@@ -489,7 +382,7 @@ public class BulkSchemeIdService {
 //requestbody change
             bulkSchemeIdUpdate.setType(JobTypeConstants.DEPRECATE_SCHEMEIDS);
             bulkSchemeIdUpdate.setModel(ModelsConstants.SCHEME_ID);
-            bulkSchemeIdUpdate.setAuthor(userObj.getLogin());
+            bulkSchemeIdUpdate.setAuthor(token.getName());
             bulkSchemeIdUpdate.setScheme(schemeName.toString());/*schemeName.schemeName.toUpperCase();*/
 
             /*SchemeIdBulkDeprecateRequestDto requestDto=new SchemeIdBulkDeprecateRequestDto(request.getSchemeIds(),
@@ -529,18 +422,14 @@ public class BulkSchemeIdService {
 
 //releaseSchemeIds
 
-    public BulkJob releaseSchemeIds(String token, SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
-        if (bulkSctidService.authenticateToken(token))
-            return this.releaseBulkSchemeIds(schemeName, request);
-        else
-            throw new CisException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
+    public BulkJob releaseSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
+            return this.releaseBulkSchemeIds(token,schemeName, request);
     }
 
-    public BulkJob releaseBulkSchemeIds(SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
+    public BulkJob releaseBulkSchemeIds(AuthenticateResponseDto token,SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
         BulkJob bulkJob = new BulkJob();
-        UserDTO userObj = bulkSctidService.getAuthenticatedUser();
 
-        if (this.isAbleUser(schemeName, userObj)) {
+        if (schemeIdService.isAbleUser(String.valueOf(schemeName), token)) {
 //requestbody change
             BulkSchemeIdUpdate bulkSchemeIdUpdate = new BulkSchemeIdUpdate();
             bulkSchemeIdUpdate.setSchemeIds(request.getSchemeIds());
@@ -553,7 +442,7 @@ public class BulkSchemeIdService {
 
             bulkSchemeIdUpdate.setType(JobTypeConstants.RELEASE_SCHEMEIDS);
             bulkSchemeIdUpdate.setModel(ModelsConstants.SCHEME_ID);
-            bulkSchemeIdUpdate.setAuthor(userObj.getLogin());
+            bulkSchemeIdUpdate.setAuthor(token.getName());
             bulkSchemeIdUpdate.setScheme(schemeName.toString());/*schemeName.schemeName.toUpperCase();*/
 
            /* SchemeIdBulkDeprecateRequestDto requestDto=new SchemeIdBulkDeprecateRequestDto(request.getSchemeIds(),
@@ -569,17 +458,13 @@ public class BulkSchemeIdService {
     }
 
     //publishSchemeIds
-    public BulkJob publishSchemeIds(String token, SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
-        if (bulkSctidService.authenticateToken(token))
-            return this.publishBulkSchemeIds(schemeName, request);
-        else
-            throw new CisException(HttpStatus.NOT_FOUND, "Invalid Token/User Not authenticated");
+    public BulkJob publishSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
+            return this.publishBulkSchemeIds(token,schemeName, request);
     }
 
-    public BulkJob publishBulkSchemeIds(SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
+    public BulkJob publishBulkSchemeIds(AuthenticateResponseDto token,SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
         BulkJob bulkJob = new BulkJob();
-        UserDTO userObj = bulkSctidService.getAuthenticatedUser();
-        if (this.isAbleUser(schemeName, userObj)) {
+        if (schemeIdService.isAbleUser(String.valueOf(schemeName), token)) {
             //requestbody change
             BulkSchemeIdUpdate bulkSchemeIdUpdate = new BulkSchemeIdUpdate();
             bulkSchemeIdUpdate.setSchemeIds(request.getSchemeIds());
@@ -592,7 +477,7 @@ public class BulkSchemeIdService {
 
             bulkSchemeIdUpdate.setType(JobTypeConstants.PUBLISH_SCHEMEIDS);
             bulkSchemeIdUpdate.setModel(ModelsConstants.SCHEME_ID);
-            bulkSchemeIdUpdate.setAuthor(userObj.getLogin());
+            bulkSchemeIdUpdate.setAuthor(token.getName());
             bulkSchemeIdUpdate.setScheme(schemeName.toString());/*schemeName.schemeName.toUpperCase();*/
 
            /* SchemeIdBulkDeprecateRequestDto requestDto=new SchemeIdBulkDeprecateRequestDto(request.getSchemeIds(),

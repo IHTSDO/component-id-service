@@ -49,66 +49,57 @@ public class BulkSctidController {
     })
 
     @GetMapping("/sct/bulk/ids")
-    @ResponseBody
-    public List<Sctid> getSctidsByQL(@RequestParam String token, @RequestParam String ids) throws CisException {
-        return service.getSctByIds(token, ids);
+    public ResponseEntity<List<Sctid>> getSctidsByQL( @RequestParam String ids) throws CisException {
+        return ResponseEntity.ok(service.getSctByIds(ids));
     }
 
     @PostMapping("/sct/bulk/ids")
-    @ResponseBody
-    public List<Sctid> getSctidsByQLPost(@RequestParam String token, @RequestBody SctIdRequest sctids) throws CisException {
-        return service.postSctByIds(token, sctids);
-    }
-
-    @GetMapping("/test")
-    public String getVal() {
-        return "Test Worked!";
-
+    public ResponseEntity<List<Sctid>> getSctidsByQLPost( @RequestBody SctIdRequest sctids) throws CisException {
+        return ResponseEntity.ok(service.postSctByIds(sctids));
     }
 
     @GetMapping("sct/namespace/{namespaceId}/systemIds")
-    public ResponseEntity<List<Sctid>> getSctidBySystemIds(@RequestParam String token, @PathVariable Integer namespaceId, @RequestParam("systemIds") String systemIdStr) {
-        return ResponseEntity.ok(service.getSctidBySystemIds(token, systemIdStr, namespaceId));
+    public ResponseEntity<List<Sctid>> getSctidBySystemIds( @PathVariable Integer namespaceId, @RequestParam("systemIds") String systemIdStr) {
+        return ResponseEntity.ok(service.getSctidBySystemIds(systemIdStr, namespaceId));
     }
 
-    //API call for POST /sct/bulk/register
     @PostMapping("/sct/bulk/register")
-    public BulkJob registerScts(@RequestParam String token, @RequestBody RegistrationDataDTO registrationData,Authentication authentication) throws CisException {
+    public ResponseEntity<BulkJob> registerScts( @RequestBody RegistrationDataDTO registrationData,Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return service.registerSctids(authToken, registrationData);
+        return ResponseEntity.ok(service.registerSctids(authToken.getAuthenticateResponseDto(), registrationData));
     }
 
     @PostMapping("/sct/bulk/generate")
-    public ResponseEntity<BulkJobResponseDto> generateSctids(@RequestParam String token, @RequestBody @Valid SCTIDBulkGenerationRequestDto sctidBulkGenerationRequestDto, Authentication authentication) throws JsonProcessingException, CisException {
+    public ResponseEntity<BulkJobResponseDto> generateSctids( @RequestBody @Valid SCTIDBulkGenerationRequestDto sctidBulkGenerationRequestDto, Authentication authentication) throws JsonProcessingException, CisException {
         Token authToken = (Token) authentication;
-        return ResponseEntity.ok(service.generateSctids(authToken, sctidBulkGenerationRequestDto));
+        return ResponseEntity.ok(service.generateSctids(authToken.getAuthenticateResponseDto(), sctidBulkGenerationRequestDto));
     }
 
     @PutMapping("/sct/bulk/deprecate")
-    public BulkJob deprecateSctid(@RequestParam String token, @RequestBody
+    public ResponseEntity<BulkJob> deprecateSctid( @RequestBody
             BulkSctRequestDTO deprecationData, Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return service.deprecateSctid(authToken, deprecationData);
+        return ResponseEntity.ok(service.deprecateSctid(authToken.getAuthenticateResponseDto(), deprecationData));
     }
 
     @PutMapping("/sct/bulk/publish")
-    public BulkJob publishSctid(@RequestParam String token, @RequestBody
+    public ResponseEntity<BulkJob> publishSctid( @RequestBody
             BulkSctRequestDTO publishData, Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return service.publishSctid(authToken, publishData);
+        return ResponseEntity.ok(service.publishSctid(authToken.getAuthenticateResponseDto(), publishData));
     }
 
     @PutMapping("/sct/bulk/release")
-    public BulkJob releaseSctid(@RequestParam String token, @RequestBody
+    public ResponseEntity<BulkJob> releaseSctid( @RequestBody
             BulkSctRequestDTO publishData, Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return service.releaseSctid(authToken, publishData);
+        return ResponseEntity.ok(service.releaseSctid(authToken.getAuthenticateResponseDto(), publishData));
     }
 
     @PostMapping("/sct/bulk/reserve")
-    public ResponseEntity<BulkJob> reserveSctids(@RequestParam String token, @RequestBody @Valid SCTIDBulkReservationRequestDto sctidBulkReservationRequestDto, Authentication authentication) throws CisException {
+    public ResponseEntity<BulkJob> reserveSctids( @RequestBody @Valid SCTIDBulkReservationRequestDto sctidBulkReservationRequestDto, Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return ResponseEntity.ok(service.reserveSctids(authToken, sctidBulkReservationRequestDto));
+        return ResponseEntity.ok(service.reserveSctids(authToken.getAuthenticateResponseDto(), sctidBulkReservationRequestDto));
     }
 
 

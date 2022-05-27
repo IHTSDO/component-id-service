@@ -25,54 +25,54 @@ public class SchemeIdController {
     private SchemeIdService schemeIdService;
 
     @GetMapping("/scheme/ids")
-    public ResponseEntity<List<SchemeId>> getSchemeIds(@RequestParam String token,@RequestParam(name="limit",required = false) String limit, @RequestParam(name="skip",required = false) String skip, @RequestParam(name="scheme",required = false) SchemeName scheme,Authentication authentication) throws CisException {
+    public ResponseEntity<List<SchemeId>> getSchemeIds(@RequestParam(name="limit",required = false) String limit, @RequestParam(name="skip",required = false) String skip, @RequestParam(name="scheme",required = false) SchemeName scheme,Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return ResponseEntity.ok(schemeIdService.getSchemeIds(authToken,limit, skip, scheme));
+        return ResponseEntity.ok(schemeIdService.getSchemeIds(authToken.getAuthenticateResponseDto(),limit, skip, scheme));
     }
 
     @GetMapping("/scheme/{schemeName}/ids/{schemeId}")
-    public ResponseEntity<SchemeId> getSchemeId(@RequestParam String token,@PathVariable SchemeName schemeName, @PathVariable String schemeId,Authentication authentication) throws CisException {
+    public ResponseEntity<SchemeId> getSchemeId(@PathVariable SchemeName schemeName, @PathVariable String schemeId,Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return ResponseEntity.ok(schemeIdService.getSchemeId(authToken,schemeName,schemeId));
+        return ResponseEntity.ok(schemeIdService.getSchemeId(authToken.getAuthenticateResponseDto(),schemeName,schemeId));
     }
 
     @GetMapping("/scheme/{schemeName}/systemids/{systemId}")
-    public ResponseEntity<SchemeId> getSchemeIdBySystemId(@RequestParam String token,@PathVariable SchemeName schemeName, @PathVariable String systemId,Authentication authentication) throws CisException {
+    public ResponseEntity<SchemeId> getSchemeIdBySystemId(@PathVariable SchemeName schemeName, @PathVariable String systemId,Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return ResponseEntity.ok(schemeIdService.getSchemeIdsBySystemId(authToken,schemeName,systemId));
+        return ResponseEntity.ok(schemeIdService.getSchemeIdsBySystemId(authToken.getAuthenticateResponseDto(),schemeName,systemId));
     }
 
     @PutMapping("/scheme/{schemeName}/deprecate")
-    public ResponseEntity<SchemeId> deprecateSchemeId(@RequestParam String token,@PathVariable SchemeName schemeName, @RequestBody SchemeIdUpdateRequestDto schemeIdUpdateRequestDto,Authentication authentication) throws CisException {
+    public ResponseEntity<SchemeId> deprecateSchemeId(@PathVariable SchemeName schemeName, @RequestBody SchemeIdUpdateRequestDto schemeIdUpdateRequestDto,Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return ResponseEntity.ok(schemeIdService.deprecateSchemeIds(authToken,schemeName, schemeIdUpdateRequestDto));
+        return ResponseEntity.ok(schemeIdService.deprecateSchemeIds(authToken.getAuthenticateResponseDto(),schemeName, schemeIdUpdateRequestDto));
     }
     @PutMapping("/scheme/{schemeName}/release")
-    public ResponseEntity<SchemeId> releaseSchemeId(@RequestParam String token,@PathVariable SchemeName schemeName, @RequestBody SchemeIdUpdateRequestDto schemeIdUpdateRequestDto,Authentication authentication) throws CisException {
+    public ResponseEntity<SchemeId> releaseSchemeId(@PathVariable SchemeName schemeName, @RequestBody SchemeIdUpdateRequestDto schemeIdUpdateRequestDto,Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return ResponseEntity.ok(schemeIdService.releaseSchemeIds(authToken,schemeName, schemeIdUpdateRequestDto));
+        return ResponseEntity.ok(schemeIdService.releaseSchemeIds(authToken.getAuthenticateResponseDto(),schemeName, schemeIdUpdateRequestDto));
     }
     @PutMapping("/scheme/{schemeName}/publish")
-    public ResponseEntity<SchemeId> publishSchemeId(@RequestParam String token,@PathVariable SchemeName schemeName, @RequestBody SchemeIdUpdateRequestDto schemeIdUpdateRequestDto,Authentication authentication) throws CisException {
+    public ResponseEntity<SchemeId> publishSchemeId(@PathVariable SchemeName schemeName, @RequestBody SchemeIdUpdateRequestDto schemeIdUpdateRequestDto,Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return ResponseEntity.ok(schemeIdService.publishSchemeId(authToken,schemeName, schemeIdUpdateRequestDto));
+        return ResponseEntity.ok(schemeIdService.publishSchemeId(authToken.getAuthenticateResponseDto(),schemeName, schemeIdUpdateRequestDto));
     }
 
     @PostMapping("/scheme/{schemeName}/reserve")
-    public ResponseEntity<SchemeId>   reserveSchemeId(@RequestParam String token,@PathVariable SchemeName schemeName,@RequestBody SchemeIdReserveRequestDto schemeIdReserveRequestDto,Authentication authentication) throws CisException {
+    public ResponseEntity<SchemeId>   reserveSchemeId(@PathVariable SchemeName schemeName,@RequestBody SchemeIdReserveRequestDto schemeIdReserveRequestDto,Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return ResponseEntity.ok(schemeIdService.reserveSchemeId(authToken,schemeName,schemeIdReserveRequestDto));
+        return ResponseEntity.ok(schemeIdService.reserveSchemeId(authToken.getAuthenticateResponseDto(),schemeName,schemeIdReserveRequestDto));
     }
 
     @PostMapping("/scheme/{schemeName}/generate")
-    public ResponseEntity<SchemeId> generateSchemeId(@RequestParam String token,@PathVariable SchemeName schemeName, @RequestBody SchemeIdGenerateRequestDto schemeIdGenerateRequestDto,Authentication authentication) throws CisException
+    public ResponseEntity<SchemeId> generateSchemeId(@PathVariable SchemeName schemeName, @RequestBody SchemeIdGenerateRequestDto schemeIdGenerateRequestDto,Authentication authentication) throws CisException
     {
         Token authToken = (Token) authentication;
-        return ResponseEntity.ok(schemeIdService.generateSchemeId(authToken,schemeName, schemeIdGenerateRequestDto));
+        return ResponseEntity.ok(schemeIdService.generateSchemeId(authToken.getAuthenticateResponseDto(),schemeName, schemeIdGenerateRequestDto));
     }
     @PostMapping("/scheme/{schemeName}/register")
-    public ResponseEntity<SchemeId>   registerSchemeId(@RequestParam String token, @PathVariable SchemeName schemeName, @RequestBody SchemeIdRegisterRequestDto schemeIdRegisterRequestDto, Authentication authentication) throws CisException {
+    public ResponseEntity<SchemeId>   registerSchemeId( @PathVariable SchemeName schemeName, @RequestBody SchemeIdRegisterRequestDto schemeIdRegisterRequestDto, Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return ResponseEntity.ok(schemeIdService.registerSchemeId(authToken,schemeName,schemeIdRegisterRequestDto));
+        return ResponseEntity.ok(schemeIdService.registerSchemeId(authToken.getAuthenticateResponseDto(),schemeName,schemeIdRegisterRequestDto));
     }
 }

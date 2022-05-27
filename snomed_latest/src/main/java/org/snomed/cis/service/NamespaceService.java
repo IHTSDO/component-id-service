@@ -95,22 +95,6 @@ public class NamespaceService {
             dto.setPartitions(partList);
             namespaceDtoList.add(dto);
         }
-//keerthika commenting
-       /* for (Partitions partitions : partitionsList) {
-            partitionsDto = new PartitionsDto(partitions.getNamespace().getNamespace(), partitions.getPartitionId(), partitions.getSequence());
-            partitionsDtoList.add(partitionsDto);
-        }
-        namespaceDto.setPartitions(partitionsDtoList);
-
-        for (Namespace namespace1 : namespaceList) {
-            namespaceDto = new NamespaceDto(namespace1.getNamespace(), namespace1.getOrganizationName(), namespace1.getOrganizationAndContactDetails(), namespace1.getDateIssued().toString(),
-                    namespace1.getEmail(), namespace1.getNotes(), namespace1.getIdPregenerate(), partitionsDtoList);
-            namespaceDtoList.add(namespaceDto);
-
-        }*/
-        //keerthika commenting
-        //  namespace.setPartitions( partitionsList);
-
 
         if (namespaceDtoList.size() > 0) {
             //Collections.sort(namespaceDtoList);
@@ -147,14 +131,6 @@ public class NamespaceService {
         //List<Partitions> partitionsList = new ArrayList<>();
         PartitionsDto partitionsDto = new PartitionsDto();
         List<Partitions> partitionsList = new ArrayList<>();
-        /*output.setNamespace(createdNamespace.getNamespace());
-        output.setOrganizationName(createdNamespace.getOrganizationName());
-        output.setOrganizationAndContactDetails(createdNamespace.getOrganizationAndContactDetails());
-        output.setDateIssued(createdNamespace.getDateIssued().toString());
-        output.setEmail(createdNamespace.getEmail());
-        output.setNotes(createdNamespace.getNotes());
-        output.setIdPregenerate(createdNamespace.getIdPregenerate());
-        output.setNamespace(createdNamespace);*/
         if (partitionsOfObj != null && !partitionsOfObj.isEmpty() && partitionsOfObj.size() > 0) {
             partitionsList = partitionsOfObj;
         } else {
@@ -209,35 +185,6 @@ public class NamespaceService {
             response.put("message", "Success");
         return response.toString();
     }
-
-    /*private boolean isAbleToEdit(Integer namespace,String username) throws CisException {
-        List<String> groups = authenticateToken.getGroupsList();
-        boolean able = false;
-        for (String group : groups) {
-            if (group.equalsIgnoreCase("component-identifier-service-admin")) {
-                able = true;
-            }
-        }
-        if (!able) {
-            if (!String.valueOf(namespace).equalsIgnoreCase("false")) {
-                List<PermissionsNamespace> permissionsNamespaceList = permissionsNamespaceRepository.findByNamespace(Integer.valueOf(namespace));
-                //
-
-                for (PermissionsNamespace perm : permissionsNamespaceList) {
-                    if (("manager").equalsIgnoreCase(perm.getRole()) && (perm.getUsername().equalsIgnoreCase(username))) {
-                        able = true;
-                    }
-                }
-                //
-            } else {
-                return able;
-            }
-
-        } else {
-            return able;
-        }
-        return able;
-    }//isAbleToEdit*/
 
     private boolean isAbleToEdit(Integer namespace, AuthenticateResponseDto authenticateResponseDto) {
         List<String> groups = authenticateResponseDto.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
@@ -299,13 +246,6 @@ public class NamespaceService {
             namespaceGet.setNotes(namespaceObj.getNotes());
             namespaceGet.setIdPregenerate(namespaceObj.getIdPregenerate());
         }
-
-       /* namespaceGet.setOrganizationName("test");
-        namespaceGet.setOrganizationAndContactDetails("test");
-        namespaceGet.setDateIssued(null);
-        namespaceGet.setEmail("keerth.san@gmail.com");
-        namespaceGet.setNotes("test");
-        namespaceGet.setIdPregenerate(null);*/
         try {
             namespace = namespaceRepository.save(namespaceGet);
             response.put("message", "Success");
@@ -316,12 +256,11 @@ public class NamespaceService {
     }
 
 
-    public List<Namespace> getNamespacesForUser(String token, String userName) throws CisException {
-        return this.getNamespacesListForUser(token, userName);
+    public List<Namespace> getNamespacesForUser(String userName) throws CisException {
+        return this.getNamespacesListForUser(userName);
     }
 
-    public List<Namespace> getNamespacesListForUser(String token, String userName) throws CisException {
-       // UserDTO userObj = this.getAuthenticatedUser();
+    public List<Namespace> getNamespacesListForUser(String userName) throws CisException {
         List<String> roleAsGroups;
         List<Namespace> namespaceList;
         List<String> namespacesFromGroup = new ArrayList<>();
@@ -337,7 +276,7 @@ public class NamespaceService {
                 } else {
                     otherGroup.add(group);
                 }
-            }//for
+            }
         }
         otherGroup.add(userName);
         List<PermissionsNamespace> permissionsNamespaceList = permissionsNamespaceRepository.findByUsernameIn(otherGroup);
@@ -369,12 +308,12 @@ public class NamespaceService {
                 .collect(Collectors.toList());
     }
 
-    public NamespaceDto getNamespace(String token, String namespaceId) throws CisException {
-        return this.getNamespaceId(token, namespaceId);
+    public NamespaceDto getNamespace(String namespaceId) throws CisException {
+        return this.getNamespaceId(namespaceId);
     }
 
     @Transactional
-    public NamespaceDto getNamespaceId(String token, String namespaceId) throws CisException {
+    public NamespaceDto getNamespaceId(String namespaceId) throws CisException {
         JSONObject response = new JSONObject();
         if (namespaceId.length() != 7 && !(namespaceId.equalsIgnoreCase("0")))
             throw new CisException(HttpStatus.NOT_FOUND, "Invalid namespace");

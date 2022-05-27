@@ -7,9 +7,11 @@ import org.snomed.cis.controller.dto.Scheme;
 import org.snomed.cis.domain.SchemeIdBase;
 import org.snomed.cis.domain.SchemeName;
 import org.snomed.cis.exception.CisException;
+import org.snomed.cis.security.Token;
 import org.snomed.cis.service.SchemeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,8 +35,9 @@ public class SchemeController {
     })
 
     @GetMapping("/users/{username}/schemes/")
-    public ResponseEntity<List<Scheme>> getSchemesForUser(@RequestParam String token, @PathVariable String username) throws CisException {
-        return ResponseEntity.ok(schemeService.getSchemesForUser(token,username));
+    public ResponseEntity<List<Scheme>> getSchemesForUser( @PathVariable String username, Authentication authentication) throws CisException {
+        Token authToken = (Token) authentication;
+        return ResponseEntity.ok(schemeService.getSchemesForUser(authToken.getAuthenticateResponseDto(),username));
     }
 
     @GetMapping("/schemes")
@@ -43,14 +46,15 @@ public class SchemeController {
     }
 
     @GetMapping("/schemes/{schemeName}")
-    public ResponseEntity<SchemeIdBase> getScheme(@RequestParam String token,@PathVariable String schemeName) throws CisException {
-        return ResponseEntity.ok(schemeService.getScheme(token,schemeName));
+    public ResponseEntity<SchemeIdBase> getScheme(@PathVariable String schemeName) throws CisException {
+        return ResponseEntity.ok(schemeService.getScheme(schemeName));
     }
 
    // @PutMapping
 
     @PutMapping("/schemes/{schemeName}")
-    public ResponseEntity<String> updateScheme(@RequestParam String token,@PathVariable SchemeName schemeName, @RequestParam String schemeSeq) throws CisException {
-        return ResponseEntity.ok(schemeService.updateScheme(token,schemeName,schemeSeq));
+    public ResponseEntity<String> updateScheme(@PathVariable SchemeName schemeName, @RequestParam String schemeSeq,Authentication authentication) throws CisException {
+        Token authToken = (Token) authentication;
+        return ResponseEntity.ok(schemeService.updateScheme(authToken.getAuthenticateResponseDto(),schemeName,schemeSeq));
     }
 }

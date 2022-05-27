@@ -14,13 +14,7 @@ import java.io.IOException;
 @Controller
 @RequestMapping("/ui")
 public class ViewsController {
-   // @Autowired
-    //HandlebarsViewResolver handlebarsViewResolver;
 
-    /*@RequestMapping(value="/views/items/main.hbs")
-    public static String welcome() {
-        return "main";
-    }*/
     TemplateLoader viewsItemsLoader = new ClassPathTemplateLoader("/static/admin/views/items", ".hbs");
     TemplateLoader viewsHomeLoader = new ClassPathTemplateLoader("/static/admin/views/home", ".hbs");
     TemplateLoader generateIdsLoader = new ClassPathTemplateLoader("/static/admin/views/generateIds", ".hbs");
@@ -207,6 +201,6 @@ public class ViewsController {
     }
     @RequestMapping(value = "/docs", method = RequestMethod.GET)
     public String redirectSwagger() {
-        return "redirect:/swagger-ui/";
+        return "redirect:/swagger-ui/index.html";
     }
 }

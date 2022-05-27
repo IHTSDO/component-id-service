@@ -146,7 +146,7 @@ public class BulkJobService {
      return bulkJobList;
     }
 
-    public BulkJob getJob(String token, Integer jobId) throws CisException {
+    public BulkJob getJob(Integer jobId) throws CisException {
         BulkJob result = null;
             BulkJob bulkJob = (bulkJobRepository.findById(jobId).isPresent())?bulkJobRepository.findById(jobId).get() : null;
             if(null!=bulkJob) {
@@ -158,7 +158,7 @@ public class BulkJobService {
         return result;
     }
 
-    public List<Object> getJobRecords(String token,Integer jobId) throws CisException, JsonProcessingException {
+    public List<Object> getJobRecords(Integer jobId) throws CisException, JsonProcessingException {
         var t2 = new Date().getTime();
         List<Object> list = new ArrayList<>();
             BulkJob jobRecord = (bulkJobRepository.findById(jobId).isPresent())?(bulkJobRepository.findById(jobId).get()): null;
@@ -234,10 +234,10 @@ public class BulkJobService {
         return cleanRows;
     }
 
-        public List<CleanUpServiceResponse> cleanUpExpiredIds(Token token) throws CisException {
+        public List<CleanUpServiceResponse> cleanUpExpiredIds(AuthenticateResponseDto token) throws CisException {
             List<CleanUpServiceResponse> result = null;
               //  UserDTO userObj = bulkSctidService.getAuthenticatedUser();
-                if (this.isAbleUser(token.getAuthenticateResponseDto())) {
+                if (this.isAbleUser(token)) {
                     String strErr="";
                     String strData="";
                     String strMsg="";

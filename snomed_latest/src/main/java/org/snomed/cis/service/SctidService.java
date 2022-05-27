@@ -10,7 +10,6 @@ import org.snomed.cis.repository.BulkSchemeIdRepository;
 import org.snomed.cis.repository.NamespaceRepository;
 import org.snomed.cis.repository.SchemeIdBaseRepository;
 import org.snomed.cis.repository.SctidRepository;
-import org.snomed.cis.security.Token;
 import org.snomed.cis.service.DM.SCTIdDM;
 import org.snomed.cis.service.DM.SchemeIdDM;
 import org.snomed.cis.util.SctIdHelper;
@@ -74,60 +73,6 @@ public class SctidService {
 
     @Autowired
     private SchemeIdBaseRepository schemeIdBaseRepository;
-   /* public Sctid getTestSct(String sctId)
-    {
-        return sctidRepository.findById(sctId).get();
-    }*/
-
-    /*public List<Sctid> findSctWithIndexAndLimit(Map<String, Object> queryObject, String limit, String skip) {
-        List<Sctid> sctList;
-        var limitR = 100;
-        var skipTo = 0;
-        if (!limit.isEmpty() && null != limit)
-            limitR = Integer.parseInt(limit);
-        if (!skip.isEmpty() && null != skip)
-            skipTo = Integer.parseInt(skip);
-        //sctidRepository.findSct(queryObject,limitR,skipTo);
-        String swhere = "";
-        if (queryObject.size() > 0) {
-            for (var query :
-                    queryObject.entrySet()) {
-                swhere += " And " + query.getKey() + "=" + (query.getValue());
-            }
-        }
-        if (swhere != "") {
-            swhere = " WHERE " + swhere.substring(5);
-        }
-        String sql;
-        if ((limitR > 0) && (skipTo == 0)) {
-            //sql = "SELECT * FROM sctId" + swhere + " order by sctid limit " + limit;
-
-            sql = "Select * FROM sctid USE INDEX (nam_par_st)" + swhere + " order by sctid limit " + limit;
-        } else {
-            //sql = "SELECT * FROM sctId" + swhere + " order by sctid";
-            sql = "Select * FROM sctid USE INDEX (nam_par_st)" + swhere + " order by sctid";
-        }
-        Query genQuery = entityManager.createNativeQuery(sql,Sctid.class);
-        System.out.println("genQuery:"+genQuery);
-        List<Sctid> resultList = genQuery.getResultList();
-        if ((skipTo == 0)) {
-            sctList = resultList;
-        } else {
-            var cont = 1;
-            List<Sctid> newRows = new ArrayList<>();
-            for (var i = 0; i < resultList.size(); i++) {
-                if (i >= skipTo) {
-                    if (null != limit && limitR > 0 && limitR < cont) {
-                        break;
-                    }
-                    newRows.add(resultList.get(i));
-                    cont++;
-                }
-            }
-            sctList = newRows;
-        }
-        return sctList;
-    }*/
 
     public List<SchemeId> getSchemeIds(String systemId, String limit, String skip) {
 
@@ -174,10 +119,10 @@ public class SctidService {
         return schemeList;
     }
 
-    public List<Sctid> getSct(Token authToken, String limit, String skip, String namespace) throws CisException, JsonProcessingException {
+    public List<Sctid> getSct(AuthenticateResponseDto authToken, String limit, String skip, String namespace) throws CisException, JsonProcessingException {
         List<Sctid> sctList = new ArrayList<>();
-           // UserDTO userObj = bulkSctidService.getAuthenticatedUser();
-            if (bulkSctidService.isAbleUser("false", authToken.getAuthenticateResponseDto())) {
+           
+            if (bulkSctidService.isAbleUser("false", authToken)) {
                 Map<String, Object> queryObject = new HashMap();
                 if (null != namespace) {
                     queryObject.put("namespace", namespace);
@@ -190,39 +135,20 @@ public class SctidService {
                     return sctList;
                 else
                     return Collections.EMPTY_LIST;
-                /*Sctid sct = (Sctid) sctList.get(0);
-                sct.setSctid(sctList.get(0).getSctid());
-                sct.setAuthor(sctList.get(0).getAuthor());
-                sct.setComment(sctList.get(0).getComment());
-                sct.setSequence(sctList.get(0).getSequence());
-                sct.setPartitionId(sctList.get(0).getPartitionId());
-                sct.setCheckDigit(sctList.get(0).getCheckDigit());
-                sct.setSystemId(sctList.get(0).getSystemId());
-                sct.setStatus(sctList.get(0).getStatus());
-                sct.setSoftware(sctList.get(0).getSoftware());
-                sct.setExpirationDate(sctList.get(0).getExpirationDate());
-                sct.setJobId(sctList.get(0).getJobId());
-                sct.setCreated_at(sctList.get(0).getCreated_at());
-                sct.setModified_at(sctList.get(0).getModified_at());*/
-
-                //ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
-                //String json = ow.writeValueAsString(sct);
-                //sc.add(sct);
             } else {
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
 
     }
 
-    public SctWithSchemeResponseDTO getSctWithId(Token authToken, String sctid, String includeAdditionalIds) throws CisException {
+    public SctWithSchemeResponseDTO getSctWithId(AuthenticateResponseDto authToken, String sctid, String includeAdditionalIds) throws CisException {
         Sctid sctResult = new Sctid();
         SctWithSchemeResponseDTO output = new SctWithSchemeResponseDTO();
         SctWithSchemeResponseDTO sctWithSchemeResponseDTO = new SctWithSchemeResponseDTO();
-
-           // UserDTO userObj = bulkSctidService.getAuthenticatedUser();
+           
             var namespace = sctIdHelper.getNamespace(sctid);
             if (null != namespace) {
-                if (bulkSctidService.isAbleUser(String.valueOf(namespace), authToken.getAuthenticateResponseDto())) {
+                if (bulkSctidService.isAbleUser(String.valueOf(namespace), authToken)) {
                     sctWithSchemeResponseDTO = this.getSctCommon(output, sctid, includeAdditionalIds);
                 } else {
                     throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
@@ -242,7 +168,7 @@ public class SctidService {
             limitR = Integer.parseInt(limit);
         if (null != skip)
             skipTo = Integer.parseInt(skip);
-        //sctidRepository.findSct(queryObject,limitR,skipTo);
+        
         String swhere = "";
         if (queryObject.size() > 0) {
             for (var query :
@@ -255,13 +181,13 @@ public class SctidService {
         }
         String sql;
         if ((limitR > 0) && (skipTo == 0)) {
-            //sql = "SELECT * FROM sctId" + swhere + " order by sctid limit " + limit;
+            
             if (swhere != "")
                 sql = "Select * FROM sctid USE INDEX (nam_par_st)" + swhere + " order by sctid limit " + limitR;
             else
                 sql = "Select * FROM sctid " + swhere + " order by sctid limit " + limitR;
         } else {
-            //sql = "SELECT * FROM sctId" + swhere + " order by sctid";
+            
             if (swhere != "")
                 sql = "Select * FROM sctid USE INDEX (nam_par_st)" + swhere + " order by sctid";
             else
@@ -291,10 +217,10 @@ public class SctidService {
 
     public SctWithSchemeResponseDTO getSctCommon(SctWithSchemeResponseDTO output, String sctid, String includeAdditionalIds) throws CisException {
         if (sctIdHelper.validSCTId(sctid)) {
-            //refactor changes
-            // Sctid sctRec = sctidRepository.findById(sctid);
+            
+            
             Sctid sctRec = ((sctidRepository.findById(sctid)).isPresent()) ? ((sctidRepository.findById(sctid))).get() : null;
-            //refactor changes
+            
             List<SchemeId> respSchemeList = new ArrayList<>();
             Sctid newSct = new Sctid();
             if (null != sctRec) {
@@ -315,25 +241,10 @@ public class SctidService {
             output.setComment(newSct.getComment());
             if (!includeAdditionalIds.isEmpty() && includeAdditionalIds.equalsIgnoreCase("true")) {
                 List<SchemeId> schemeResult = getSchemeIds(newSct.getSystemId(), "10", "0");
-                   /* for (SchemeId res :
-                            schemeResult) {
-                        SchemeIdResponseDTO schemeResp = new SchemeIdResponseDTO();
-                        schemeResp.setSchemeId(res.getSchemeId());
-                        schemeResp.setScheme(res.getScheme());
-                        schemeResp.setSequence(res.getSequence());
-                        schemeResp.setCheckDigit(res.getCheckDigit());
-                        schemeResp.setSystemId(res.getSystemId());
-                        schemeResp.setStatus(res.getStatus());
-                        schemeResp.setAuthor(res.getAuthor());
-                        schemeResp.setSoftware(res.getSoftware());
-                        schemeResp.setExpirationDate(res.getExpirationDate());
-                        schemeResp.setComment(res.getComment());
-                        respSchemeList.add(res);
-                    }*/
                 output.setAdditionalIds(schemeResult);
                 return output;
             } else {
-                //throw new APIException(HttpStatus.ACCEPTED, "No SctRecords Returned.");
+                
                 return output;
             }
         } else {
@@ -345,25 +256,12 @@ public class SctidService {
         return SctIdHelper.checkSctid(sctid);
     }
 
-    public Sctid getSctWithSystemId(Token authToken, Integer namespaceId, String systemId) throws CisException {
-        //  SctWithSchemeResponseDTO output = new SctWithSchemeResponseDTO();
+    public Sctid getSctWithSystemId(AuthenticateResponseDto authToken, Integer namespaceId, String systemId) throws CisException {
+        
         Sctid sct = new Sctid();
-
-            //UserDTO userObj = bulkSctidService.getAuthenticatedUser();
-            if (bulkSctidService.isAbleUser(String.valueOf(namespaceId), authToken.getAuthenticateResponseDto())) {
+            if (bulkSctidService.isAbleUser(String.valueOf(namespaceId), authToken)) {
                 List<Sctid> result = sctidRepository.findBySystemIdAndNamespace(systemId, namespaceId);
                 sct = result.get(0);
-                /*output.setSctid(sct.getSctid());
-                output.setSequence(sct.getSequence());
-                output.setNamespace(sct.getNamespace());
-                output.setPartitionId(sct.getPartitionId());
-                output.setCheckDigit(sct.getCheckDigit());
-                output.setSystemId(sct.getSystemId());
-                output.setStatus(sct.getStatus());
-                output.setAuthor(sct.getAuthor());
-                output.setSoftware(sct.getSoftware());
-                output.setExpirationDate(sct.getExpirationDate());
-                output.setComment(sct.getComment());*/
             } else {
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
@@ -371,24 +269,20 @@ public class SctidService {
         return sct;
     }
 
-    public Sctid deprecateSct(Token authToken, DeprecateSctRequestDTO request) throws CisException {
-        // request body change
-
+    public Sctid deprecateSct(AuthenticateResponseDto authToken, DeprecateSctRequestDTO request) throws CisException {
         Sctid output = new Sctid();
             DeprecateSctRequest deprecateSctRequest = new DeprecateSctRequest();
             deprecateSctRequest.setSctid(request.getSctid());
             deprecateSctRequest.setNamespace(request.getNamespace());
             deprecateSctRequest.setSoftware(request.getSoftware());
             deprecateSctRequest.setComment(request.getComment());
-
-
-            //UserDTO userObj = bulkSctidService.getAuthenticatedUser();
+            
             Integer returnedNamespace = sctIdHelper.getNamespace(request.getSctid());
             if (!returnedNamespace.equals(request.getNamespace())) {
                 throw new CisException(HttpStatus.BAD_REQUEST, "Namespaces differences between sctId and parameter");
             } else {
-                if (bulkSctidService.isAbleUser(String.valueOf(returnedNamespace), authToken.getAuthenticateResponseDto())) {
-                    deprecateSctRequest.setAuthor(authToken.getUserName());
+                if (bulkSctidService.isAbleUser(String.valueOf(returnedNamespace), authToken)) {
+                    deprecateSctRequest.setAuthor(authToken.getName());
                     Sctid sctRec = sctIdHelper.getSctid(deprecateSctRequest.getSctid());
                     if (sctRec.getSctid().isEmpty()) {
                         throw new CisException(HttpStatus.ACCEPTED, "No Sctid Rec Found");
@@ -414,9 +308,9 @@ public class SctidService {
         return output;
     }
 
-    public Sctid releaseSct(Token authToken, DeprecateSctRequestDTO request) throws CisException {
+    public Sctid releaseSct(AuthenticateResponseDto authToken, DeprecateSctRequestDTO request) throws CisException {
 
-        // request body change
+        
         Sctid output = new Sctid();
             DeprecateSctRequest deprecateSctRequest = new DeprecateSctRequest();
             deprecateSctRequest.setSctid(request.getSctid());
@@ -424,13 +318,13 @@ public class SctidService {
             deprecateSctRequest.setSoftware(request.getSoftware());
             deprecateSctRequest.setComment(request.getComment());
 
-            //UserDTO userObj = bulkSctidService.getAuthenticatedUser();
+            
             Integer returnedNamespace = sctIdHelper.getNamespace(request.getSctid());
             if (!returnedNamespace.equals(request.getNamespace())) {
                 throw new CisException(HttpStatus.ACCEPTED, "Namespaces differences between sctId and parameter");
             } else {
-                if (bulkSctidService.isAbleUser(String.valueOf(returnedNamespace), authToken.getAuthenticateResponseDto())) {
-                    deprecateSctRequest.setAuthor(authToken.getUserName());
+                if (bulkSctidService.isAbleUser(String.valueOf(returnedNamespace), authToken)) {
+                    deprecateSctRequest.setAuthor(authToken.getName());
                     Sctid sctRec = sctIdHelper.getSctid(request.getSctid());
                     if (sctRec.getSctid().isEmpty()) {
                         throw new CisException(HttpStatus.ACCEPTED, "No Sctid Rec Found");
@@ -441,7 +335,7 @@ public class SctidService {
                             sctRec.setAuthor(deprecateSctRequest.getAuthor());
                             sctRec.setSoftware(deprecateSctRequest.getSoftware());
                             sctRec.setComment(deprecateSctRequest.getComment());
-                            //change i/p param null error
+                            
                             sctRec.setJobId(null);
                             output = sctidRepository.save(sctRec);
                         } else {
@@ -457,8 +351,8 @@ public class SctidService {
         return output;
     }
 
-    public Sctid publishSct(Token authToken, DeprecateSctRequestDTO request) throws CisException {
-        // request body change
+    public Sctid publishSct(AuthenticateResponseDto authToken, DeprecateSctRequestDTO request) throws CisException {
+        
         Sctid output = new Sctid();
             DeprecateSctRequest deprecateSctRequest = new DeprecateSctRequest();
             deprecateSctRequest.setSctid(request.getSctid());
@@ -466,13 +360,13 @@ public class SctidService {
             deprecateSctRequest.setSoftware(request.getSoftware());
             deprecateSctRequest.setComment(request.getComment());
 
-            //UserDTO userObj = bulkSctidService.getAuthenticatedUser();
+            
             Integer returnedNamespace = sctIdHelper.getNamespace(request.getSctid());
             if (!returnedNamespace.equals(request.getNamespace())) {
                 throw new CisException(HttpStatus.ACCEPTED, "Namespaces differences between sctId and parameter");
             } else {
-                if (bulkSctidService.isAbleUser(String.valueOf(returnedNamespace), authToken.getAuthenticateResponseDto())) {
-                    deprecateSctRequest.setAuthor(authToken.getUserName());
+                if (bulkSctidService.isAbleUser(String.valueOf(returnedNamespace), authToken)) {
+                    deprecateSctRequest.setAuthor(authToken.getName());
                     Sctid sctRec = sctIdHelper.getSctid(request.getSctid());
                     if (sctRec.getSctid().isEmpty()) {
                         throw new CisException(HttpStatus.ACCEPTED, "No Sctid Rec Found");
@@ -483,7 +377,7 @@ public class SctidService {
                             sctRec.setAuthor(deprecateSctRequest.getAuthor());
                             sctRec.setSoftware(deprecateSctRequest.getSoftware());
                             sctRec.setComment(deprecateSctRequest.getComment());
-                            //change i/p param null error
+                            
 
                             sctRec.setJobId(null);
                             output = sctidRepository.save(sctRec);
@@ -500,9 +394,9 @@ public class SctidService {
         return output;
     }
 
-    public SctWithSchemeResponseDTO generateSctid(Token authToken, SctidsGenerateRequestDto generationData) throws CisException {
+    public SctWithSchemeResponseDTO generateSctid(AuthenticateResponseDto authToken, SctidsGenerateRequestDto generationData) throws CisException {
         SctWithSchemeResponseDTO sctResponse = new SctWithSchemeResponseDTO();
-        //change for reqBody match begins
+        
         SctidGenerate generate = new SctidGenerate();
         generate.setNamespace(generationData.getNamespace());
         generate.setPartitionId(generationData.getPartitionId());
@@ -510,20 +404,20 @@ public class SctidService {
         generate.setSoftware(generationData.getSoftware());
         generate.setComment(generationData.getComment());
         generate.setGenerateLegacyIds(generationData.isGenerateLegacyIds());
-        //change for reqBody match begins
-            //UserDTO userObj = bulkSctidService.getAuthenticatedUser();
-            if (bulkSctidService.isAbleUser((generationData.getNamespace()).toString(), authToken.getAuthenticateResponseDto())) {
+        
+            
+            if (bulkSctidService.isAbleUser((generationData.getNamespace()).toString(), authToken)) {
                 if ((generationData.getNamespace() == 0 && (!generationData.getPartitionId().substring(0, 1).equalsIgnoreCase("0")))
                         || (generationData.getNamespace() != 0 && !generationData.getPartitionId().substring(0, 1).equalsIgnoreCase("1"))) {
                     throw new CisException(HttpStatus.ACCEPTED, "Namespace and partitionId parameters are not consistent.");
                 }
                 if (generationData.getSystemId().isBlank()) {
-                    // generationData.setSystemId(sctIdHelper.guid());
+                    
                     generate.setSystemId(sctIdHelper.guid());
                     generate.setAutoSysId(true);
                 }
-                // generationData.setAuthor(userObj.getLogin());
-                generate.setAuthor(authToken.getUserName());
+                
+                generate.setAuthor(authToken.getName());
                 Sctid sctRec1 = this.generateSctidSubFun(generate);
                 var sctIdRecordArray = new ArrayList<SchemeId>();
                 if (generationData.isGenerateLegacyIds() &&
@@ -595,7 +489,7 @@ public class SctidService {
                     sctList.get(0).setStatus(newStatus);
                     sctList.get(0).setAuthor(generationData.getAuthor());
                     sctList.get(0).setSoftware(generationData.getSoftware());
-                    //Doubt - need to be clarified- there is no ExpirationDate in Request body.
+                    
                     sctList.get(0).setExpirationDate(LocalDateTime.now());
                     sctList.get(0).setComment(generationData.getComment());
                     sctList.get(0).setJobId(null);
@@ -605,7 +499,7 @@ public class SctidService {
                     sctOutput = sctIdDM.counterMode(generationData, action);
                 }
             } else {
-                //throw new APIException(HttpStatus.ACCEPTED,"error getting available partitionId:" + generationData.getPartitionId() + " and namespace:" + generationData.getNamespace() + ", err: ");
+                
                 sctOutput = sctIdDM.counterMode(generationData, action);
             }
         } else {
@@ -614,8 +508,8 @@ public class SctidService {
         return sctOutput;
     }
 
-    //request body change
-    // first parameter type chnage
+    
+    
     public Sctid setAvailableSCTIDRecord2NewStatus(SCTIDReserveRequest sctidReservationRequest, String action) throws CisException {
         Sctid result = null;
         List<Sctid> sctIdRecords = null;
@@ -685,7 +579,7 @@ public class SctidService {
                 schemeIdRecords.get(0).setStatus(newStatus);
                 schemeIdRecords.get(0).setAuthor(generationData.getAuthor());
                 schemeIdRecords.get(0).setSoftware(generationData.getSoftware());
-                //Expiration Date Not available in request.
+                
                 schemeIdRecords.get(0).setExpirationDate(null);
                 schemeIdRecords.get(0).setComment(generationData.getComment());
                 schemeIdRecords.get(0).setJobId(null);
@@ -707,7 +601,7 @@ public class SctidService {
             limitR = Integer.parseInt(limit);
         if (!skip.isEmpty() && null != skip)
             skipTo = Integer.parseInt(skip);
-        //sctidRepository.findSct(queryObject,limitR,skipTo);
+        
         String swhere = "";
         if (queryObject.size() > 0) {
             for (var query :
@@ -720,11 +614,11 @@ public class SctidService {
         }
         String sql;
         if ((limitR > 0) && (skipTo == 0)) {
-            //sql = "SELECT * FROM sctId" + swhere + " order by sctid limit " + limit;
+            
 
             sql = "SELECT * FROM schemeId" + swhere + " order by schemeId limit " + limit;
         } else {
-            //sql = "SELECT * FROM sctId" + swhere + " order by sctid";
+            
             sql = "SELECT * FROM schemeId" + swhere + " order by schemeId";
         }
         Query genQuery = entityManager.createQuery(sql);
@@ -763,11 +657,10 @@ public class SctidService {
                     schemeIdRecord.setStatus(newStatus);
                     schemeIdRecord.setAuthor(request.getAuthor());
                     schemeIdRecord.setSoftware(request.getSoftware());
-                    //Expiration Date Not available in request.
                     schemeIdRecord.setExpirationDate(null);
                     schemeIdRecord.setComment(request.getComment());
                     schemeIdRecord.setJobId(null);
-                    // outputSchemeRec = bulkSchemeIdRepository.save(schemeIdRecords.get(0));
+                    
                     updatedrecord = schemeIdService.updateSchemeIdRecord(schemeIdRecord, schemeName.toString());
                     return updatedrecord;
                 } else {
@@ -778,20 +671,17 @@ public class SctidService {
         return newSchemeId;
     }
 
-
     private SchemeId getNextSchemeId(SchemeName schemeName, SctidGenerate request) {
         Optional<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeName.toString());
         SchemeIdBase schemeIdBase = null;
         if (schemeIdBaseList.isPresent())
             schemeIdBase.setIdBase(schemeIdBaseList.get().getIdBase());
         schemeIdBaseRepository.save(schemeIdBase);
-        return null;//List<SchmeId>
+        return null;
     }
 
-    public Sctid registerSctid(Token authToken, SCTIDRegistrationRequest registrationData) throws CisException {
+    public Sctid registerSctid(AuthenticateResponseDto authToken, SCTIDRegistrationRequest registrationData) throws CisException {
         Sctid result = new Sctid();
-            //UserDTO userObj = bulkSctidService.getAuthenticatedUser();
-            //requestbody change
             SCTIDRegisterRequest registerRequest = new SCTIDRegisterRequest();
             registerRequest.setSctid(registrationData.getSctid());
             registerRequest.setNamespace(registrationData.getNamespace());
@@ -803,12 +693,12 @@ public class SctidService {
             if (!(returnedNamespace.equals(registrationData.getNamespace()))) {
                 throw new CisException(HttpStatus.ACCEPTED, "Namespaces differences between sctId and parameter");
             } else {
-                if (bulkSctidService.isAbleUser((registrationData.getNamespace()).toString(), authToken.getAuthenticateResponseDto())) {
+                if (bulkSctidService.isAbleUser((registrationData.getNamespace()).toString(), authToken)) {
                     if (registrationData.getSystemId().isBlank() || registrationData.getSystemId().isEmpty()) {
                         registerRequest.setAutoSysId(true);
                     }
-                    registerRequest.setAuthor(authToken.getUserName());
-                    //requestbody change
+                    registerRequest.setAuthor(authToken.getName());
+                    
                     Sctid sct = sctIdDM.registerSctid(registerRequest, "SCTIDRegisterRequest");
                     if (null != (sct))
                         result = sct;
@@ -820,7 +710,7 @@ public class SctidService {
         return result;
     }
 
-    public Sctid reserveSctid(Token token, SCTIDReservationRequest reservationData) throws CisException {
+    public Sctid reserveSctid(AuthenticateResponseDto token, SCTIDReservationRequest reservationData) throws CisException {
         Sctid result = null;
         /*
         *
@@ -832,7 +722,7 @@ public class SctidService {
   "comment": "string"
 }*/
 
-        //requestbody change
+        
 
             SCTIDReserveRequest reserveRequest = new SCTIDReserveRequest();
             reserveRequest.setNamespace(reservationData.getNamespace());
@@ -841,13 +731,12 @@ public class SctidService {
             reserveRequest.setSoftware(reservationData.getSoftware());
             reserveRequest.setComment(reservationData.getComment());
 
-            UserDTO userObj = bulkSctidService.getAuthenticatedUser();
-            if (bulkSctidService.isAbleUser((reservationData.getNamespace()).toString(), token.getAuthenticateResponseDto())) {
+            if (bulkSctidService.isAbleUser((reservationData.getNamespace()).toString(), token)) {
                 if ((reservationData.getNamespace() == 0 && reservationData.getPartitionId().substring(0, 1) != "0")
                         || (reservationData.getNamespace() != 0 && reservationData.getPartitionId().substring(0, 1) != "1")) {
                     throw new CisException(HttpStatus.ACCEPTED, ("Namespace and partitionId parameters are not consistent."));
                 }
-                reserveRequest.setAuthor(userObj.getLogin());
+                reserveRequest.setAuthor(token.getName());
                 Sctid sct = this.reserveSctid(reserveRequest);
                 if (null != (sct))
                     result = sct;
@@ -865,7 +754,6 @@ public class SctidService {
     }
 
     public ResultDto getStats(String token, String username) throws CisException {
-        if (bulkSctidService.authenticateToken(token)) {
             ResultDto result = new ResultDto();
             List<String> users = new ArrayList<>();
             List<String> securityAdmins = new ArrayList<>();
@@ -873,7 +761,7 @@ public class SctidService {
             securityAdmins.add("keerthika");
             securityAdmins.add("lakshmana");
             boolean adminU = false;
-            // boolean found = this.added(userToAdd);
+            
             for (String admin : securityAdmins) {
                 if (admin.equalsIgnoreCase(username))
                     adminU = true;
@@ -891,7 +779,7 @@ public class SctidService {
                 result.setSchemes(schemeCount);
                 long namespaceCount = namespaceRepository.count();
                 List<Namespace> namespaceList = namespaceRepository.findAll();
-                //result.getNamespaces().setTotal(namespaceCount);
+                
                 var total = namespaceList.size();
                 var done = 0;
                 if (total > 0) {
@@ -904,7 +792,7 @@ public class SctidService {
                         long sctCount = sctidCount(queryObject);
                         if (sctCount > 0) {
                             hash.put(namespace.getNamespace().toString(), sctCount);
-                            //result.getNamespaces("namespace.getNamespace()") = sctCount;
+                            
                         }
                         done++;
                         if (total == done) {
@@ -946,7 +834,7 @@ public class SctidService {
                             namespaceList.add(new Namespace(Integer.valueOf(namespLoop)));
                     }
                 }
-                //result.getNamespaces().total = namespaceList.size();
+                
                 var total = namespaceList.size();
                 var done = 0;
                 if (total > 0) {
@@ -959,7 +847,7 @@ public class SctidService {
                         long sctCount = sctidCount(queryObject);
                         if (sctCount > 0) {
                             done++;
-                            // result.getNamespaces("namespace.getNamespace()") = sctCount;
+                            
                             hash.put(namespaceR.getNamespace().toString(), sctCount);
                             if (total == done) {
                                 hash.put("total", (long) total);
@@ -971,9 +859,6 @@ public class SctidService {
                 }
             }
             return result;
-        } else {
-            throw new CisException(HttpStatus.UNAUTHORIZED, "Invalid Token/User Not authenticated");
-        }
     }
 
     public boolean added(String userToAdd) {
@@ -1016,7 +901,7 @@ public class SctidService {
                         query.getValue()) {
                     groupList += "," + "'" + group + "'";
                 }
-                // groupList += ")";
+                
                 groupList = groupList.substring(1);
                 swhere += " And " + query.getKey() + " in" + "(" + groupList + ")";
             }
@@ -1043,7 +928,7 @@ public class SctidService {
                         query.getValue()) {
                     groupList += "," + "'" + group + "'";
                 }
-                //groupList += ")";
+                
                 groupList = groupList.substring(1);
                 swhere += " And " + query.getKey() + " in" + "(" + groupList + ")";
             }
@@ -1060,13 +945,4 @@ public class SctidService {
         return result;
     }
 
-    /*public List<String> getUserGroup(String username) throws APIException {
-        UserDTO user = new UserDTO();
-        List<String> role = new ArrayList<>();
-        ResponseEntity<UserDTO> resp = securityController.isValidUser(servReq);
-        if(resp.hasBody())
-            user  = resp.getBody();
-        role.add(user.getRoles().get(0).split("_")[1]);
-        return role;
-    }*/
 }
