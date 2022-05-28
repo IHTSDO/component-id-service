@@ -1,5 +1,7 @@
 package org.snomed.cis.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snomed.cis.controller.SecurityController;
 import org.snomed.cis.controller.dto.*;
 import org.snomed.cis.domain.PermissionsScheme;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class SchemeIdService {
+    private final Logger logger = LoggerFactory.getLogger(SchemeIdService.class);
     @Autowired
     private SecurityController securityController;
 
@@ -79,6 +82,7 @@ public class SchemeIdService {
                 try {
                     roleAsGroups = authToken.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
                 } catch (Exception e) {
+                    logger.error("error hasSchemePermission():: Error accessing groups");
                     throw new CisException(HttpStatus.BAD_REQUEST, "Error accessing groups");
                 }
                 for (String group : roleAsGroups) {
@@ -171,6 +175,7 @@ public class SchemeIdService {
                 schemeidList = newRows;
             }
         } else {
+            logger.error("error getSchemeIdsList():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -185,7 +190,7 @@ public class SchemeIdService {
         SchemeId record = new SchemeId();
         Optional<SchemeId> schemeIdObj = null;
             if (schemeid == null || schemeid == "") {
-
+                logger.error("error getSchemeIdsByschemeIdList():: Not valid schemeId.");
                 throw new CisException(HttpStatus.UNAUTHORIZED, "Not valid schemeId.");
             } else {
                 boolean isValidScheme = false;
@@ -194,10 +199,11 @@ public class SchemeIdService {
                 } else if ("CTV3ID".equalsIgnoreCase(schemeName.toString().toUpperCase())) {
                     isValidScheme = CTV3ID.validSchemeId(schemeid);
                 }
-                if (!isValidScheme)
+                if (!isValidScheme) {
+                    logger.error("error getSchemeIdsByschemeIdList():: Not valid schemeId.");
                     throw new CisException(HttpStatus.UNAUTHORIZED, "Not valid schemeId.");
+                }
             }
-            System.out.println("bulkScheme:" + bulkSchemeIdRepository);
             schemeIdObj = bulkSchemeIdRepository.findBySchemeAndSchemeId(schemeName, schemeid);
             if (schemeIdObj.isEmpty()) {
                 record = getFreeRecords(schemeName, schemeid);
@@ -310,9 +316,11 @@ public class SchemeIdService {
             if (!schemeIdList.isEmpty() && schemeIdList.size() > 0) {
                 return schemeIdList.get(0);
             } else {
+                logger.error("error getSchemeIdsBysystemList()::SchemeId list is empty");
                 throw new CisException(HttpStatus.UNAUTHORIZED, "SchemeId list is empty");
             }
         } else {
+            logger.error("error getSchemeIdsBysystemList():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
 
@@ -333,6 +341,7 @@ public class SchemeIdService {
             updateRequest.setAuthor(authToken.getName());
             SchemeId schemeIdrecord = getSchemeIdsByschemeIdList(schemeName.toString(), updateRequest.getSchemeId());
             if (schemeIdrecord.getSchemeId().isEmpty()) {
+                logger.error("error deprecateSchemeIdList():: SchemeId record is empty");
                 throw new CisException(HttpStatus.NOT_FOUND, "SchemeId record is empty");
             } else {
                 var newStatus = stateMachine.getNewStatus(schemeIdrecord.getStatus(), stateMachine.actions.get("deprecate"));
@@ -344,10 +353,12 @@ public class SchemeIdService {
                     schemeIdrecord.setJobId(null);
                     schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
                 } else {
+                    logger.error("error deprecateSchemeIdList():: Cannot deprecate SchemeId:{}, current status:{}",schemeIdrecord.getSchemeId(),schemeIdrecord.getStatus());
                     throw new CisException(HttpStatus.BAD_REQUEST, "Cannot deprecate SchemeId:" + schemeIdrecord.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
                 }
             }
         } else {
+            logger.error("error deprecateSchemeIdList():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
         return schemeId;
@@ -371,6 +382,7 @@ public class SchemeIdService {
             SchemeId schemeIdrecord = getSchemeIdsByschemeIdList(schemeName.toString(), updateRequest.getSchemeId());
 
             if (schemeIdrecord.getSchemeId().isEmpty()) {
+                logger.error("error releaseSchemeIdList():: SchemeId record is empty");
                 throw new CisException(HttpStatus.NOT_FOUND, "SchemeId record is empty");
             } else {
                 var newStatus = stateMachine.getNewStatus(schemeIdrecord.getStatus(), stateMachine.actions.get("release"));
@@ -382,10 +394,12 @@ public class SchemeIdService {
                     schemeIdrecord.setJobId(null);
                     schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
                 } else {
+                    logger.error("error releaseSchemeIdList():: Cannot release SchemeId:{} , current status:{}",schemeIdrecord.getSchemeId(),schemeIdrecord.getStatus());
                     throw new CisException(HttpStatus.BAD_REQUEST, "Cannot release SchemeId:" + schemeIdrecord.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
                 }
             }
         } else {
+            logger.error("error releaseSchemeIdList():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -410,6 +424,7 @@ public class SchemeIdService {
             SchemeId schemeIdrecord = getSchemeIdsByschemeIdList(schemeName.toString(), updateRequest.getSchemeId());
 
             if (schemeIdrecord.getSchemeId().isEmpty()) {
+                logger.error("error publishSchemeIdList():: SchemeId record is empty");
                 throw new CisException(HttpStatus.NOT_FOUND, "SchemeId record is empty");
             } else {
                 var newStatus = stateMachine.getNewStatus(schemeIdrecord.getStatus(), stateMachine.actions.get("publish"));
@@ -421,10 +436,12 @@ public class SchemeIdService {
                     schemeIdrecord.setJobId(null);
                     schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
                 } else {
+                    logger.error("error publishSchemeIdList():: Cannot publish SchemeId:{}, current status:{}",schemeIdrecord.getSchemeId(),schemeIdrecord.getStatus());
                     throw new CisException(HttpStatus.BAD_REQUEST, "Cannot publish SchemeId:" + schemeIdrecord.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
                 }
             }
         } else {
+            logger.error("error publishSchemeIdList():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -445,6 +462,7 @@ public class SchemeIdService {
             reserveRequest.setAuthor(authToken.getName());
             setNewSchemeIdRecord(schemeName, reserveRequest, stateMachine.actions.get("reserve"));
         } else {
+            logger.error("error reserveSchemeIdList():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -462,11 +480,13 @@ public class SchemeIdService {
                 if (schemeIdRec != null) {
                     return schemeIdRec;
                 } else {
+                    logger.error("error setNewSchemeIdRecord():: Error");
                     throw new CisException(HttpStatus.NOT_FOUND, "Error");
                 }
 
             }
         } catch (Exception e) {
+            logger.error("error setNewSchemeIdRecord():: error getting available schemeId for:{}, Exception msg: {}",schemeName,e.getMessage());
             throw new CisException(HttpStatus.NOT_FOUND, "error getting available schemeId for:" + schemeName + e.getMessage());
         }
 
@@ -658,6 +678,7 @@ public class SchemeIdService {
             }
 
         } else {
+            logger.error("error generateSchemeIds():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -685,11 +706,13 @@ public class SchemeIdService {
                 if (schemeIdRec != null) {
                     return schemeIdRec;
                 } else {
+                    logger.error("error setNewSchemeIdRecordGen():: Not found Error");
                     throw new CisException(HttpStatus.NOT_FOUND, "Error");
                 }
 
             }
         } catch (Exception e) {
+            logger.error("error setNewSchemeIdRecordGen():: error getting available schemeId for:{}, Exception msg: {}",schemeName,e.getMessage());
             throw new CisException(HttpStatus.NOT_FOUND, "error getting available schemeId for:" + schemeName + e.getMessage());
         }
 
@@ -730,6 +753,7 @@ public class SchemeIdService {
         } else if (schemeIdRecords.size() == 0) {
             return counterModeGen(schemeName, request, generate);
         } else {
+            logger.error("error setAvailableSchemeIdRecord2NewStatusGen():: error getting available schemeId for:{}",schemeName);
             throw new CisException(HttpStatus.ACCEPTED, "error getting available schemeId for:" + schemeName + ", err: ");
         }
         return updatedrecord;
@@ -807,6 +831,7 @@ public class SchemeIdService {
                     schemeIdRec = getSchemeIdBySystemId(schemeName.toString(), registerRequest.getSystemId());
                     if (schemeIdRec != null) {
                         if (schemeIdRec.getSchemeId() != request.getSchemeId()) {
+                            logger.error("error registerSchemeIds():: Bad Request: SystemId : {} already exists with SchemeId:{}",request.getSystemId(),schemeIdRec.getSchemeId());
                             throw new CisException(HttpStatus.BAD_REQUEST, "SystemId" + request.getSystemId() + " already exists with SchemeId:" + schemeIdRec.getSchemeId());
                         }
                         if (Objects.equals(schemeIdRec.getStatus(), stateMachine.statuses.get("assigned"))) {
@@ -820,6 +845,7 @@ public class SchemeIdService {
                 }
             }
         } else {
+            logger.error("error registerSchemeIds():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -832,6 +858,7 @@ public class SchemeIdService {
 
         //
         if (schemeIdrecord.getSchemeId().isEmpty()) {
+            logger.error("error registerNewSchemeId():: SchemeId record is empty");
             throw new CisException(HttpStatus.NOT_FOUND, "SchemeId record is empty");
         } else {
             var newStatus = stateMachine.getNewStatus(schemeIdrecord.getStatus(), stateMachine.actions.get("register"));
@@ -848,6 +875,7 @@ public class SchemeIdService {
                 //schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
                 schemeId = updateSchemeIdRecord(schemeIdrecord, schemeName.toString());
             } else {
+                logger.error("error registerNewSchemeId():: Cannot register SchemeId:{}, current status:{}",request.getSchemeId(),schemeIdrecord.getStatus());
                 throw new CisException(HttpStatus.BAD_REQUEST, "Cannot register SchemeId:" + request.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
             }
         }

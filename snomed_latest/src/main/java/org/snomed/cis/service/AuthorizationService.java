@@ -1,5 +1,7 @@
 package org.snomed.cis.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snomed.cis.controller.dto.AuthenticateResponseDto;
 import org.snomed.cis.pojo.Config;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +12,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class AuthorizationService {
-
+    private final Logger logger = LoggerFactory.getLogger(AuthorizationService.class);
     @Autowired
     private Config config;
 

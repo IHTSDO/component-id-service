@@ -1,5 +1,7 @@
 package org.snomed.cis.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snomed.cis.controller.dto.AuthenticateResponseDto;
 import org.snomed.cis.controller.dto.GetStatsResponseDto;
 import org.snomed.cis.controller.dto.QueryCountByNamespaceDto;
@@ -19,7 +21,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class StatsService {
-
+    private final Logger logger = LoggerFactory.getLogger(StatsService.class);
     @Autowired
     private Config config;
 

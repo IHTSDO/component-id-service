@@ -3,6 +3,8 @@ package org.snomed.cis.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snomed.cis.controller.dto.*;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.pojo.Config;
@@ -18,7 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 
 @Service
 public class AuthenticationService {
-
+    private final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
     @Autowired
     private Config config;
 

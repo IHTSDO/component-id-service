@@ -38,26 +38,29 @@ public class BulkJobsController {
     })
     @GetMapping("/bulk/jobs")
     @ResponseBody
-    public List<BulkJob> getJobs(@RequestParam String token) throws CisException {
-        logger.info("Request received - token :: {}", token);
-        return bulkJobService.getJobs(token);
+    public List<BulkJob> getJobs() throws CisException {
+        logger.info("Request received - getJobs");
+        return bulkJobService.getJobs();
     }
 
     @GetMapping("/bulk/jobs/{jobId}")
     @ResponseBody
     public BulkJob getJob( @PathVariable Integer jobId) throws CisException {
+        logger.info("Request received - jobId :: {}", jobId);
         return bulkJobService.getJob(jobId);
     }
 
     @GetMapping("/bulk/jobs/{jobId}/records")
     @ResponseBody
     public List<Object> getJobRecords(@PathVariable Integer jobId) throws CisException, JsonProcessingException {
+        logger.info("Request received for - jobId :: {}", jobId);
         return bulkJobService.getJobRecords(jobId);
     }
 
     @GetMapping("/bulk/jobs/cleanupExpired")
     @ResponseBody
     public List<CleanUpServiceResponse> cleanUpExpiredIds( Authentication authentication) throws CisException {
+        logger.info("Request received - authentication :: {}", authentication);
         Token authToken = (Token)authentication;
         return bulkJobService.cleanUpExpiredIds(authToken.getAuthenticateResponseDto());
     }

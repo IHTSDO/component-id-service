@@ -1,6 +1,9 @@
 package org.snomed.cis.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.snomed.cis.controller.ViewsController;
 import org.snomed.cis.controller.dto.AuthenticateResponseDto;
 import org.snomed.cis.controller.dto.BulkJobsListResponse;
 import org.snomed.cis.controller.dto.CleanUpServiceResponse;
@@ -26,6 +29,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class BulkJobService {
+    private final Logger logger = LoggerFactory.getLogger(BulkJobService.class);
     @Autowired
     BulkSctidService bulkSctidService;
 
@@ -48,7 +52,7 @@ public class BulkJobService {
     @Autowired
     SctidRepository sctidRepository;
 
-    public List<BulkJob> getJobs(String token) throws CisException {
+    public List<BulkJob> getJobs() {
         List<BulkJob> result = null;
             Map<String, Object> queryObject = new HashMap();
             Map<String, Integer> fields = new LinkedHashMap<>();
@@ -153,9 +157,11 @@ public class BulkJobService {
                 if (bulkJob.getId() == jobId)
                     result = bulkJob;
             }
-            else
-                throw new CisException(HttpStatus.NOT_FOUND,"There is no result from Database for jobId"+jobId);
-        return result;
+            else {
+                logger.error("error getJob():: There is no result from Database for jobId {}",jobId);
+                throw new CisException(HttpStatus.NOT_FOUND, "There is no result from Database for jobId" + jobId);
+            }
+                return result;
     }
 
     public List<Object> getJobRecords(Integer jobId) throws CisException, JsonProcessingException {
@@ -277,6 +283,7 @@ public class BulkJobService {
                     }
                     catch(Exception e)
                     {
+                        logger.error("error cleanUpExpiredIds():: [Error] in clean up service - SctId expiration date: {}",e.getMessage());
                         throw new CisException(HttpStatus.UNAUTHORIZED," [Error] in clean up service - SctId expiration date: "+ e.getMessage());
                     }
                     try {
@@ -312,9 +319,11 @@ public class BulkJobService {
                     }
                     catch(Exception e)
                     {
+                        logger.error("error cleanUpExpiredIds():: [Error] in clean up service - SctId expiration date: {}",e.getMessage());
                         throw new CisException(HttpStatus.UNAUTHORIZED," [Error] in clean up service - SctId expiration date: "+ e.getMessage());
                     }
                 } else {
+                    logger.error("error cleanUpExpiredIds():: No permission for the selected operation.");
                     throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
                 }
             return result;

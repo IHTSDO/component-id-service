@@ -1,6 +1,8 @@
 package org.snomed.cis.controller;
 
 import io.swagger.annotations.Api;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snomed.cis.controller.dto.EmptyDto;
 import org.snomed.cis.domain.PermissionsNamespace;
 import org.snomed.cis.domain.PermissionsScheme;
@@ -20,7 +22,7 @@ import java.util.List;
 @Api(tags = "Authorization", value = "Authorization")
 @RestController
 public class AuthorizationController {
-
+    private final Logger logger = LoggerFactory.getLogger(AuthorizationController.class);
     @Autowired
     NamespaceService namespaceService;
 

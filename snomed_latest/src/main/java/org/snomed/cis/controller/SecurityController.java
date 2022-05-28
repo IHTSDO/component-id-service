@@ -2,6 +2,8 @@ package org.snomed.cis.controller;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponses;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snomed.cis.controller.dto.UserDTO;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.pojo.Config;
@@ -22,7 +24,7 @@ import java.util.List;
 //This class is under modification, code is under Draft version. Null or empty checks will be handled in next version.
 @RestController
 public class SecurityController {
-
+    private final Logger logger = LoggerFactory.getLogger(SecurityController.class);
     @Autowired
     private HttpServletRequest servReq;
 

@@ -2,15 +2,19 @@ package org.snomed.cis.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.snomed.cis.controller.SecurityController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snomed.cis.controller.dto.*;
-import org.snomed.cis.domain.*;
+import org.snomed.cis.domain.BulkJob;
+import org.snomed.cis.domain.SchemeId;
+import org.snomed.cis.domain.SchemeIdBase;
+import org.snomed.cis.domain.SchemeName;
 import org.snomed.cis.exception.CisException;
-import org.snomed.cis.util.*;
 import org.snomed.cis.repository.BulkJobRepository;
 import org.snomed.cis.repository.BulkSchemeIdRepository;
 import org.snomed.cis.repository.PermissionsSchemeRepository;
 import org.snomed.cis.repository.SchemeIdBaseRepository;
+import org.snomed.cis.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -20,6 +24,7 @@ import java.util.*;
 
 @Service
 public class BulkSchemeIdService {
+    private final Logger logger = LoggerFactory.getLogger(BulkSchemeIdService.class);
     @Autowired
     private BulkSchemeIdRepository bulkSchemeIdRepository;
     @Autowired
@@ -51,6 +56,7 @@ public class BulkSchemeIdService {
             if (able) {
                 for (String schemeId : schemedIdArray) {
                     if (schemeId == null || schemeId.isEmpty()) {
+                        logger.error("error getSchemeIds():: SchemeId is null.");
                         throw new CisException(HttpStatus.BAD_REQUEST, "SchemeId is null.");
                     } else {
                         boolean isValidScheme = false;
@@ -85,6 +91,7 @@ public class BulkSchemeIdService {
                     }
                 }//validate schemeId
             } else {
+                logger.error("error getSchemeIds():: No permission for the selected operation.");
                 throw new CisException(HttpStatus.BAD_REQUEST, "No permission for the selected operation");
             }
         return resSchemeArrayList;
@@ -153,7 +160,8 @@ public class BulkSchemeIdService {
             schemeIdBulk = schemeDB.isPresent()?schemeDB.get():null;
             return schemeIdBulk;
         } catch (Exception e) {
-            error = e.toString();
+            logger.error("error insertSchemeIdRecord():: {}",e.getMessage());
+            error = e.getMessage();
         }
         if (error != null) {
             Optional<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeIdBulk.getScheme().toString());
@@ -168,6 +176,7 @@ public class BulkSchemeIdService {
                     schemeIdBaseList.ge
                 }*/
                 else {
+                    logger.error("error insertSchemeIdRecord():: Unable to attempt to solve error");
                     throw new CisException(HttpStatus.BAD_REQUEST, "Unable to attempt to solve error");
                 }
 
@@ -207,9 +216,11 @@ public class BulkSchemeIdService {
 
             boolean able = schemeIdService.isAbleUser(String.valueOf(schemeName), token);
             if (!able) {
+                logger.error("error generateSchemeIds():: No permission for the selected operation");
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
             if ((schemeIdBulkDto.getSystemIds().length != 0 && (schemeIdBulkDto.getSystemIds().length != schemeIdBulkDto.getQuantity()))) {
+                logger.error("error generateSchemeIds():: SystemIds quantity is not equal to quantity requirement.");
                 throw new CisException(HttpStatus.BAD_REQUEST, "SystemIds quantity is not equal to quantity requirement");
             }
             if (schemeIdBulkDto.getSystemIds() != null || schemeIdBulkDto.getSystemIds().length == 0) {
@@ -232,6 +243,7 @@ public class BulkSchemeIdService {
                 bulk.setRequest(regString);
 
             } catch (JsonProcessingException e) {
+                logger.error("error generateSchemeIds():: {}",e.getMessage());
                 throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
             }
 
@@ -255,6 +267,7 @@ public class BulkSchemeIdService {
             bulkRegister.setComment(schemeIdBulkRegisterDto.getComment());
 
             if (schemeIdBulkRegisterDto.getRecords() == null || schemeIdBulkRegisterDto.getRecords().size() == 0) {
+                logger.error("error registerBulkSchemeIds():: Records property cannot be empty.");
                 throw new CisException(HttpStatus.BAD_REQUEST, "Records property cannot be empty.");
             }
             bulkRegister.setType(JobTypeConstants.REGISTER_SCHEMEIDS);
@@ -276,6 +289,7 @@ public class BulkSchemeIdService {
                 bulk.setRequest(regString);
 
             } catch (JsonProcessingException e) {
+                logger.error("error registerBulkSchemeIds():: {}",e.getMessage());
                 throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
             }
 
@@ -284,6 +298,7 @@ public class BulkSchemeIdService {
             return resultJob;
 
         } else {
+            logger.error("error registerBulkSchemeIds():: No permission for the selected operation.");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -316,6 +331,7 @@ public class BulkSchemeIdService {
             bulkReserve.setComment(request.getComment());
 
             if ((null == request.getQuantity()) || request.getQuantity() < 1) {
+                logger.error("error reserveBulkSchemeIds():: Quantity property cannot be lower to 1.");
                 throw new CisException(HttpStatus.BAD_REQUEST, "Quantity property cannot be lower to 1.");
             }
             bulkReserve.setType(JobTypeConstants.RESERVE_SCHEMEIDS);
@@ -337,6 +353,7 @@ public class BulkSchemeIdService {
                 bulk.setRequest(regString);
 
             } catch (JsonProcessingException e) {
+                logger.error("error reserveBulkSchemeIds():: {}",e.getMessage());
                 throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
             }
 
@@ -345,6 +362,7 @@ public class BulkSchemeIdService {
             return resultJob;
 
         } else {
+            logger.error("error reserveBulkSchemeIds():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -358,18 +376,6 @@ public class BulkSchemeIdService {
 
     public BulkJob deprecateBulkSchemeIds(AuthenticateResponseDto token,SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
         BulkJob bulkJob = new BulkJob();
-  /*
-    *
-    * {
-  "schemeIds": [
-    "string"
-  ],
-  "software": "string",
-  "comment": "string"
-}*/
-
-        //requestbody change
-
         if (schemeIdService.isAbleUser(String.valueOf(schemeName), token)) {
             BulkSchemeIdUpdate bulkSchemeIdUpdate = new BulkSchemeIdUpdate();
             bulkSchemeIdUpdate.setSchemeIds(request.getSchemeIds());
@@ -377,9 +383,9 @@ public class BulkSchemeIdService {
             bulkSchemeIdUpdate.setComment(request.getComment());
 
             if (request.getSchemeIds() == null || request.getSchemeIds().size() < 1) {
+                logger.error("error deprecateBulkSchemeIds():: SchemeIds property cannot be empty.");
                 throw new CisException(HttpStatus.UNAUTHORIZED, "SchemeIds property cannot be empty.");
             }
-//requestbody change
             bulkSchemeIdUpdate.setType(JobTypeConstants.DEPRECATE_SCHEMEIDS);
             bulkSchemeIdUpdate.setModel(ModelsConstants.SCHEME_ID);
             bulkSchemeIdUpdate.setAuthor(token.getName());
@@ -391,6 +397,7 @@ public class BulkSchemeIdService {
             return createJob(bulkSchemeIdUpdate, "deprecate");
 
         } else {
+            logger.error("error deprecateBulkSchemeIds():: No permission for the selected operation.");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -412,6 +419,7 @@ public class BulkSchemeIdService {
             bulk.setRequest(regString);
 
         } catch (JsonProcessingException e) {
+            logger.error("error createJob():: {}", e.getMessage());
             throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
 
@@ -437,6 +445,7 @@ public class BulkSchemeIdService {
             bulkSchemeIdUpdate.setComment(request.getComment());
 
             if (request.getSchemeIds() == null || request.getSchemeIds().size() < 1) {
+                logger.error("error releaseBulkSchemeIds():: SchemeIds property cannot be empty.");
                 throw new CisException(HttpStatus.UNAUTHORIZED, "SchemeIds property cannot be empty.");
             }
 
@@ -452,6 +461,7 @@ public class BulkSchemeIdService {
 
 
         } else {
+            logger.error("error releaseBulkSchemeIds():: No permission for the selected operation.");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -472,6 +482,7 @@ public class BulkSchemeIdService {
             bulkSchemeIdUpdate.setComment(request.getComment());
 
             if (request.getSchemeIds() == null || request.getSchemeIds().size() < 1) {
+                logger.error("error publishBulkSchemeIds():: SchemeIds property cannot be empty.");
                 throw new CisException(HttpStatus.UNAUTHORIZED, "SchemeIds property cannot be empty.");
             }
 
@@ -486,6 +497,7 @@ public class BulkSchemeIdService {
             return createJob(bulkSchemeIdUpdate, "publish");
 
         } else {
+            logger.error("error publishBulkSchemeIds():: No permission for the selected operation.");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }

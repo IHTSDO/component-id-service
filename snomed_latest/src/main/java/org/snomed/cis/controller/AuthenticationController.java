@@ -3,6 +3,8 @@ package org.snomed.cis.controller;
 import io.swagger.annotations.Api;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snomed.cis.controller.dto.*;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.security.Token;
@@ -26,7 +28,7 @@ import java.util.List;
 @Api(tags = "Authentication", value = "Authentication")
 @RestController
 public class AuthenticationController {
-
+    private final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
     @Autowired
     private AuthenticationService authenticationService;
 

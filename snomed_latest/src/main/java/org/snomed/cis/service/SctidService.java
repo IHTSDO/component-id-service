@@ -1,6 +1,8 @@
 package org.snomed.cis.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snomed.cis.controller.SecurityController;
 import org.snomed.cis.controller.dto.*;
 import org.snomed.cis.domain.*;
@@ -28,6 +30,7 @@ import java.util.*;
 
 @Service
 public class SctidService {
+    private final Logger logger = LoggerFactory.getLogger(SctidService.class);
     @Autowired
     BulkSctidService bulkSctidService;
 
@@ -136,6 +139,7 @@ public class SctidService {
                 else
                     return Collections.EMPTY_LIST;
             } else {
+                logger.error("error getSct():: No permission for the selected operation");
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
 
@@ -151,6 +155,7 @@ public class SctidService {
                 if (bulkSctidService.isAbleUser(String.valueOf(namespace), authToken)) {
                     sctWithSchemeResponseDTO = this.getSctCommon(output, sctid, includeAdditionalIds);
                 } else {
+                    logger.error("error getSctWithId():: No permission for the selected operation");
                     throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
                 }
             } else {
@@ -248,6 +253,7 @@ public class SctidService {
                 return output;
             }
         } else {
+            logger.error("error getSctCommon():: Not valid SCTID {}",sctid);
             throw new CisException(HttpStatus.BAD_REQUEST, "Not valid SCTID.");
         }
     }
@@ -263,6 +269,7 @@ public class SctidService {
                 List<Sctid> result = sctidRepository.findBySystemIdAndNamespace(systemId, namespaceId);
                 sct = result.get(0);
             } else {
+                logger.error("error getSctWithSystemId():: No permission for the selected operation");
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
 
@@ -279,12 +286,14 @@ public class SctidService {
             
             Integer returnedNamespace = sctIdHelper.getNamespace(request.getSctid());
             if (!returnedNamespace.equals(request.getNamespace())) {
+                logger.error("error deprecateSct():: Namespaces differences between sctId and parameter");
                 throw new CisException(HttpStatus.BAD_REQUEST, "Namespaces differences between sctId and parameter");
             } else {
                 if (bulkSctidService.isAbleUser(String.valueOf(returnedNamespace), authToken)) {
                     deprecateSctRequest.setAuthor(authToken.getName());
                     Sctid sctRec = sctIdHelper.getSctid(deprecateSctRequest.getSctid());
                     if (sctRec.getSctid().isEmpty()) {
+                        logger.error("error deprecateSct():: No Sctid Rec Found");
                         throw new CisException(HttpStatus.ACCEPTED, "No Sctid Rec Found");
                     } else {
                         var newStatus = stateMachine.getNewStatus(sctRec.getStatus(), stateMachine.actions.get("deprecate"));
@@ -296,11 +305,13 @@ public class SctidService {
                             sctRec.setJobId(null);
                             output = sctidRepository.save(sctRec);
                         } else {
+                            logger.error("error deprecateSct():: Cannot deprecate SCTID:{}, current status: {}", request.getSctid(),sctRec.getStatus());
                             throw new CisException(HttpStatus.BAD_REQUEST, "Cannot deprecate SCTID:" + request.getSctid() + ", current status: " + sctRec.getStatus());
                         }
                     }
 
                 } else {
+                    logger.error("error deprecateSct():: No permission for the selected operation");
                     throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
                 }
             }
@@ -321,12 +332,14 @@ public class SctidService {
             
             Integer returnedNamespace = sctIdHelper.getNamespace(request.getSctid());
             if (!returnedNamespace.equals(request.getNamespace())) {
+                logger.error("error releaseSct():: Namespaces differences between sctId and parameter");
                 throw new CisException(HttpStatus.ACCEPTED, "Namespaces differences between sctId and parameter");
             } else {
                 if (bulkSctidService.isAbleUser(String.valueOf(returnedNamespace), authToken)) {
                     deprecateSctRequest.setAuthor(authToken.getName());
                     Sctid sctRec = sctIdHelper.getSctid(request.getSctid());
                     if (sctRec.getSctid().isEmpty()) {
+                        logger.error("error releaseSct():: No Sctid Rec Found");
                         throw new CisException(HttpStatus.ACCEPTED, "No Sctid Rec Found");
                     } else {
                         var newStatus = stateMachine.getNewStatus(sctRec.getStatus(), stateMachine.actions.get("release"));
@@ -339,11 +352,13 @@ public class SctidService {
                             sctRec.setJobId(null);
                             output = sctidRepository.save(sctRec);
                         } else {
+                            logger.error("error releaseSct()::Cannot release SCTID:{}, current status: {}",request.getSctid(),sctRec.getStatus());
                             throw new CisException(HttpStatus.BAD_REQUEST, "Cannot release SCTID:" + request.getSctid() + ", current status: " + sctRec.getStatus());
                         }
                     }
 
                 } else {
+                    logger.error("error releaseSct():: No permission for the selected operation");
                     throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
                 }
             }
@@ -363,12 +378,14 @@ public class SctidService {
             
             Integer returnedNamespace = sctIdHelper.getNamespace(request.getSctid());
             if (!returnedNamespace.equals(request.getNamespace())) {
+                logger.error("error publishSct()::Namespaces differences between sctId and parameter");
                 throw new CisException(HttpStatus.ACCEPTED, "Namespaces differences between sctId and parameter");
             } else {
                 if (bulkSctidService.isAbleUser(String.valueOf(returnedNamespace), authToken)) {
                     deprecateSctRequest.setAuthor(authToken.getName());
                     Sctid sctRec = sctIdHelper.getSctid(request.getSctid());
                     if (sctRec.getSctid().isEmpty()) {
+                        logger.error("error publishSct():: No Sctid Rec Found");
                         throw new CisException(HttpStatus.ACCEPTED, "No Sctid Rec Found");
                     } else {
                         var newStatus = stateMachine.getNewStatus(sctRec.getStatus(), stateMachine.actions.get("publish"));
@@ -382,11 +399,13 @@ public class SctidService {
                             sctRec.setJobId(null);
                             output = sctidRepository.save(sctRec);
                         } else {
+                            logger.error("error publishSct():: Cannot publish SCTID:{}, current status:{}",request.getSctid(),sctRec.getStatus());
                             throw new CisException(HttpStatus.BAD_REQUEST, "Cannot publish SCTID:" + request.getSctid() + ", current status: " + sctRec.getStatus());
                         }
                     }
 
                 } else {
+                    logger.error("error publishSct():: No permission for the selected operation");
                     throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
                 }
             }
@@ -409,6 +428,7 @@ public class SctidService {
             if (bulkSctidService.isAbleUser((generationData.getNamespace()).toString(), authToken)) {
                 if ((generationData.getNamespace() == 0 && (!generationData.getPartitionId().substring(0, 1).equalsIgnoreCase("0")))
                         || (generationData.getNamespace() != 0 && !generationData.getPartitionId().substring(0, 1).equalsIgnoreCase("1"))) {
+                    logger.error("error generateSctid():: Namespace and partitionId parameters are not consistent.");
                     throw new CisException(HttpStatus.ACCEPTED, "Namespace and partitionId parameters are not consistent.");
                 }
                 if (generationData.getSystemId().isBlank()) {
@@ -444,6 +464,7 @@ public class SctidService {
                 sctResponse.setComment(sctRec1.getComment());
                 sctResponse.setAdditionalIds(sctIdRecordArray);
             } else {
+                logger.error("error generateSctid():: No permission for the selected operation");
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
 
@@ -503,6 +524,7 @@ public class SctidService {
                 sctOutput = sctIdDM.counterMode(generationData, action);
             }
         } else {
+            logger.error("error setAvailableSCTIDRecord2NewStatus():: Request Cannot be Empty");
             throw new CisException(HttpStatus.BAD_REQUEST, "Request Cannot be Empty");
         }
         return sctOutput;
@@ -588,6 +610,7 @@ public class SctidService {
                 counterMode(scheme, generationData, action);
             }
         } else {
+            logger.error("error setAvailableSchemeIdRecord2NewStatus():: error getting available schemeId for:{}",scheme);
             throw new CisException(HttpStatus.ACCEPTED, "error getting available schemeId for:" + scheme + ", err: ");
         }
         return outputSchemeRec;
@@ -691,6 +714,7 @@ public class SctidService {
 
             Integer returnedNamespace = sctIdHelper.getNamespace(registrationData.getSctid());
             if (!(returnedNamespace.equals(registrationData.getNamespace()))) {
+                logger.error("error registerSctid():: Namespaces differences between sctId and parameter");
                 throw new CisException(HttpStatus.ACCEPTED, "Namespaces differences between sctId and parameter");
             } else {
                 if (bulkSctidService.isAbleUser((registrationData.getNamespace()).toString(), authToken)) {
@@ -703,6 +727,7 @@ public class SctidService {
                     if (null != (sct))
                         result = sct;
                 } else {
+                    logger.error("error registerSctid():: No permission for the selected operation");
                     throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
                 }
             }
@@ -712,18 +737,6 @@ public class SctidService {
 
     public Sctid reserveSctid(AuthenticateResponseDto token, SCTIDReservationRequest reservationData) throws CisException {
         Sctid result = null;
-        /*
-        *
-        * {
-  "namespace": 0,
-  "partitionId": "string",
-  "expirationDate": "string",
-  "software": "string",
-  "comment": "string"
-}*/
-
-        
-
             SCTIDReserveRequest reserveRequest = new SCTIDReserveRequest();
             reserveRequest.setNamespace(reservationData.getNamespace());
             reserveRequest.setPartitionId(reservationData.getPartitionId());
@@ -734,6 +747,7 @@ public class SctidService {
             if (bulkSctidService.isAbleUser((reservationData.getNamespace()).toString(), token)) {
                 if ((reservationData.getNamespace() == 0 && reservationData.getPartitionId().substring(0, 1) != "0")
                         || (reservationData.getNamespace() != 0 && reservationData.getPartitionId().substring(0, 1) != "1")) {
+                    logger.error("error reserveSctid():: Namespace and partitionId parameters are not consistent.");
                     throw new CisException(HttpStatus.ACCEPTED, ("Namespace and partitionId parameters are not consistent."));
                 }
                 reserveRequest.setAuthor(token.getName());
@@ -741,6 +755,7 @@ public class SctidService {
                 if (null != (sct))
                     result = sct;
             } else {
+                logger.error("error reserveSctid():: No permission for the selected operation");
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
 

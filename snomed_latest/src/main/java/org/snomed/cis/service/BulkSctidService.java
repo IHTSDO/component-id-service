@@ -2,6 +2,8 @@ package org.snomed.cis.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snomed.cis.config.CacheConfig;
 import org.snomed.cis.controller.SecurityController;
 import org.snomed.cis.controller.dto.*;
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class BulkSctidService {
+    private final Logger logger = LoggerFactory.getLogger(BulkSctidService.class);
     @Autowired
     private SctidRepository repo;
 
@@ -121,6 +124,7 @@ public class BulkSctidService {
     public void validSctidCheck(ArrayList<String> sctidsArray) throws CisException {
         for (int i = 0; i < sctidsArray.size(); i++) {
             if (!(sctIdHelper.validSCTId(sctidsArray.get(i))))
+                logger.error("error getSchemeIds():: Not a Valid Sctid: {}",sctidsArray.get(i));
                 throw new CisException(HttpStatus.NOT_ACCEPTABLE, "Not a Valid Sctid:" + sctidsArray.get(i));
         }
     }
@@ -209,7 +213,7 @@ public class BulkSctidService {
             sctidBulkRegister.setComment(registrationData.getComment());
 
             if ((registrationData.getRecords() == null) || (registrationData.getRecords().length == 0)) {
-
+                logger.error("error registerScts():: Records property cannot be empty.");
                 throw new CisException(HttpStatus.ACCEPTED, "Records property cannot be empty.");
             } else {
                 int namespace;
@@ -218,6 +222,7 @@ public class BulkSctidService {
                     namespace = sctIdHelper.getNamespace(record.getSctid());
                     if (namespace != registrationData.getNamespace()) {
                         error = true;
+                        logger.error("error registerScts():: Namespaces differences between schemeid: {} and parameter: {} ",record.getSctid(),registrationData.getNamespace());
                         throw new CisException(HttpStatus.CONFLICT, "Namespaces differences between schemeid: " + record.getSctid() + " and parameter: " + registrationData.getNamespace());
                     }
                 }
@@ -238,6 +243,7 @@ public class BulkSctidService {
                         bulk.setCreated_at(LocalDateTime.now());
                         bulk.setModified_at(LocalDateTime.now());
                     } catch (JsonProcessingException e) {
+                        logger.error("error registerScts():: {}",e.getMessage());
                         throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
                     }
 
@@ -246,6 +252,7 @@ public class BulkSctidService {
                 }
             }
         } else {
+            logger.error("error registerScts():: No permission for the selected operation.");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
         return resultJob;
@@ -302,14 +309,17 @@ public class BulkSctidService {
 
             boolean able = isAbleUser(sctidBulkGenerationRequestDto.getNamespace().toString(), token);
             if (!able) {
+                logger.error("error generateSctids():: No permission for the selected operation");
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
 
             if (((sctidBulkGenerationRequestDto.getNamespace() == 0) && (!"0".equalsIgnoreCase(sctidBulkGenerationRequestDto.getPartitionId().substring(0, 1))))
                     || (0 != (sctidBulkGenerationRequestDto.getNamespace()) && (!"1".equalsIgnoreCase(sctidBulkGenerationRequestDto.getPartitionId().substring(0, 1))))) {
+                logger.error("error generateSctids():: Namespace and partitionId parameters are not consistent.");
                 throw new CisException(HttpStatus.BAD_REQUEST, "Namespace and partitionId parameters are not consistent.");
             }
             if ((sctidBulkGenerationRequestDto.getSystemIds().size() != 0 && (sctidBulkGenerationRequestDto.getSystemIds().size() != sctidBulkGenerationRequestDto.getQuantity()))) {
+                logger.error("error generateSctids():: SystemIds quantity is not equal to quantity requirement");
                 throw new CisException(HttpStatus.BAD_REQUEST, "SystemIds quantity is not equal to quantity requirement");
             }
 
@@ -460,10 +470,11 @@ public class BulkSctidService {
 
             boolean able = isAbleUser(deprecateBulkSctRequestDTO.getNamespace().toString(), token);
             if (!able) {
-                throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
+                logger.error("error deprecateSctid():: No permission for the selected operation.");
+                throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation.");
             } else {
                 if (null == deprecateBulkSctRequestDTO.getSctids() || deprecateBulkSctRequestDTO.getSctids().length < 1) {
-
+                    logger.error("error deprecateSctid():: Sctids property cannot be empty.");
                     throw new CisException(HttpStatus.ACCEPTED, "Sctids property cannot be empty.");
                 } else {
                     int namespace;
@@ -472,6 +483,7 @@ public class BulkSctidService {
                         namespace = sctIdHelper.getNamespace(sctid);
                         if (namespace != deprecateBulkSctRequestDTO.getNamespace()) {
                             error = true;
+                            logger.error("error deprecateSctid():: SNamespaces differences between sctid: {} and parameter: {}",sctid,deprecateBulkSctRequestDTO.getNamespace());
                             throw new CisException(HttpStatus.ACCEPTED, "Namespaces differences between sctid: " + sctid + " and parameter: " + deprecateBulkSctRequestDTO.getNamespace());
                         }
                     }
@@ -491,11 +503,10 @@ public class BulkSctidService {
                             bulk.setCreated_at(LocalDateTime.now());
                             bulk.setModified_at(LocalDateTime.now());
                         } catch (JsonProcessingException e) {
+                            logger.error("error deprecateSctid():: {}", e.getMessage());
                             throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
                         }
-
                         resultJob = this.bulkJobRepository.save(bulk);
-                        System.out.println("result:" + resultJob);
                     }
                 }
 
@@ -513,10 +524,11 @@ public class BulkSctidService {
             bulkSctRequest.setComment(publishBulkSctRequestDTO.getComment());
             boolean able = isAbleUser(publishBulkSctRequestDTO.getNamespace().toString(), token);
             if (!able) {
+                logger.error("error publishSctid():: No permission for the selected operation");
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             } else {
                 if (null == publishBulkSctRequestDTO.getSctids() || publishBulkSctRequestDTO.getSctids().length < 1) {
-
+                    logger.error("error publishSctid():: ctids property cannot be empty.");
                     throw new CisException(HttpStatus.ACCEPTED, "Sctids property cannot be empty.");
                 } else {
                     int namespace;
@@ -525,6 +537,7 @@ public class BulkSctidService {
                         namespace = sctIdHelper.getNamespace(sctid);
                         if (namespace != publishBulkSctRequestDTO.getNamespace()) {
                             error = true;
+                            logger.error("error publishSctid():: Namespaces differences between sctid: {} and parameter: {}",sctid,publishBulkSctRequestDTO.getNamespace());
                             throw new CisException(HttpStatus.ACCEPTED, "Namespaces differences between sctid: " + sctid + " and parameter: " + publishBulkSctRequestDTO.getNamespace());
                         }
                     }
@@ -544,6 +557,7 @@ public class BulkSctidService {
                             bulk.setCreated_at(LocalDateTime.now());
                             bulk.setModified_at(LocalDateTime.now());
                         } catch (JsonProcessingException e) {
+                            logger.error("error publishSctid()::{}",e.getMessage());
                             throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
                         }
 
@@ -568,10 +582,11 @@ public class BulkSctidService {
             //UserDTO userObj = this.getAuthenticatedUser();
             boolean able = isAbleUser(releaseBulkSctRequestDTO.getNamespace().toString(), token);
             if (!able) {
+                logger.error("error releaseSctid():: No permission for the selected operation");
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             } else {
                 if (null == releaseBulkSctRequestDTO.getSctids() || releaseBulkSctRequestDTO.getSctids().length < 1) {
-
+                    logger.error("error releaseSctid():: Sctids property cannot be empty.");
                     throw new CisException(HttpStatus.ACCEPTED, "Sctids property cannot be empty.");
                 } else {
                     int namespace;
@@ -580,6 +595,7 @@ public class BulkSctidService {
                         namespace = sctIdHelper.getNamespace(sctid);
                         if (namespace != releaseBulkSctRequestDTO.getNamespace()) {
                             error = true;
+                            logger.error("error releaseSctid():: Namespaces differences between sctid: {} and parameter: {}",sctid,releaseBulkSctRequestDTO.getNamespace());
                             throw new CisException(HttpStatus.ACCEPTED, "Namespaces differences between sctid: " + sctid + " and parameter: " + releaseBulkSctRequestDTO.getNamespace());
                         }
                     }
@@ -599,11 +615,10 @@ public class BulkSctidService {
                             bulk.setCreated_at(LocalDateTime.now());
                             bulk.setModified_at(LocalDateTime.now());
                         } catch (JsonProcessingException e) {
+                            logger.error("error releaseSctid():: {}",e.getMessage());
                             throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
                         }
-
                         resultJob = this.bulkJobRepository.save(bulk);
-                        System.out.println("result:" + resultJob);
                     }
                 }
 
@@ -618,6 +633,7 @@ public class BulkSctidService {
             if (able)
                 output = bulkReserveSctids(sctidBulkReservationRequestDto,authToken.getName());
             else {
+                logger.error("error reserveSctids():: No permission for the selected operation.");
                 throw new CisException(HttpStatus.FORBIDDEN, "No permission for the selected operation");
             }
         return output;
@@ -634,9 +650,10 @@ public class BulkSctidService {
 
         if (((sctidBulkReservationRequestDto.getNamespace() == 0) && (!("0".equalsIgnoreCase(sctidBulkReservationRequestDto.getPartitionId().substring(0, 1)))))
                 || (sctidBulkReservationRequestDto.getNamespace() != 0 && (!("1".equalsIgnoreCase(sctidBulkReservationRequestDto.getPartitionId().substring(0, 1)))))) {
+            logger.error("error bulkReserveSctids():: Namespace and partitionId parameters are not consistent.");
             throw new CisException(HttpStatus.UNAUTHORIZED, "Namespace and partitionId parameters are not consistent.");
         } else if (sctidBulkReservationRequestDto.getQuantity() == null || sctidBulkReservationRequestDto.getQuantity() < 1) {
-
+            logger.error("error bulkReserveSctids():: Quantity property cannot be lower to 1.");
             throw new CisException(HttpStatus.UNAUTHORIZED, "Quantity property cannot be lower to 1.");
         }
         {
@@ -653,6 +670,7 @@ public class BulkSctidService {
                 bulkJob.setCreated_at(LocalDateTime.now());
                 bulkJob.setModified_at(LocalDateTime.now());
             } catch (JsonProcessingException e) {
+                logger.error("error bulkReserveSctids():: {}",e.getMessage());
                 throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
             }
             bulkJob = bulkJobRepository.save(bulkJob);

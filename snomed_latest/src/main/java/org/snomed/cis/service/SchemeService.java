@@ -26,8 +26,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class SchemeService {
-
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(SchemeService.class);
 
     @Autowired
     BulkSctidService bulkSctidService;
@@ -88,11 +87,11 @@ public class SchemeService {
 
 
     //@GetMapping("/schemes")
-    public List<SchemeIdBase> getSchemes(String token) throws CisException {
-        return this.getSchemesAll(token);
+    public List<SchemeIdBase> getSchemes() throws CisException {
+        return this.getSchemesAll();
     }
 
-    public List<SchemeIdBase> getSchemesAll(String token) throws CisException {
+    public List<SchemeIdBase> getSchemesAll() throws CisException {
         List<Scheme> schemeList = new ArrayList<>();
         List<SchemeIdBase> schemeIdBase = schemeIdBaseRepository.findAll();
         List<SchemeIdBase> finalList = new ArrayList();
@@ -150,6 +149,7 @@ public class SchemeService {
             }
 
         } else {
+            logger.error("error updateSchemes():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -167,6 +167,7 @@ public class SchemeService {
             response.put("message", "Success");
             return response.toString();
         } else {
+            logger.error("error deleteSchemePermissions():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
 
@@ -180,6 +181,7 @@ public class SchemeService {
             response.put("message", "Success");
             return response.toString();
         } else {
+            logger.error("error createSchemePermissions():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
 

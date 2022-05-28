@@ -1,5 +1,7 @@
 package org.snomed.cis.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snomed.cis.controller.dto.CheckSctidResponseDTO;
 import org.snomed.cis.controller.dto.NamespaceDto;
 import org.snomed.cis.exception.CisException;
@@ -16,7 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/public")
 public class PublicSCTIDInfoAPIController {
-
+    private final Logger logger = LoggerFactory.getLogger(PublicSCTIDInfoAPIController.class);
     @Autowired
     NamespaceService namespaceService;
 
@@ -36,14 +38,16 @@ public class PublicSCTIDInfoAPIController {
     })
     @GetMapping("/sct/namespaces")
     @ResponseBody
-    public List<NamespaceDto> getNamespaces(@RequestParam(name="token",required = false)String token)
+    public List<NamespaceDto> getNamespaces()
     {
+        logger.info("Request received for getNamespaces() - No Param");
         return namespaceService.getNamespaceslist();
     }
 
     @GetMapping("/sct/check/{sctid}")
     @ResponseBody
     public CheckSctidResponseDTO checkSctid(@PathVariable String sctid) throws CisException {
+        logger.info("Request received for - sctid :: {}", sctid);
         return sctidService.checkSctid(sctid);
     }
 }

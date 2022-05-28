@@ -1,6 +1,8 @@
 package org.snomed.cis.service;
 
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snomed.cis.controller.SecurityController;
 import org.snomed.cis.controller.dto.AuthenticateResponseDto;
 import org.snomed.cis.controller.dto.NamespaceDto;
@@ -34,6 +36,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class NamespaceService {
+    private final Logger logger = LoggerFactory.getLogger(NamespaceService.class);
     @Autowired
     public NamespaceRepository namespaceRepository;
 
@@ -56,7 +59,7 @@ public class NamespaceService {
     private PartitionsRepository partitionsRepository;
 
 
-    public List<NamespaceDto> getNamespaces(String token) throws CisException {
+    public List<NamespaceDto> getNamespaces() throws CisException {
         return this.getNamespaceslist();
     }
 
@@ -114,11 +117,13 @@ public class NamespaceService {
         NamespaceDto output = new NamespaceDto();
         if (this.isAbleToEdit(namespace.getNamespace(),authenticateResponseDto)) {
             if (namespaceString.length() != 7 && !namespaceString.equalsIgnoreCase("0")) {
+                logger.error("error createNamespaces():: Invalid namespace");
                 throw new CisException(HttpStatus.BAD_REQUEST, "Invalid namespace");
             } else {
                 return createNamespaceList(namespace);
             }
         } else {
+            logger.error("error createNamespaces():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -219,6 +224,7 @@ public class NamespaceService {
             return (editNamespace(namespace.getNamespace(), namespace));
 
         } else {
+            logger.error("error updateNamespaces():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -250,6 +256,7 @@ public class NamespaceService {
             namespace = namespaceRepository.save(namespaceGet);
             response.put("message", "Success");
         } catch (Exception e) {
+            logger.error("error editNamespace():: ",e.getMessage());
             throw new Exception(String.valueOf(response.put("message", e.getMessage())));
         }
         return response.toString();
@@ -315,8 +322,10 @@ public class NamespaceService {
     @Transactional
     public NamespaceDto getNamespaceId(String namespaceId) throws CisException {
         JSONObject response = new JSONObject();
-        if (namespaceId.length() != 7 && !(namespaceId.equalsIgnoreCase("0")))
+        if (namespaceId.length() != 7 && !(namespaceId.equalsIgnoreCase("0"))) {
+            logger.error("error getSchemeIds()::Invalid namespace");
             throw new CisException(HttpStatus.NOT_FOUND, "Invalid namespace");
+        }
         NamespaceDto namespacesObj = new NamespaceDto();
         List<Partitions> partitionsList = null;
         PartitionsDto partitionsDto = null;
@@ -368,6 +377,7 @@ public class NamespaceService {
                     partitionsRepository.deleteAll(partNamespace);
                 response.put("message", "Success");
             } else {
+                logger.error("error getSchemeIds():: No permission for the selected operation");
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
             }
@@ -393,6 +403,7 @@ public class NamespaceService {
             if ((partResult.getSequence()).equals(Integer.parseInt(value)))
                 response.put("message", "Success");
         } else {
+            logger.error("error getSchemeIds():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -409,6 +420,7 @@ public class NamespaceService {
         }
         catch (Exception e)
         {
+            logger.error("error getSchemeIds():: BAd Request: {}",e.getMessage());
             throw new CisException(HttpStatus.BAD_REQUEST,e.getMessage());
         }
     }
@@ -420,6 +432,7 @@ public class NamespaceService {
             response.put("message", "Success");
             return response.toString();
         } else {
+            logger.error("error deleteNamespacePermissionsOfUser():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
     }
@@ -432,6 +445,7 @@ public class NamespaceService {
             response.put("message", "Success");
             return response.toString();
         } else {
+            logger.error("error createNamespacePermissionsOfUser():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
     }

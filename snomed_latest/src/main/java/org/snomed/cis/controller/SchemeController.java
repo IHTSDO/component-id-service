@@ -3,6 +3,8 @@ package org.snomed.cis.controller;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponses;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snomed.cis.controller.dto.Scheme;
 import org.snomed.cis.domain.SchemeIdBase;
 import org.snomed.cis.domain.SchemeName;
@@ -18,7 +20,7 @@ import java.util.List;
 @Api(tags = "Scheme", value = "Scheme")
 @RestController
 public class SchemeController {
-
+    private final Logger logger = LoggerFactory.getLogger(SchemeController.class);
     @Autowired
     public SchemeService schemeService;
 
@@ -37,16 +39,19 @@ public class SchemeController {
     @GetMapping("/users/{username}/schemes/")
     public ResponseEntity<List<Scheme>> getSchemesForUser( @PathVariable String username, Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
+        logger.info("Request received for - username :: {} - authenticateResponseDto :: {}", username,authToken.getAuthenticateResponseDto());
         return ResponseEntity.ok(schemeService.getSchemesForUser(authToken.getAuthenticateResponseDto(),username));
     }
 
     @GetMapping("/schemes")
-    public ResponseEntity<List<SchemeIdBase>> getSchemes(@RequestParam String token) throws CisException {
-        return ResponseEntity.ok(schemeService.getSchemes(token));
+    public ResponseEntity<List<SchemeIdBase>> getSchemes() throws CisException {
+        logger.info("Request received for getSchemes() - No Params");
+        return ResponseEntity.ok(schemeService.getSchemes());
     }
 
     @GetMapping("/schemes/{schemeName}")
     public ResponseEntity<SchemeIdBase> getScheme(@PathVariable String schemeName) throws CisException {
+        logger.info("Request received for - schemeName :: {}", schemeName);
         return ResponseEntity.ok(schemeService.getScheme(schemeName));
     }
 
@@ -55,6 +60,7 @@ public class SchemeController {
     @PutMapping("/schemes/{schemeName}")
     public ResponseEntity<String> updateScheme(@PathVariable SchemeName schemeName, @RequestParam String schemeSeq,Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
+        logger.info("Request received for - schemeName :: {} - schemeSeq :: {} - authenticateResponseDto :: {}", schemeName,schemeSeq,authToken.getAuthenticateResponseDto());
         return ResponseEntity.ok(schemeService.updateScheme(authToken.getAuthenticateResponseDto(),schemeName,schemeSeq));
     }
 }
