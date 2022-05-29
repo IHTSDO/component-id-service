@@ -1,22 +1,18 @@
 package org.snomed.cis.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snomed.cis.controller.ViewsController;
 import org.snomed.cis.controller.dto.AuthenticateResponseDto;
 import org.snomed.cis.controller.dto.BulkJobsListResponse;
 import org.snomed.cis.controller.dto.CleanUpServiceResponse;
-import org.snomed.cis.controller.dto.UserDTO;
 import org.snomed.cis.domain.BulkJob;
 import org.snomed.cis.domain.SchemeId;
 import org.snomed.cis.domain.Sctid;
 import org.snomed.cis.exception.CisException;
-import org.snomed.cis.security.Token;
-import org.snomed.cis.util.ModelsConstants;
 import org.snomed.cis.repository.BulkJobRepository;
 import org.snomed.cis.repository.SctidRepository;
-import org.json.JSONObject;
+import org.snomed.cis.util.ModelsConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -164,7 +160,7 @@ public class BulkJobService {
                 return result;
     }
 
-    public List<Object> getJobRecords(Integer jobId) throws CisException, JsonProcessingException {
+    public List<Object> getJobRecords(Integer jobId) {
         var t2 = new Date().getTime();
         List<Object> list = new ArrayList<>();
             BulkJob jobRecord = (bulkJobRepository.findById(jobId).isPresent())?(bulkJobRepository.findById(jobId).get()): null;

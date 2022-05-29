@@ -1,6 +1,5 @@
 package org.snomed.cis.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponses;
@@ -13,7 +12,10 @@ import org.snomed.cis.security.Token;
 import org.snomed.cis.service.BulkJobService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 @Api(tags = "Bulk Jobs", value = "Bulk Jobs")
@@ -52,7 +54,7 @@ public class BulkJobsController {
 
     @GetMapping("/bulk/jobs/{jobId}/records")
     @ResponseBody
-    public List<Object> getJobRecords(@PathVariable Integer jobId) throws CisException, JsonProcessingException {
+    public List<Object> getJobRecords(@PathVariable Integer jobId) {
         logger.info("Request received for - jobId :: {}", jobId);
         return bulkJobService.getJobRecords(jobId);
     }
