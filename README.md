@@ -104,3 +104,36 @@ Retrieving the Sctid from table
 GET http://localhost:YourPort/getSctByIds?token=hdaskjdhakjdgy7,ids=123456789,456789234
 
 
+### Build
+
+The application has 3 build profiles configured
+
+Command to build jar and deb files
+
+`mvn clean package -Dprofile=<<profileName>>`
+
+Input parameters:
+1) profileName
+   1) The name of profile based on the deployment environment
+   2) Possible value: dev, stage, prod
+
+Output:
+1) jar file in target folder (Eg. target/cis-0.0.1-SNAPSHOT.jar)
+2) deb file in target folder (Eg. target/cis-0.0.1-SNAPSHOT-all.deb)
+
+
+###Deployment
+
+Deployment requires JRE11 installed on the target machine
+
+Command to deploy the jar file
+
+`java -jar target/cis-0.0.1-SNAPSHOT.jar -Dprofile=<<profileName>>`
+
+Input parameters:
+1) profileName
+    1) The name of profile based on the deployment environment
+    2) Possible value: dev, stage, prod
+
+Output:
+1) jar file deployed in target environment
