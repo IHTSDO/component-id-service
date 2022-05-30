@@ -168,7 +168,6 @@ public class BulkSchemeIdService {
 
             if (error.indexOf("ER_DUP_ENTRY") > -1) {
                 if (error.indexOf("'PRIMARY'") > -1 /*&& ()*/) {
-                    System.out.println("Trying to solve the primary key error during scheme id insert.");
                     //    schemeIdRecord.getScheme();
                 }
                 /*else if(schemeIdRecord.get())
@@ -248,7 +247,6 @@ public class BulkSchemeIdService {
             }
 
             BulkJob resultJob = this.bulkJobRepository.save(bulk);
-            System.out.println("result:" + resultJob);
             return resultJob;
     }
 
@@ -294,7 +292,6 @@ public class BulkSchemeIdService {
             }
 
             BulkJob resultJob = this.bulkJobRepository.save(bulk);
-            System.out.println("result:" + resultJob);
             return resultJob;
 
         } else {
@@ -358,7 +355,6 @@ public class BulkSchemeIdService {
             }
 
             BulkJob resultJob = this.bulkJobRepository.save(bulk);
-            System.out.println("result:" + resultJob);
             return resultJob;
 
         } else {
@@ -424,7 +420,6 @@ public class BulkSchemeIdService {
         }
 
         BulkJob resultJob = this.bulkJobRepository.save(bulk);
-        System.out.println("result:" + resultJob);
         return resultJob;
     }
 

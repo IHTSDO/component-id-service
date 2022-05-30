@@ -64,7 +64,7 @@ public class SctIdHelper {
             var ret=verhoeffCompute(num);
             return parseInt(cd)==ret;
         }catch (Exception e){
-            System.out.println("parser error:" + e);
+
         }
         return false;
     }

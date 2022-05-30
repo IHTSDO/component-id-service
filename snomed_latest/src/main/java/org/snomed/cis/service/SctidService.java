@@ -1,6 +1,5 @@
 package org.snomed.cis.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.cis.controller.SecurityController;
@@ -122,7 +121,7 @@ public class SctidService {
         return schemeList;
     }
 
-    public List<Sctid> getSct(AuthenticateResponseDto authToken, String limit, String skip, String namespace) throws CisException, JsonProcessingException {
+    public List<Sctid> getSct(AuthenticateResponseDto authToken, String limit, String skip, String namespace) throws CisException {
         List<Sctid> sctList = new ArrayList<>();
 
         if (bulkSctidService.isAbleUser("false", authToken)) {
@@ -925,7 +924,6 @@ public class SctidService {
         }
         String sql;
         sql = "SELECT count(*) as count FROM permissionsscheme" + swhere;
-        System.out.println("from getSct:" + sql);
         Query query = entityManager.createNativeQuery(sql);
         List<BigInteger> result = query.getResultList();
         return result.get(0).longValue();
@@ -953,7 +951,6 @@ public class SctidService {
         String sql;
         sql = "SELECT * FROM permissionsnamespace" + swhere;
         Query query = entityManager.createNativeQuery(sql);
-        System.out.println("from Sct perm namespace:" + sql);
         List<Namespace> result = query.getResultList();
         return result;
     }

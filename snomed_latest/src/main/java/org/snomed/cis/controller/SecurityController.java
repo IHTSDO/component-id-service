@@ -88,7 +88,6 @@ public class SecurityController {
     public boolean validateUserToken(String userToken) {
         Cookie[] cookieAr = servReq.getCookies();
         Cookie cookie = cookieAr[0];
-        System.out.println("Cookie from REQUEST Value:" + cookie.getValue());
         if (userToken.equals(cookie.getValue()))
             return true;
         else
@@ -172,8 +171,6 @@ public class SecurityController {
         String uri = config.getIms().getUrl().getBase() + config.getIms().getUrl().getAuthenticate();
         Cookie[] cookieAr = request.getCookies();
         Cookie cookie = cookieAr[0];
-        System.out.println("Cookie from REQUEST Name:" + cookie.getName());
-        System.out.println("Cookie from REQUEST Value:" + cookie.getValue());
         if (cookie.getValue().isEmpty() || cookie.getValue().isBlank()) {
             throw new CisException(HttpStatus.ACCEPTED, "Authorization Token Expired or User Logged Out");
         }
@@ -182,7 +179,6 @@ public class SecurityController {
         //Cookie cookie = new Cookie("dev-ims-ihtsdo","rem-4YIi85oWY5Ab6szkmwAAAAAAAIACa2VlcnRoaWth");
         headers.add(HttpHeaders.COOKIE, cookie.getName() + "=" + cookie.getValue());
         HttpEntity<?> req = new HttpEntity<>(headers);
-        System.out.println("headers from req:" + req.getHeaders());
         ResponseEntity<UserDTO> response = restTemplate.exchange(uri, HttpMethod.GET, req, UserDTO.class);
         return response;
     }
@@ -198,7 +194,6 @@ public class SecurityController {
         //Cookie cookie = new Cookie("dev-ims-ihtsdo","rem-4YIi85oWY5Ab6szkmwAAAAAAAIACa2VlcnRoaWth");
         headers.add(HttpHeaders.COOKIE, logoutCookie.getName() + "=" + logoutCookie.getValue());
         HttpEntity<?> req = new HttpEntity<>(headers);
-        System.out.println("headers from req:" + req.getHeaders());
         ResponseEntity response = restTemplate.exchange(uri, HttpMethod.POST, req, ResponseEntity.class);
         String[] logoutArr = response.getHeaders().get("set-cookie").get(0).split(";")[0].split("=");
         Cookie logoutRespCookie = null;

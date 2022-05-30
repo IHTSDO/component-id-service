@@ -113,7 +113,6 @@ public class BulkJobService {
             sql = "SELECT " + "*" + " FROM bulkJob" + swhere + " order by " + dataOrder;
         }
         Query genQuery = entityManager.createNativeQuery(sql, BulkJob.class);
-        System.out.println("genQuery BUlkJob:" + genQuery);
         List<BulkJob> resultList = genQuery.getResultList();
         if (null == skip || skip == 0) {
             bulkJobList = resultList;
@@ -163,7 +162,6 @@ public class BulkJobService {
                 list = Collections.singletonList(sctidByJobId);
             }
             var t3 = new Date().getTime();
-            System.out.println("getJobRecords took: " + (t3 - t2) + " milisecs");
         } else {
             list = null;
         }
@@ -229,7 +227,6 @@ public class BulkJobService {
                 String sql = "Update sctId set expirationDate=null,status='Available',software='Clean Service' where status='Reserved' and expirationDate<now()";
                 Query genQuery = entityManager.createNativeQuery(sql, Sctid.class);
                 int returnVal = genQuery.executeUpdate();
-                System.out.println("return Val:" + returnVal);
                 List<Sctid> outputList = genQuery.getResultList();
                 if (outputList.size() >= 0) {
                     cleanUpServiceResponse.setModel("SctId");
@@ -263,7 +260,6 @@ public class BulkJobService {
                 String sql = "Update schemeId set expirationDate=null,status='Available',software='Clean Service' where status='Reserved' and expirationDate<now()";
                 Query genQuery = entityManager.createNativeQuery(sql, SchemeId.class);
                 int returnVal = genQuery.executeUpdate();
-                System.out.println("return Val:" + returnVal);
                 List<SchemeId> outputList = genQuery.getResultList();
                 if (outputList.size() >= 0) {
                     cleanUpServiceResponse.setModel("SchemeId");

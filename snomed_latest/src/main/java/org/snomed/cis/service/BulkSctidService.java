@@ -247,7 +247,6 @@ public class BulkSctidService {
                     }
 
                     resultJob = this.bulkJobRepository.save(bulk);
-                    System.out.println("result:" + resultJob);
                 }
             }
         } else {
@@ -561,7 +560,6 @@ public class BulkSctidService {
                     }
 
                     resultJob = this.bulkJobRepository.save(bulk);
-                    System.out.println("result:" + resultJob);
                 }
             }
 
