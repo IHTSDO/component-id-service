@@ -1,6 +1,5 @@
 package org.snomed.cis.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponses;
@@ -39,7 +38,7 @@ public class SctidController {
     })
 
     @GetMapping("/sct/ids")
-    public ResponseEntity<List<Sctid>> getSct( @RequestParam(name = "limit", required = false) String limit, @RequestParam(name = "skip", required = false) String skip, @RequestParam(name = "namespace", required = false) String namespace,Authentication authentication) throws CisException, JsonProcessingException {
+    public ResponseEntity<List<Sctid>> getSct( @RequestParam(name = "limit", required = false) String limit, @RequestParam(name = "skip", required = false) String skip, @RequestParam(name = "namespace", required = false) String namespace,Authentication authentication) throws CisException{
         Token authToken = (Token) authentication;
         logger.info("Request received for - limit :: {} - skip :: {} - namespace :: {} - authenticateResponseDto :: {}", limit,skip,namespace,authToken.getAuthenticateResponseDto());
         return ResponseEntity.ok(sctidService.getSct(authToken.getAuthenticateResponseDto(), limit, skip, namespace));
