@@ -1,15 +1,15 @@
 package org.snomed.cis.controller;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.snomed.cis.controller.dto.CheckSctidResponseDTO;
-import org.snomed.cis.controller.dto.NamespaceDto;
-import org.snomed.cis.exception.CisException;
-import org.snomed.cis.service.NamespaceService;
-import org.snomed.cis.service.SctidService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponses;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.snomed.cis.dto.CheckSctidResponseDTO;
+import org.snomed.cis.dto.NamespaceDto;
+import org.snomed.cis.exception.CisException;
+import org.snomed.cis.service.NamespaceService;
+import org.snomed.cis.service.SctidService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

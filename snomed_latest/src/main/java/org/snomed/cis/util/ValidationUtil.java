@@ -1,7 +1,7 @@
 package org.snomed.cis.util;
 
 import org.apache.commons.lang3.StringUtils;
-import org.snomed.cis.controller.dto.LoginRequestDto;
+import org.snomed.cis.dto.LoginRequestDto;
 import org.snomed.cis.exception.CisException;
 import org.springframework.http.HttpStatus;
 

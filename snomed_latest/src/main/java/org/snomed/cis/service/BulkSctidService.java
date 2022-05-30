@@ -4,13 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snomed.cis.config.CacheConfig;
 import org.snomed.cis.controller.SecurityController;
-import org.snomed.cis.controller.dto.*;
 import org.snomed.cis.domain.BulkJob;
 import org.snomed.cis.domain.PermissionsNamespace;
 import org.snomed.cis.domain.PermissionsScheme;
 import org.snomed.cis.domain.Sctid;
+import org.snomed.cis.dto.*;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.repository.BulkJobRepository;
 import org.snomed.cis.repository.PermissionsNamespaceRepository;
@@ -47,9 +46,6 @@ public class BulkSctidService {
 
     @Autowired
     private SctIdHelper sctIdHelper;
-
-    @Autowired
-    private CacheConfig cache;
 
     @Autowired
     JobTypeConstants jobType;

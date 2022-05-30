@@ -1,18 +1,18 @@
 package org.snomed.cis.service.DM;
 
-import org.snomed.cis.controller.dto.SCTIDRegisterRequest;
-import org.snomed.cis.controller.dto.SCTIDReserveRequest;
-import org.snomed.cis.controller.dto.SctidGenerate;
 import org.snomed.cis.domain.Partitions;
 import org.snomed.cis.domain.PartitionsPk;
 import org.snomed.cis.domain.Sctid;
+import org.snomed.cis.dto.SCTIDRegisterRequest;
+import org.snomed.cis.dto.SCTIDReserveRequest;
+import org.snomed.cis.dto.SctidGenerate;
 import org.snomed.cis.exception.CisException;
-import org.snomed.cis.util.ModelsConstants;
-import org.snomed.cis.util.SctIdHelper;
-import org.snomed.cis.util.StateMachine;
 import org.snomed.cis.repository.PartitionsRepository;
 import org.snomed.cis.repository.SctidRepository;
 import org.snomed.cis.service.BulkSctidService;
+import org.snomed.cis.util.ModelsConstants;
+import org.snomed.cis.util.SctIdHelper;
+import org.snomed.cis.util.StateMachine;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;

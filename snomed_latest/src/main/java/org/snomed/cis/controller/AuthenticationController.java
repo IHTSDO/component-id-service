@@ -5,7 +5,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snomed.cis.controller.dto.*;
+import org.snomed.cis.dto.*;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.security.Token;
 import org.snomed.cis.service.AuthenticationService;

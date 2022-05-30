@@ -1,8 +1,8 @@
 package org.snomed.cis.util;
 
-import org.snomed.cis.controller.dto.CheckSctidResponseDTO;
 import org.snomed.cis.domain.Namespace;
 import org.snomed.cis.domain.Sctid;
+import org.snomed.cis.dto.CheckSctidResponseDTO;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.repository.NamespaceRepository;
 import org.snomed.cis.repository.SctidRepository;

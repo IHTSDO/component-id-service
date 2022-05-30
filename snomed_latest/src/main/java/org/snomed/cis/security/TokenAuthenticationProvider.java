@@ -1,7 +1,7 @@
 package org.snomed.cis.security;
 
-import org.snomed.cis.controller.dto.AuthenticateRequestDto;
-import org.snomed.cis.controller.dto.AuthenticateResponseDto;
+import org.snomed.cis.dto.AuthenticateRequestDto;
+import org.snomed.cis.dto.AuthenticateResponseDto;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.pojo.Config;
 import org.snomed.cis.service.AuthenticationService;

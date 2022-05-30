@@ -2,7 +2,7 @@ package org.snomed.cis.security;
 
 
 import lombok.Getter;
-import org.snomed.cis.controller.dto.AuthenticateResponseDto;
+import org.snomed.cis.dto.AuthenticateResponseDto;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.Transient;

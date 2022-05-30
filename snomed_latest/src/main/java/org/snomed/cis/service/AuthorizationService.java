@@ -2,7 +2,7 @@ package org.snomed.cis.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snomed.cis.controller.dto.AuthenticateResponseDto;
+import org.snomed.cis.dto.AuthenticateResponseDto;
 import org.snomed.cis.pojo.Config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

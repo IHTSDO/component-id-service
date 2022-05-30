@@ -1,7 +1,7 @@
 package org.snomed.cis.repository;
 
-import org.snomed.cis.controller.dto.QueryCountByNamespaceDto;
 import org.snomed.cis.domain.Sctid;
+import org.snomed.cis.dto.QueryCountByNamespaceDto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

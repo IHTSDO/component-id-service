@@ -2,10 +2,10 @@ package org.snomed.cis.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snomed.cis.controller.dto.AuthenticateResponseDto;
-import org.snomed.cis.controller.dto.GetStatsResponseDto;
-import org.snomed.cis.controller.dto.QueryCountByNamespaceDto;
 import org.snomed.cis.domain.PermissionsNamespace;
+import org.snomed.cis.dto.AuthenticateResponseDto;
+import org.snomed.cis.dto.GetStatsResponseDto;
+import org.snomed.cis.dto.QueryCountByNamespaceDto;
 import org.snomed.cis.pojo.Config;
 import org.snomed.cis.repository.PermissionsNamespaceRepository;
 import org.snomed.cis.repository.PermissionsSchemeRepository;

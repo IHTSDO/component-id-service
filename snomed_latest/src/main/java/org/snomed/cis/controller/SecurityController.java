@@ -4,7 +4,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponses;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snomed.cis.controller.dto.UserDTO;
+import org.snomed.cis.dto.UserDTO;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.pojo.Config;
 import org.springframework.beans.factory.annotation.Autowired;
