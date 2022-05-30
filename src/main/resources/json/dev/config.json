@@ -6,17 +6,6 @@
       "logout": "/account/logout",
       "authenticate": "/account"
     },
-    "creds": {
-      "login": "keerthika",
-      "password": "Crowd@3392",
-      "firstName": "keerthika",
-      "lastName": "santhanam",
-      "email": "keerthika.s@telliant.net",
-      "langKey": "en",
-      "roles": [
-        "user"
-      ]
-    },
     "cookieName": "dev-ims-ihtsdo"
   },
   "stats": {
