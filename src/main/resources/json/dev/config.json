@@ -1,0 +1,39 @@
+{
+  "ims": {
+    "url": {
+      "base": "https://dev-ims.ihtsdotools.org/api",
+      "login": "/authenticate",
+      "logout": "/account/logout",
+      "authenticate": "/account"
+    },
+    "creds": {
+      "login": "keerthika",
+      "password": "Crowd@3392",
+      "firstName": "keerthika",
+      "lastName": "santhanam",
+      "email": "keerthika.s@telliant.net",
+      "langKey": "en",
+      "roles": [
+        "user"
+      ]
+    },
+    "cookieName": "dev-ims-ihtsdo"
+  },
+  "stats": {
+    "securityAdmins": [
+      "keerthika"
+    ],
+    "securityUsers": [
+      "lakshmana"
+    ]
+  },
+  "authorization": {
+    "users": [
+      "keerthika"
+    ],
+    "groups": [
+      "component-identifier-service-admin",
+      "component-identifier-service-user"
+    ]
+  }
+}
