@@ -184,8 +184,12 @@ public class BulkJobService {
 
     public List<SchemeId> findSchemeByJobId(Integer jobId) {
         logger.debug("BulkJobService.findSchemeByJobId() jobId :: {}", jobId);
-        var sql = "SELECT * FROM schemeId WHERE jobId = " + (jobId) + " UNION SELECT * FROM schemeId_log WHERE jobId =  " + (jobId);
-        Query genQuery = entityManager.createNativeQuery(sql, SchemeId.class);
+       // var sql = "SELECT * FROM schemeId WHERE jobId = " + (jobId) + " UNION SELECT * FROM schemeId_log WHERE jobId =  " + (jobId);
+        StringBuffer sql = new StringBuffer();
+        sql.append("SELECT * FROM schemeId WHERE jobId = ").append((jobId))
+                .append(" UNION SELECT * FROM schemeId_log WHERE jobId =  ")
+                .append((jobId));
+        Query genQuery = entityManager.createNativeQuery(sql.toString(), SchemeId.class);
         List<SchemeId> resultList = genQuery.getResultList();
         List cleanRows = new ArrayList();
         List ids = new ArrayList();
@@ -208,8 +212,11 @@ public class BulkJobService {
 
     public List<Sctid> findSctidByJobId(Integer jobId) {
         logger.debug("BulkJobService.findSctidByJobId() jobId :: {}", jobId);
-        var sql = "SELECT * FROM sctId WHERE jobId = " + jobId + " UNION SELECT * FROM sctId_log WHERE jobId =  " + jobId;
-        Query genQuery = entityManager.createNativeQuery(sql, Sctid.class);
+        //var sql = "SELECT * FROM sctId WHERE jobId = " + jobId + " UNION SELECT * FROM sctId_log WHERE jobId =  " + jobId;
+        StringBuffer sql = new StringBuffer();
+        sql.append("SELECT * FROM sctId WHERE jobId = ").append(jobId).append(" UNION SELECT * FROM sctId_log WHERE jobId =  ")
+                .append(jobId);
+        Query genQuery = entityManager.createNativeQuery(sql.toString(), Sctid.class);
         List<Sctid> resultList = genQuery.getResultList();
         List cleanRows = new ArrayList();
         List ids = new ArrayList();

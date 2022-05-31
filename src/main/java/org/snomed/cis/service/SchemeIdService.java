@@ -122,23 +122,30 @@ public class SchemeIdService {
                 objQuery.put("scheme", schemeName.toString());
             }
 
-            String swhere = "";
+            StringBuffer swhere = new StringBuffer("");
+            StringBuffer whereResult = new StringBuffer("");
             if (objQuery.size() > 0) {
                 for (var query :
                         objQuery.entrySet()) {
-                    swhere += " And " + query.getKey() + "=" + "'" + (query.getValue()) + "'";
+                   // swhere += " And " + query.getKey() + "=" + "'" + (query.getValue()) + "'";
+                    swhere.append(" And ").append(query.getKey()).append("=").append("'").append((query.getValue()))
+                            .append("'");
                 }
             }
-            if (swhere != "") {
-                swhere = " WHERE " + swhere.substring(5);
+            if (!(swhere.toString().equalsIgnoreCase(""))) {
+               // swhere = " WHERE " + swhere.substring(5);
+                whereResult.append(" WHERE ").append(swhere.substring(5));
             }
-            String sql;
+            StringBuffer sql =new StringBuffer();
             if ((limitR > 0) && (skipTo == 0)) {
-                sql = "Select * FROM schemeid" + swhere + " order by schemeId limit " + limitR;
+                //sql = "Select * FROM schemeid" + whereResult + " order by schemeId limit " + limitR;
+                sql.append("Select * FROM schemeid").append(whereResult).append(" order by schemeId limit ")
+                        .append(limitR);
             } else {
-                sql = "Select * FROM schemeid" + swhere + " order by schemeId";
+                //sql = "Select * FROM schemeid" + whereResult + " order by schemeId";
+                sql.append("Select * FROM schemeid").append(whereResult).append(" order by schemeId");
             }
-            Query genQuery = entityManager.createNativeQuery(sql, SchemeId.class);
+            Query genQuery = entityManager.createNativeQuery(sql.toString(), SchemeId.class);
 
             List<SchemeId> resultList = genQuery.getResultList();
 
@@ -637,23 +644,29 @@ StringBuffer supdate = new StringBuffer("");
             objQuery.put("schemeName", schemeName.toString());
         }*/
 
-        String swhere = "";
+        StringBuffer swhere = new StringBuffer("");
+        StringBuffer whereResult = new StringBuffer();
         if (objQuery.size() > 0) {
             for (var query :
                     objQuery.entrySet()) {
-                swhere += " And " + query.getKey() + "=" + "'" + query.getValue() + "'";
+                //swhere += " And " + query.getKey() + "=" + "'" + query.getValue() + "'";
+                swhere = swhere.append(" And ").append(query.getKey()).append("=").append("'")
+                        .append(query.getValue()).append("'");
             }
         }
-        if (swhere != "") {
-            swhere = " WHERE " + swhere.substring(5);
+        if (!(swhere.toString().equalsIgnoreCase(""))) {
+           // swhere = " WHERE " + swhere.substring(5);
+            whereResult.append(" WHERE ").append(swhere.substring(5));
         }
-        String sql;
+        StringBuffer sql = new StringBuffer();
         if ((limitR > 0) && (skipTo == 0)) {
-            sql = "SELECT * FROM schemeId" + swhere + " order by schemeId limit " + limit;
+           // sql = "SELECT * FROM schemeId" + swhere + " order by schemeId limit " + limit;
+            sql.append("SELECT * FROM schemeId").append(whereResult).append(" order by schemeId limit ").append(limit);
         } else {
-            sql = "SELECT * FROM schemeId" + swhere + " order by schemeId";
+           // sql = "SELECT * FROM schemeId" + swhere + " order by schemeId";
+            sql.append("SELECT * FROM schemeId").append(whereResult).append(" order by schemeId");
         }
-        Query genQuery = entityManager.createNativeQuery(sql, SchemeId.class);
+        Query genQuery = entityManager.createNativeQuery(sql.toString(), SchemeId.class);
 
         List<SchemeId> resultList = genQuery.getResultList();
         if ((skipTo == 0)) {

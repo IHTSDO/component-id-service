@@ -89,25 +89,22 @@ public class SctidService {
             limitR = Integer.parseInt(limit);
         if (null != skip && !skip.isEmpty())
             skipTo = Integer.parseInt(skip);
-        //String swhere = "";
+        StringBuffer resultWhere = new StringBuffer("");
         StringBuffer swhere = new StringBuffer("");
         if (!systemId.isEmpty() && null != systemId) {
             objQuery = systemId;
-            //swhere += " And " + "systemId" + "=" + "'" + (objQuery) + "'";
             swhere = swhere.append(" And ").append("systemId").append("=").append("'").append((objQuery)).append("'");
         }
         if (!(swhere.toString().equalsIgnoreCase(""))) {
-            //swhere = " WHERE " + swhere.substring(5);
-            String subValue = swhere.substring(5);
-            swhere = swhere.append(" WHERE ").append(subValue);
+            resultWhere.append(" WHERE ").append(swhere.toString().substring(5));
         }
-        String sql;
+        StringBuffer sql = new StringBuffer("");
         if (limitR > 0 && (skipTo == 0)) {
-            sql = "SELECT * FROM schemeid" + swhere + " order by schemeId limit " + limit;
+            sql.append("SELECT * FROM schemeid").append((resultWhere)).append(" order by schemeId limit ").append(limit);
         } else {
-            sql = "SELECT * FROM schemeid" + swhere + " order by schemeId";
+            sql.append("SELECT * FROM schemeid").append((resultWhere)).append(" order by schemeId");
         }
-        Query genQuery = entityManager.createNativeQuery(sql, SchemeId.class);
+        Query genQuery = entityManager.createNativeQuery(sql.toString(), SchemeId.class);
         List<SchemeId> resultList = genQuery.getResultList();
         if ((skipTo == 0)) {
             schemeList = resultList;
@@ -186,35 +183,32 @@ public class SctidService {
         if (null != skip)
             skipTo = Integer.parseInt(skip);
 
-       // String swhere = "";
+        StringBuffer resultWhere = new StringBuffer("");
         StringBuffer swhere = new StringBuffer("");
         if (queryObject.size() > 0) {
             for (var query :
                     queryObject.entrySet()) {
-               // swhere += " And " + query.getKey() + "=" + (query.getValue());
                 swhere = swhere.append(" And ").append(query.getKey()).append("=").append(query.getValue());
             }
         }
         if (!(swhere.toString().equalsIgnoreCase(""))) {
-            String subvalue = swhere.substring(5);
-            //swhere = " WHERE " + swhere.substring(5);
-            swhere = swhere.append(" WHERE ").append(subvalue);
+            resultWhere.append(" WHERE ").append(swhere.substring(5));
         }
-        String sql;
+        StringBuffer sql = new StringBuffer();
         if ((limitR > 0) && (skipTo == 0)) {
 
             if (swhere.toString() != "")
-                sql = "Select * FROM sctid USE INDEX (nam_par_st)" + swhere + " order by sctid limit " + limitR;
-            else
-                sql = "Select * FROM sctid " + swhere + " order by sctid limit " + limitR;
+                sql.append("Select * FROM sctid USE INDEX (nam_par_st)").append(resultWhere).append(" order by sctid limit ").append(limitR);
+                else
+                sql.append("Select * FROM sctid ").append(resultWhere).append(" order by sctid limit ").append(limitR);
         } else {
 
             if (swhere.toString() != "")
-                sql = "Select * FROM sctid USE INDEX (nam_par_st)" + swhere + " order by sctid";
+            sql.append("Select * FROM sctid USE INDEX (nam_par_st)").append(resultWhere).append(" order by sctid");
             else
-                sql = "Select * FROM sctid " + swhere + " order by sctid";
+            sql.append("Select * FROM sctid ").append(resultWhere).append(" order by sctid");
         }
-        Query genQuery = entityManager.createNativeQuery(sql, Sctid.class);
+        Query genQuery = entityManager.createNativeQuery(sql.toString(), Sctid.class);
         List<Sctid> resultList = genQuery.getResultList();
         if ((skipTo == 0)) {
             sctList = resultList;
@@ -661,26 +655,28 @@ public class SctidService {
         if (!skip.isEmpty() && null != skip)
             skipTo = Integer.parseInt(skip);
 
-        String swhere = "";
+        StringBuffer swhere = new StringBuffer("");
+        StringBuffer resultWhere = new StringBuffer("");
         if (queryObject.size() > 0) {
             for (var query :
                     queryObject.entrySet()) {
-                swhere += " And " + query.getKey() + "=" + (query.getValue());
+               // swhere += " And " + query.getKey() + "=" + (query.getValue());
+                swhere = swhere.append(" And ").append(query.getKey()).append("=").append((query.getValue()));
             }
         }
-        if (swhere != "") {
-            swhere = " WHERE " + swhere.substring(5);
+        if (!(swhere.toString().equalsIgnoreCase(""))) {
+           // swhere = " WHERE " + swhere.substring(5);
+            resultWhere.append(" WHERE ").append(swhere.substring(5));
         }
-        String sql;
+        StringBuffer sql =new StringBuffer();
         if ((limitR > 0) && (skipTo == 0)) {
-
-
-            sql = "SELECT * FROM schemeId" + swhere + " order by schemeId limit " + limit;
+           // sql = "SELECT * FROM schemeId" + resultWhere + " order by schemeId limit " + limit;
+            sql.append("SELECT * FROM schemeId").append(resultWhere).append(" order by schemeId limit ").append(limit);
         } else {
-
-            sql = "SELECT * FROM schemeId" + swhere + " order by schemeId";
+            sql.append("SELECT * FROM schemeId").append(resultWhere).append(" order by schemeId");
+            //sql = "SELECT * FROM schemeId" + resultWhere + " order by schemeId";
         }
-        Query genQuery = entityManager.createQuery(sql);
+        Query genQuery = entityManager.createQuery(sql.toString());
         List<SchemeId> resultList = genQuery.getResultList();
         if ((skipTo == 0)) {
             schemeList = resultList;
@@ -822,7 +818,7 @@ public class SctidService {
         return result;
     }
 
-    public ResultDto getStats(String token, String username) throws CisException {
+    /*public ResultDto getStats(String token, String username) throws CisException {
         logger.debug("Request Received : token-{} :: username - {} ", token, username);
         ResultDto result = new ResultDto();
         List<String> users = new ArrayList<>();
@@ -930,7 +926,7 @@ public class SctidService {
         }
         logger.info("getStats() - Response :: {}", result);
         return result;
-    }
+    }*/
 
     public boolean added(String userToAdd) {
         List<String> users = new ArrayList<>();
@@ -943,7 +939,7 @@ public class SctidService {
         return found;
     }
 
-    public Long sctidCount(Map<String, Integer> queryObject) {
+    /*public Long sctidCount(Map<String, Integer> queryObject) {
         logger.debug("Request Received : queryObject-{} ", queryObject);
         var swhere = "";
         if (queryObject.size() > 0) {
@@ -962,9 +958,9 @@ public class SctidService {
         List<BigInteger> result = query.getResultList();
         logger.info("sctidCount() : response - {}", result.get(0).longValue());
         return result.get(0).longValue();
-    }
+    }*/
 
-    public Long permissionsSchemeCount(Map<String, ArrayList<String>> queryObject) {
+    /*public Long permissionsSchemeCount(Map<String, ArrayList<String>> queryObject) {
         logger.debug("Request Received : queryObject-{} :: authToken - {} ", queryObject);
        // var swhere = "";
         StringBuffer swhere = new StringBuffer("");
@@ -994,9 +990,9 @@ public class SctidService {
         List<BigInteger> result = query.getResultList();
         logger.info("permissionsSchemeCount() : response - {}", result.get(0).longValue());
         return result.get(0).longValue();
-    }
+    }*/
 
-    public List<Namespace> findPermissionsNamespace(Map<String, ArrayList<String>> queryObject) {
+   /* public List<Namespace> findPermissionsNamespace(Map<String, ArrayList<String>> queryObject) {
         logger.debug("Request Received : queryObject-{} ", queryObject);
        // var swhere = "";
         StringBuffer swhere = new StringBuffer("");
@@ -1026,6 +1022,6 @@ public class SctidService {
         List<Namespace> result = query.getResultList();
         logger.info("findPermissionsNamespace() : response - {}", result);
         return result;
-    }
+    }*/
 
 }
