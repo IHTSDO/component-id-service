@@ -65,7 +65,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<AuthenticateResponseDto> authenticate(@RequestParam String token, @ApiIgnore Authentication authentication) throws CisException {
+    public ResponseEntity<AuthenticateResponseDto> authenticate(@RequestParam(required = false) String token, @ApiIgnore Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
         return new ResponseEntity<>(authToken.getAuthenticateResponseDto(), HttpStatus.OK);
     }
