@@ -31,7 +31,7 @@ public interface SctidRepository extends JpaRepository<Sctid, String> {
     List<Sctid> update(@Param("systemIds") List<Sctid> systemIds, Integer jobId);
 
     @Query(value = "UPDATE sctId SET JobId=(:jobId) modified_at=:now() WHERE sctid in (:sctids)", nativeQuery = true)
-    List<Sctid> updateSctid(@Param("systemIds") List<Sctid> sctids, Integer jobId);
+    List<Sctid> updateSctid(@Param("sctids") List<Sctid> sctids, Integer jobId);
 
 
     List<Sctid> findByNamespaceAndPartitionId(Integer namespace, String partitionId);
