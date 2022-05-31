@@ -2,14 +2,11 @@ package org.snomed.cis.dto;
 
 import org.snomed.cis.domain.BulkJob;
 
-import javax.persistence.Id;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 
 public class BulkJobResponseDto {
 
-    @Id
     private Integer id;
     private String name;
     private String author;
@@ -28,7 +25,7 @@ public class BulkJobResponseDto {
     private String partitionId;
     public Integer jobId;
     public Integer namespace;
-    public  String software;
+    public String software;
     public int sctid[];
     public String action;
     public String schemeId;
@@ -82,7 +79,7 @@ public class BulkJobResponseDto {
         return sctid;
     }
 
-    public void setSctid(int [] sctid) {
+    public void setSctid(int[] sctid) {
         this.sctid = sctid;
     }
 
@@ -133,7 +130,6 @@ public class BulkJobResponseDto {
     public void setNamespace(Integer namespace) {
         this.namespace = namespace;
     }
-
 
 
     public Boolean getAutoSysId() {
