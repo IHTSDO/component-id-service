@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import springfox.documentation.annotations.ApiIgnore;
 
 @Api(tags = "Stats", value = "Stats")
 @RestController
@@ -23,10 +24,10 @@ public class StatsController {
 
 
     @GetMapping("/stats")
-    public ResponseEntity<GetStatsResponseDto> getStats(@RequestParam String username, Authentication authentication) throws CisException {
-        Token token = (Token) authentication;
-        logger.info("Request received for - username :: {} - authenticateResponseDto :: {}", username,token.getAuthenticateResponseDto());
-        return ResponseEntity.ok(statsService.getStats(username, token.getAuthenticateResponseDto()));
+    public ResponseEntity<GetStatsResponseDto> getStats(@RequestParam String token, @RequestParam String username, @ApiIgnore Authentication authentication) throws CisException {
+        Token authToken = (Token) authentication;
+        logger.info("Request received for - username :: {} - authenticateResponseDto :: {}", username,authToken.getAuthenticateResponseDto());
+        return ResponseEntity.ok(statsService.getStats(username, authToken.getAuthenticateResponseDto()));
     }
 
 

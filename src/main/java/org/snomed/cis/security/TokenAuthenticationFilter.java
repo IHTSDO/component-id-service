@@ -46,6 +46,9 @@ public class TokenAuthenticationFilter extends AbstractAuthenticationProcessingF
                     if ("token".equalsIgnoreCase(entry.getName()))
                         tokenOptional = Optional.ofNullable(entry.getValue());
                 }
+                if(tokenOptional.isEmpty()){
+                    tokenOptional = Optional.ofNullable(request.getParameter("token"));
+                }
             }
         } else {
             tokenOptional = Optional.ofNullable(request.getParameter("token"));
