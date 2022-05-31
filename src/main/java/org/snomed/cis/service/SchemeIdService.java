@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.print.DocFlavor;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -55,16 +56,20 @@ public class SchemeIdService {
 
     @Autowired
     StateMachine stateMachine;
+
     public boolean isAbleUser(String schemeName, AuthenticateResponseDto authToken) throws CisException {
+        logger.debug("Request Received : schemeName-{} :: authToken - {} ", schemeName, authToken);
         List<String> groups = authToken.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
         boolean isAble = false;
         if (groups.contains("component-identifier-service-admin") || hasSchemePermission(schemeName, authToken)) {
             isAble = true;
         }
+        logger.info("isAbleUser() - Response: {}", isAble);
         return isAble;
     }
 
-    public boolean hasSchemePermission(String schemeName,AuthenticateResponseDto authToken) throws CisException {
+    public boolean hasSchemePermission(String schemeName, AuthenticateResponseDto authToken) throws CisException {
+        logger.debug("Request Received : schemeName-{} :: authToken - {} ", schemeName, authToken);
         boolean able = false;
         if (!"false".equalsIgnoreCase(schemeName.toString())) {
             List<PermissionsScheme> permissionsSchemeList = permissionsSchemeRepository.findByScheme(schemeName.toString());
@@ -90,18 +95,17 @@ public class SchemeIdService {
                 }
             }
         }
+        logger.info("hasSchemePermission() - Response: {}", able);
         return able;
     }
 
-    public UserDTO getAuthenticatedUser() throws CisException {
-        return this.securityController.authenticate();
-    }
-
     public List<SchemeId> getSchemeIds(AuthenticateResponseDto authToken, String limit, String skip, SchemeName schemeName) throws CisException {
-            return this.getSchemeIdsList(limit, skip, schemeName,authToken);
+        logger.debug("Request Received :authToken - {} ::limit - {} :: skip - {}:: schemeName-{} :: ", authToken, limit, skip, schemeName);
+        return this.getSchemeIdsList(limit, skip, schemeName, authToken);
     }
 
-    private List<SchemeId> getSchemeIdsList(String limit, String skip, SchemeName schemeName,AuthenticateResponseDto authToken) throws CisException {
+    private List<SchemeId> getSchemeIdsList(String limit, String skip, SchemeName schemeName, AuthenticateResponseDto authToken) throws CisException {
+        logger.debug("Request Received : limit - {} :: skip - {} :: schemeName-{} :: authToken - {} ", limit, skip, schemeName, authToken);
         List<SchemeId> schemeidList = new ArrayList<>();
         if (this.isAbleUser("false", authToken)) {
             //ArrayList<String> schemeIdsArrayList = new ArrayList<String>(Arrays.asList(schemedIdArray));
@@ -138,31 +142,12 @@ public class SchemeIdService {
 
             List<SchemeId> resultList = genQuery.getResultList();
 
-            /*
-            * if ((skipTo==0)) {
-            schemeList = resultList;
-        }else {
-            var cont = 1;
-            List<SchemeId> newRows = new ArrayList<>();
-            for (var i = 0; i < resultList.size(); i++) {
-                if (i >= skipTo) {
-                    if (null != limit && limitR > 0 && limitR < cont) {
-                        break;
-                    }
-                    newRows.add(resultList.get(i));
-                    cont++;
-                }
-            }
-            schemeList = newRows;
-        }
-        return schemeList;
-            * */
             if ((skipTo == 0)) {
                 schemeidList = resultList;
             } else {
                 var cont = 1;
                 List<SchemeId> newRows = new ArrayList<>();
-                for (var i = 0; i < (resultList.size() / 1000); i++) {
+                for (var i = 0; i < (resultList.size()); i++) {
                     if (i >= skipTo) {
                         if (limitR > 0 && limitR < cont) {
                             break;
@@ -178,57 +163,65 @@ public class SchemeIdService {
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
+        logger.info("getSchemeIdsList-Response:{}", schemeidList);
         return schemeidList;
     }
 
     public SchemeId getSchemeId(AuthenticateResponseDto authToken, SchemeName scheme, String schemeid) throws CisException {
-            return this.getSchemeIdsByschemeIdList(scheme.toString(), schemeid);
+        logger.debug("Request Received : schemeName-{} :: authToken - {} :: schemeid - {}", scheme, authToken, schemeid);
+        return this.getSchemeIdsByschemeIdList(scheme.toString(), schemeid);
     }
 
     public SchemeId getSchemeIdsByschemeIdList(String schemeName, String schemeid) throws CisException {
+        logger.debug("Request Received : schemeName-{} :: schemeid - {} ", schemeName, schemeid);
         SchemeId record = new SchemeId();
         Optional<SchemeId> schemeIdObj = null;
-            if (schemeid == null || schemeid == "") {
+        if (schemeid == null || schemeid == "") {
+            logger.error("error getSchemeIdsByschemeIdList():: Not valid schemeId.");
+            throw new CisException(HttpStatus.UNAUTHORIZED, "Not valid schemeId.");
+        } else {
+            boolean isValidScheme = false;
+            if ("SNOMEDID".equalsIgnoreCase(schemeName.toString().toUpperCase())) {
+                isValidScheme = SNOMEDID.validSchemeId(schemeid);
+            } else if ("CTV3ID".equalsIgnoreCase(schemeName.toString().toUpperCase())) {
+                isValidScheme = CTV3ID.validSchemeId(schemeid);
+            }
+            if (!isValidScheme) {
                 logger.error("error getSchemeIdsByschemeIdList():: Not valid schemeId.");
                 throw new CisException(HttpStatus.UNAUTHORIZED, "Not valid schemeId.");
-            } else {
-                boolean isValidScheme = false;
-                if ("SNOMEDID".equalsIgnoreCase(schemeName.toString().toUpperCase())) {
-                    isValidScheme = SNOMEDID.validSchemeId(schemeid);
-                } else if ("CTV3ID".equalsIgnoreCase(schemeName.toString().toUpperCase())) {
-                    isValidScheme = CTV3ID.validSchemeId(schemeid);
-                }
-                if (!isValidScheme) {
-                    logger.error("error getSchemeIdsByschemeIdList():: Not valid schemeId.");
-                    throw new CisException(HttpStatus.UNAUTHORIZED, "Not valid schemeId.");
-                }
             }
-            schemeIdObj = bulkSchemeIdRepository.findBySchemeAndSchemeId(schemeName, schemeid);
-            if (schemeIdObj.isEmpty()) {
-                record = getFreeRecords(schemeName, schemeid);
-                return record;
-            } else {
-                return schemeIdObj.get();
-            }
+        }
+        schemeIdObj = bulkSchemeIdRepository.findBySchemeAndSchemeId(schemeName, schemeid);
+        if (schemeIdObj.isEmpty()) {
+            record = getFreeRecords(schemeName, schemeid);
+        } else {
+            record = schemeIdObj.get();
+        }
+        logger.info("getSchemeIdsByschemeIdList(): Response - {}", record);
+        return record;
     }
 
     private SchemeId getFreeRecords(String schemeName, String schemeid) throws CisException {
+        logger.debug("Request Received : schemeName-{} :: schemeid - {} ", schemeName, schemeid);
         Map<String, Object> schemeIdRecord = getNewRecord(schemeName, schemeid);
         schemeIdRecord.put("status", "Available");
         return insertSchemeIdRecord(schemeIdRecord);
     }
 
     private Map<String, Object> getNewRecord(String schemeName, String schemeid) {
+        logger.debug("Request Received : schemeName-{} :: schemeid - {} ", schemeName, schemeid);
         Map<String, Object> schemeIdRecord = new LinkedHashMap<>();
         schemeIdRecord.put("scheme", schemeName);
         schemeIdRecord.put("schemeId", schemeid);
         schemeIdRecord.put("sequence", sctIdHelper.getSequence(schemeid));
         schemeIdRecord.put("checkDigit", sctIdHelper.getCheckDigit(schemeid));
         schemeIdRecord.put("systemId", sctIdHelper.guid());
+        logger.info("getNewRecord():Response - {}", schemeIdRecord);
         return schemeIdRecord;
     }
 
     private SchemeId insertSchemeIdRecord(Map<String, Object> schemeIdRecord) throws CisException {
+        logger.debug("Request Received : schemeIdRecord-{}", schemeIdRecord);
         String error;
         Optional<SchemeId> schemeIdBulk = null;
         String scheme = null;
@@ -290,12 +283,10 @@ public class SchemeIdService {
                     }
                 }
             }
-            //refactor changes
             SchemeId schemeIdObj = SchemeId.builder().scheme(scheme).schemeId(schemeId).sequence(sequence).checkDigit(checkDigit).systemId(systemId).status(status).author(author).software(software).expirationDate(expirationDate).jobId(jobId).build();
-            //SchemeId schemeIdObj=new SchemeId("SNOMEDID","A-22335", 0, 0, "systemId0op0o0o0k0k0", "Available", null, null, null, null, null, null);
-            //refactor changes
-           // schemeIdBulk = bulkSchemeIdRepository.findBySchemeAndSchemeId(scheme.toString(), schemeId.toString());
-            return bulkSchemeIdRepository.save(schemeIdObj);
+            SchemeId schemeId1 = bulkSchemeIdRepository.save(schemeIdObj);
+            logger.info("insertSchemeIdRecord():Response - {}", schemeId1);
+            return schemeId1;
         } catch (Exception e) {
             error = e.toString();
         }
@@ -305,14 +296,17 @@ public class SchemeIdService {
 
 
     public SchemeId getSchemeIdsBySystemId(AuthenticateResponseDto authToken, SchemeName scheme, String systemid) throws CisException {
-            return this.getSchemeIdsBysystemList(scheme.toString(), systemid,authToken);
+        logger.debug("Request Received : schemeName-{} :: authToken - {} :: systemid - {}", scheme, authToken, systemid);
+        return this.getSchemeIdsBysystemList(scheme.toString(), systemid, authToken);
     }
 
-    private SchemeId getSchemeIdsBysystemList(String scheme, String systemid,AuthenticateResponseDto authToken) throws CisException {
+    private SchemeId getSchemeIdsBysystemList(String scheme, String systemid, AuthenticateResponseDto authToken) throws CisException {
+        logger.debug("Request Received : schemeName-{} ::systemid - {} :: authToken - {} ", scheme, systemid, authToken);
         if (isAbleUser(scheme, authToken)) {
             List<SchemeId> schemeIdList = bulkSchemeIdRepository.findBySchemeAndSystemId(scheme, systemid);
 
             if (!schemeIdList.isEmpty() && schemeIdList.size() > 0) {
+                logger.info("getSchemeIdsBysystemList()-Response: {}", schemeIdList.get(0));
                 return schemeIdList.get(0);
             } else {
                 logger.error("error getSchemeIdsBysystemList()::SchemeId list is empty");
@@ -327,10 +321,12 @@ public class SchemeIdService {
     }
 
     public SchemeId deprecateSchemeIds(AuthenticateResponseDto authToken, SchemeName schemeName, SchemeIdUpdateRequestDto request) throws CisException {
-            return this.deprecateSchemeIdList(schemeName, request,authToken);
+        logger.debug("Request Received :authToken - {} :: schemeName-{} :: SchemeIdUpdateRequestDto - {} ", authToken, schemeName, request);
+        return this.deprecateSchemeIdList(schemeName, request, authToken);
     }
 
-    private SchemeId deprecateSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request,AuthenticateResponseDto authToken) throws CisException {
+    private SchemeId deprecateSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request, AuthenticateResponseDto authToken) throws CisException {
+        logger.debug("Request Received : schemeName-{} ::SchemeIdUpdateRequestDto-{} :: authToken - {} ", schemeName, request, authToken);
         SchemeId schemeId = new SchemeId();
         if (isAbleUser(schemeName.toString(), authToken)) {
             SchemeIdUpdateRequest updateRequest = new SchemeIdUpdateRequest();
@@ -352,7 +348,7 @@ public class SchemeIdService {
                     schemeIdrecord.setJobId(null);
                     schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
                 } else {
-                    logger.error("error deprecateSchemeIdList():: Cannot deprecate SchemeId:{}, current status:{}",schemeIdrecord.getSchemeId(),schemeIdrecord.getStatus());
+                    logger.error("error deprecateSchemeIdList():: Cannot deprecate SchemeId:{}, current status:{}", schemeIdrecord.getSchemeId(), schemeIdrecord.getStatus());
                     throw new CisException(HttpStatus.BAD_REQUEST, "Cannot deprecate SchemeId:" + schemeIdrecord.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
                 }
             }
@@ -360,16 +356,19 @@ public class SchemeIdService {
             logger.error("error deprecateSchemeIdList():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
+        logger.info("deprecateSchemeIdList()-Response: {}", schemeId);
         return schemeId;
 
     }
     //releaseSchmeId
 
     public SchemeId releaseSchemeIds(AuthenticateResponseDto authToken, SchemeName schemeName, SchemeIdUpdateRequestDto request) throws CisException {
-            return this.releaseSchemeIdList(schemeName, request, authToken);
+        logger.debug("Request Received :AuthenticateResponseDto - {} :: schemeName-{} :: SchemeIdUpdateRequestDto - {} ", authToken, schemeName, request);
+        return this.releaseSchemeIdList(schemeName, request, authToken);
     }
 
-    private SchemeId releaseSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request,AuthenticateResponseDto authToken) throws CisException {
+    private SchemeId releaseSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request, AuthenticateResponseDto authToken) throws CisException {
+        logger.debug("Request Received : schemeName-{} ::SchemeIdUpdateRequestDto - {}:: authToken - {} ", schemeName, request, authToken);
         SchemeId schemeId = new SchemeId();
         if (isAbleUser(schemeName.toString(), authToken)) {
 
@@ -393,7 +392,7 @@ public class SchemeIdService {
                     schemeIdrecord.setJobId(null);
                     schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
                 } else {
-                    logger.error("error releaseSchemeIdList():: Cannot release SchemeId:{} , current status:{}",schemeIdrecord.getSchemeId(),schemeIdrecord.getStatus());
+                    logger.error("error releaseSchemeIdList():: Cannot release SchemeId:{} , current status:{}", schemeIdrecord.getSchemeId(), schemeIdrecord.getStatus());
                     throw new CisException(HttpStatus.BAD_REQUEST, "Cannot release SchemeId:" + schemeIdrecord.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
                 }
             }
@@ -402,17 +401,20 @@ public class SchemeIdService {
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
+        logger.info("releaseSchemeIdList()-Response: {}", schemeId);
         return schemeId;
     }
 
     //publish
 
     public SchemeId publishSchemeId(AuthenticateResponseDto authToken, SchemeName schemeName, SchemeIdUpdateRequestDto request) throws CisException {
-            return this.publishSchemeIdList(schemeName, request,authToken);
+        logger.debug("Request Received : AuthenticateResponseDto - {}:: schemeName-{} :: SchemeIdUpdateRequestDto - {} ", authToken, schemeName, request);
+        return this.publishSchemeIdList(schemeName, request, authToken);
 
     }
 
-    private SchemeId publishSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request,AuthenticateResponseDto authToken) throws CisException {
+    private SchemeId publishSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request, AuthenticateResponseDto authToken) throws CisException {
+        logger.debug("Request Received : schemeName-{} :: SchemeIdUpdateRequestDto-{}:: authToken - {} ", schemeName, request, authToken);
         SchemeId schemeId = new SchemeId();
         if (isAbleUser(schemeName.toString(), authToken)) {
             SchemeIdUpdateRequest updateRequest = new SchemeIdUpdateRequest();
@@ -435,7 +437,7 @@ public class SchemeIdService {
                     schemeIdrecord.setJobId(null);
                     schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
                 } else {
-                    logger.error("error publishSchemeIdList():: Cannot publish SchemeId:{}, current status:{}",schemeIdrecord.getSchemeId(),schemeIdrecord.getStatus());
+                    logger.error("error publishSchemeIdList():: Cannot publish SchemeId:{}, current status:{}", schemeIdrecord.getSchemeId(), schemeIdrecord.getStatus());
                     throw new CisException(HttpStatus.BAD_REQUEST, "Cannot publish SchemeId:" + schemeIdrecord.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
                 }
             }
@@ -444,15 +446,19 @@ public class SchemeIdService {
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
+        logger.info("publishSchemeIdList() - Response: {}", schemeId);
         return schemeId;
     }
 
     public SchemeId reserveSchemeId(AuthenticateResponseDto authToken, SchemeName schemeName, SchemeIdReserveRequestDto request) throws CisException {
-            return this.reserveSchemeIdList(schemeName, request,authToken);
+        logger.debug("Request Received :AuthenticateResponseDto - {} :: schemeName-{} :: SchemeIdReserveRequestDto - {} ", authToken, schemeName, request);
+        SchemeId schemeId = this.reserveSchemeIdList(schemeName, request, authToken);
+        logger.info("reserveSchemeId() - Response: {}", schemeId);
+        return schemeId;
     }
 
-    private SchemeId reserveSchemeIdList(SchemeName schemeName, SchemeIdReserveRequestDto request,AuthenticateResponseDto authToken) throws CisException {
-
+    private SchemeId reserveSchemeIdList(SchemeName schemeName, SchemeIdReserveRequestDto request, AuthenticateResponseDto authToken) throws CisException {
+        logger.debug("Request Received : schemeName-{} :: SchemeIdReserveRequestDto - {} :: AuthenticateResponseDto - {}", schemeName, request, authToken);
         if (this.isAbleUser(schemeName.toString(), authToken)) {
             SchemeIdReserveRequest reserveRequest = new SchemeIdReserveRequest();
             reserveRequest.setSoftware(request.getSoftware());
@@ -470,6 +476,7 @@ public class SchemeIdService {
 
     //List
     private SchemeId setNewSchemeIdRecord(SchemeName schemeName, SchemeIdReserveRequest request, String reserve) throws CisException {
+        logger.debug("Request Received : schemeName-{} ::  SchemeIdReserveRequest -{} :: authToken - {} ", schemeName, request, reserve);
         SchemeId record = setAvailableSchemeIdRecord2NewStatus(schemeName, request, reserve);
         try {
             if (record != null) {
@@ -477,6 +484,7 @@ public class SchemeIdService {
             } else {
                 SchemeId schemeIdRec = counterMode(schemeName, request, reserve);
                 if (schemeIdRec != null) {
+                    logger.info("setNewSchemeIdRecord(): Response- {}", schemeIdRec);
                     return schemeIdRec;
                 } else {
                     logger.error("error setNewSchemeIdRecord():: Error");
@@ -485,13 +493,14 @@ public class SchemeIdService {
 
             }
         } catch (Exception e) {
-            logger.error("error setNewSchemeIdRecord():: error getting available schemeId for:{}, Exception msg: {}",schemeName,e.getMessage());
+            logger.error("error setNewSchemeIdRecord():: error getting available schemeId for:{}, Exception msg: {}", schemeName, e.getMessage());
             throw new CisException(HttpStatus.NOT_FOUND, "error getting available schemeId for:" + schemeName + e.getMessage());
         }
 
     }
 
     private SchemeId setAvailableSchemeIdRecord2NewStatus(SchemeName schemeName, SchemeIdReserveRequest request, String reserve) throws CisException {
+        logger.debug("Request Received : schemeName-{} :: SchemeIdReserveRequest - {} ::  reserve - {} ", schemeName, request, reserve);
         Map<String, String> objQuery = new HashMap<String, String>();
         SchemeId outputSchemeRec = new SchemeId();
         SchemeId updatedrecord = null;
@@ -525,15 +534,17 @@ public class SchemeIdService {
         } else {
             return null;
         }
+        logger.info("setAvailableSchemeIdRecord2NewStatus: Response - {}", updatedrecord);
         return updatedrecord;
 
     }
 
     public SchemeId counterMode(SchemeName schemeName, SchemeIdReserveRequest request, String reserve) throws CisException {
-        SchemeId newSchemeId = getNextSchemeId(schemeName, request);
+        logger.debug("Request Received : schemeName-{} :: SchemeIdReserveRequest - {} :: reserve - {}", schemeName, request, reserve);
+        String newSchemeId = getNextSchemeId(schemeName, request);
+        SchemeId updatedrecord = null;
         if (newSchemeId != null) {
             SchemeId schemeIdRecord = getSchemeIdsByschemeIdList(schemeName.toString(), newSchemeId.toString());
-            SchemeId updatedrecord;
             if (schemeIdRecord != null) {
                 var newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(), reserve);
                 if (null != newStatus) {
@@ -550,52 +561,70 @@ public class SchemeIdService {
                     schemeIdRecord.setJobId(null);
                     // outputSchemeRec = bulkSchemeIdRepository.save(schemeIdRecords.get(0));
                     updatedrecord = updateSchemeIdRecord(schemeIdRecord, schemeName.toString());
-                    return updatedrecord;
                 } else {
-                    counterMode(schemeName, request, reserve);
+                    updatedrecord = counterMode(schemeName, request, reserve);
                 }
             }
         }
-        return newSchemeId;
+        return updatedrecord;
     }
 
-    private SchemeId getNextSchemeId(SchemeName schemeName, SchemeIdReserveRequest request) {
+    private String getNextSchemeId(SchemeName schemeName, SchemeIdReserveRequest request) {
+        logger.debug("Request Received : schemeName-{} :: SchemeIdReserveRequest - {} ", schemeName, request);
         Optional<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeName.toString());
         SchemeIdBase schemeIdBase = null;
-        if(schemeIdBaseList.isPresent())
-        schemeIdBase.setIdBase(schemeIdBaseList.get().getIdBase());
+        String nextId = null;
+
+        if (schemeIdBaseList.isPresent()) {
+            if (schemeName.toString().toUpperCase().equalsIgnoreCase("SNOMEDID")) {
+                if (schemeIdBaseList.isPresent())
+                    nextId = SNOMEDID.getNextId(schemeIdBaseList.get().getIdBase());
+            } else if (schemeName.toString().toUpperCase().equalsIgnoreCase("CTV3ID")) {
+                if (schemeIdBaseList.isPresent())
+                    nextId = CTV3ID.getNextId(schemeIdBaseList.get().getIdBase());
+            }
+            schemeIdBase.setIdBase(nextId);
+        }
         schemeIdBaseRepository.save(schemeIdBase);
-        return null;//List<SchmeId>
+        return nextId;
     }
 
     public SchemeId updateSchemeIdRecord(SchemeId schemeId, String schemeName) {
+        logger.debug("Request Received : schemeId-{} :: authToken - {} ", schemeId, schemeName);
         Map<String, String> objQuery = new HashMap<String, String>();
 
         if (null != schemeId) {
             objQuery.put("schemeId", String.valueOf(schemeId));
             objQuery.put("scheme", schemeName.toString());
         }
-        String supdate = "";
-
+        //String supdate = "";
+StringBuffer supdate = new StringBuffer("");
+        String updateResult="";
         for (var query :
                 objQuery.entrySet()) {
             if (!"schemeId".equalsIgnoreCase(query.toString()) && !"schemeName".equalsIgnoreCase(query.toString())) {
-                supdate += " ," + query.getKey() + "=" + (query.getValue());
+               // supdate += " ," + query.getKey() + "=" + (query.getValue());
+                supdate.append(" ,").append(query.getKey()).append("=").append((query.getValue()));
             }
 
         }
-        if (supdate != "") {
-            supdate = supdate.substring(2);
+        if (!supdate.toString().equalsIgnoreCase("")) {
+            updateResult = supdate.toString().substring(2);
         }
-        String sql = "UPDATE schemeId SET " + supdate + " ,modified_at=now() WHERE scheme=" + schemeName +
-                " And schemeId=" + schemeId;
-        Query genQuery = entityManager.createQuery(sql);
+        /*String sql = "UPDATE schemeId SET " + supdate + " ,modified_at=now() WHERE scheme=" + schemeName +
+                " And schemeId=" + schemeId;*/
+        StringBuffer sql = new StringBuffer();
+        sql.append("UPDATE schemeId SET ").append(updateResult).append(" ,modified_at=now() WHERE scheme=")
+                .append(schemeName).append(" And schemeId=").append(schemeId);
+        Query genQuery = entityManager.createQuery(sql.toString());
         SchemeId resultList = (SchemeId) genQuery.getResultList();
+        logger.info("updateSchemeIdRecord() - Response::{}", resultList);
         return resultList;
 
     }
 
     public List<SchemeId> findschemeRecord(Map<String, String> objQuery, String limit, String skip) {
+        logger.debug("Request Received : schemeName-{} :: authToken - {} ", objQuery, limit, skip);
         SchemeId schemeidList = null;
         var limitR = 100;
         var skipTo = 0;
@@ -641,6 +670,7 @@ public class SchemeIdService {
                     cont++;
                 }
             }
+            logger.info("findschemeRecord() - Response::{}", newRows);
             return newRows;
         }
         // return schemeidList;
@@ -648,10 +678,14 @@ public class SchemeIdService {
 
 
     public SchemeId generateSchemeId(AuthenticateResponseDto authToken, SchemeName schemeName, SchemeIdGenerateRequestDto request) throws CisException {
-            return this.generateSchemeIds(schemeName.toString(), request,authToken);
+        logger.debug("Request Received : authToken - {} :: schemeName-{} :: SchemeIdGenerateRequestDto - {}", authToken, schemeName, request);
+        SchemeId schemeId = this.generateSchemeIds(schemeName.toString(), request, authToken);
+        logger.info("generateSchemeId() - Response::{}", schemeId);
+        return schemeId;
     }
 
-    public SchemeId generateSchemeIds(String schemeName, SchemeIdGenerateRequestDto request,AuthenticateResponseDto authToken) throws CisException {
+    public SchemeId generateSchemeIds(String schemeName, SchemeIdGenerateRequestDto request, AuthenticateResponseDto authToken) throws CisException {
+        logger.debug("Request Received : schemeName-{} ::SchemeIdGenerateRequestDto-{}:: authToken - {} ", schemeName, request, authToken);
         SchemeId schemeIdRec = new SchemeId();
         if (this.isAbleUser(schemeName, authToken)) {
             SchemeIdGenerateRequest generateRequest = new SchemeIdGenerateRequest();
@@ -670,10 +704,10 @@ public class SchemeIdService {
                     return schemeIdRec;
                 } else {
                     //request body change
-                    return setNewSchemeIdRecordGen(schemeName, generateRequest, stateMachine.actions.get("generate"));
+                    schemeIdRec = setNewSchemeIdRecordGen(schemeName, generateRequest, stateMachine.actions.get("generate"));
                 }
             } else {
-                return setNewSchemeIdRecordGen(schemeName, generateRequest, stateMachine.actions.get("generate"));
+                schemeIdRec = setNewSchemeIdRecordGen(schemeName, generateRequest, stateMachine.actions.get("generate"));
             }
 
         } else {
@@ -681,21 +715,25 @@ public class SchemeIdService {
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
-        //return schemeIdRec;
+        logger.info("generateSchemeIds() - Response::{}", schemeIdRec);
+        return schemeIdRec;
     }
 
     public SchemeId getSchemeIdBySystemId(String schemeName, String systemId) {
+        logger.debug("Request Received : schemeName-{} :: systemId - {} ", schemeName, systemId);
         List<SchemeId> schemeId = bulkSchemeIdRepository.findBySchemeAndSystemId(schemeName, systemId);
         if (schemeId.size() > 0) {
+            logger.info("getSchemeIdBySystemId() - Response::{}", schemeId.get(0));
             return schemeId.get(0);
         } else {
-            //requestbody change fix
+            logger.info("getSchemeIdBySystemId() - Response::{}", "null");
             return null;
         }
 
     }
 
     public SchemeId setNewSchemeIdRecordGen(String schemeName, SchemeIdGenerateRequest request, String reserve) throws CisException {
+        logger.debug("Request Received : schemeName-{} :: request - {} :: SchemeIdGenerateRequest - {} ", schemeName, request, reserve);
         SchemeId record = setAvailableSchemeIdRecord2NewStatusGen(schemeName, request, reserve);
         try {
             if (record != null) {
@@ -703,6 +741,7 @@ public class SchemeIdService {
             } else {
                 SchemeId schemeIdRec = counterModeGen(schemeName, request, reserve);
                 if (schemeIdRec != null) {
+                    logger.info("setNewSchemeIdRecordGen() - Response::{}", schemeIdRec);
                     return schemeIdRec;
                 } else {
                     logger.error("error setNewSchemeIdRecordGen():: Not found Error");
@@ -711,13 +750,14 @@ public class SchemeIdService {
 
             }
         } catch (Exception e) {
-            logger.error("error setNewSchemeIdRecordGen():: error getting available schemeId for:{}, Exception msg: {}",schemeName,e.getMessage());
+            logger.error("error setNewSchemeIdRecordGen():: error getting available schemeId for:{}, Exception msg: {}", schemeName, e.getMessage());
             throw new CisException(HttpStatus.NOT_FOUND, "error getting available schemeId for:" + schemeName + e.getMessage());
         }
 
     }
 
     public SchemeId setAvailableSchemeIdRecord2NewStatusGen(String schemeName, SchemeIdGenerateRequest request, String generate) throws CisException {
+        logger.debug("Request Received : schemeName-{} :: SchemeIdGenerateRequest - {} :: generate - {} ", schemeName, request, generate);
         Map<String, String> objQuery = new HashMap<String, String>();
         SchemeId outputSchemeRec = new SchemeId();
         SchemeId updatedrecord = null;
@@ -752,14 +792,16 @@ public class SchemeIdService {
         } else if (schemeIdRecords.size() == 0) {
             return counterModeGen(schemeName, request, generate);
         } else {
-            logger.error("error setAvailableSchemeIdRecord2NewStatusGen():: error getting available schemeId for:{}",schemeName);
+            logger.error("error setAvailableSchemeIdRecord2NewStatusGen():: error getting available schemeId for:{}", schemeName);
             throw new CisException(HttpStatus.ACCEPTED, "error getting available schemeId for:" + schemeName + ", err: ");
         }
+        logger.info("setAvailableSchemeIdRecord2NewStatusGen() - Response::{}", updatedrecord);
         return updatedrecord;
 
     }
 
     public SchemeId counterModeGen(String schemeName, SchemeIdGenerateRequest request, String reserve) throws CisException {
+        logger.debug("Request Received : schemeName-{} :: SchemeIdGenerateRequest - {} ::  reserve - {} ", schemeName, request, reserve);
         String newSchemeId = getNextSchemeIdGen(schemeName, request);
         SchemeId updatedrecord = null;
         if (newSchemeId != null) {
@@ -785,35 +827,43 @@ public class SchemeIdService {
                 }
             }
         }
+        logger.info("counterModeGen() - Response::{}", updatedrecord);
         return updatedrecord;
     }
 
     public String getNextSchemeIdGen(String schemeName, SchemeIdGenerateRequest request) {
+        logger.debug("Request Received : schemeName-{} :: SchemeIdGenerateRequest - {} ", schemeName, request);
         Optional<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeName.toString());
         String nextId = "";
         if (schemeName.toUpperCase().equalsIgnoreCase("SNOMEDID")) {
-            if(schemeIdBaseList.isPresent())
-            nextId = SNOMEDID.getNextId(schemeIdBaseList.get().getIdBase());
-        }
-        else if (schemeName.toUpperCase().equalsIgnoreCase("CTV3ID")) {
-            if(schemeIdBaseList.isPresent())
-            nextId = CTV3ID.getNextId(schemeIdBaseList.get().getIdBase());
+            if (schemeIdBaseList.isPresent())
+                nextId = SNOMEDID.getNextId(schemeIdBaseList.get().getIdBase());
+        } else if (schemeName.toUpperCase().equalsIgnoreCase("CTV3ID")) {
+            if (schemeIdBaseList.isPresent())
+                nextId = CTV3ID.getNextId(schemeIdBaseList.get().getIdBase());
         }
         // schemaIdBaseRecord.idBase = nextId;
         SchemeIdBase schemeIdBase = new SchemeIdBase(schemeName.toUpperCase(), nextId);
         SchemeIdBase schemeId = schemeIdBaseRepository.save(schemeIdBase);
-        if (null != schemeId)
+        if (null != schemeId) {
+            logger.info("getNextSchemeIdGen() - Response::{}", nextId);
             return nextId;
-        else
+        } else {
+            logger.info("getNextSchemeIdGen() - Response::{}", "null");
             return null;
+        }
     }
 
     //registerSchemeId
     public SchemeId registerSchemeId(AuthenticateResponseDto authToken, SchemeName schemeName, SchemeIdRegisterRequestDto request) throws CisException {
-            return this.registerSchemeIds(schemeName, request,authToken);
+        logger.debug("Request Received : schemeName-{} :: authToken - {} :: SchemeIdRegisterRequestDto - {} ", schemeName, authToken, request);
+        SchemeId schemeId = this.registerSchemeIds(schemeName, request, authToken);
+        logger.info("registerSchemeIds() - Response::{}", schemeId);
+        return schemeId;
     }
 
-    public SchemeId registerSchemeIds(SchemeName schemeName, SchemeIdRegisterRequestDto request,AuthenticateResponseDto authToken) throws CisException {
+    public SchemeId registerSchemeIds(SchemeName schemeName, SchemeIdRegisterRequestDto request, AuthenticateResponseDto authToken) throws CisException {
+        logger.debug("Request Received : schemeName-{} :: SchemeIdRegisterRequestDto -{} :: authToken - {} ", schemeName, request, authToken);
         SchemeId schemeIdRec = null;
         if (this.isAbleUser(schemeName.toString(), authToken)) {
             SchemeIdRegisterRequest registerRequest = new SchemeIdRegisterRequest();
@@ -830,7 +880,7 @@ public class SchemeIdService {
                     schemeIdRec = getSchemeIdBySystemId(schemeName.toString(), registerRequest.getSystemId());
                     if (schemeIdRec != null) {
                         if (schemeIdRec.getSchemeId() != request.getSchemeId()) {
-                            logger.error("error registerSchemeIds():: Bad Request: SystemId : {} already exists with SchemeId:{}",request.getSystemId(),schemeIdRec.getSchemeId());
+                            logger.error("error registerSchemeIds():: Bad Request: SystemId : {} already exists with SchemeId:{}", request.getSystemId(), schemeIdRec.getSchemeId());
                             throw new CisException(HttpStatus.BAD_REQUEST, "SystemId" + request.getSystemId() + " already exists with SchemeId:" + schemeIdRec.getSchemeId());
                         }
                         if (Objects.equals(schemeIdRec.getStatus(), stateMachine.statuses.get("assigned"))) {
@@ -848,14 +898,15 @@ public class SchemeIdService {
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
+        logger.info("registerSchemeIds() - Response::{}", schemeIdRec);
         return schemeIdRec;
     }
 
     private SchemeId registerNewSchemeId(SchemeName schemeName, SchemeIdRegisterRequest request) throws CisException {
+        logger.debug("Request Received : schemeName-{} :: request - {} ", schemeName, request);
         SchemeId schemeIdrecord = getSchemeIdsByschemeIdList(schemeName.schemeName, request.getSchemeId());
         SchemeId schemeId = new SchemeId();
 
-        //
         if (schemeIdrecord.getSchemeId().isEmpty()) {
             logger.error("error registerNewSchemeId():: SchemeId record is empty");
             throw new CisException(HttpStatus.NOT_FOUND, "SchemeId record is empty");
@@ -874,10 +925,11 @@ public class SchemeIdService {
                 //schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
                 schemeId = updateSchemeIdRecord(schemeIdrecord, schemeName.toString());
             } else {
-                logger.error("error registerNewSchemeId():: Cannot register SchemeId:{}, current status:{}",request.getSchemeId(),schemeIdrecord.getStatus());
+                logger.error("error registerNewSchemeId():: Cannot register SchemeId:{}, current status:{}", request.getSchemeId(), schemeIdrecord.getStatus());
                 throw new CisException(HttpStatus.BAD_REQUEST, "Cannot register SchemeId:" + request.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
             }
         }
+        logger.info("registerNewSchemeId() - Response::{}", schemeId);
         return schemeId;
     }
 

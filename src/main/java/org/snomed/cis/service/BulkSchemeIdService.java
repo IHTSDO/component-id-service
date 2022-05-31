@@ -50,61 +50,67 @@ public class BulkSchemeIdService {
     private SNOMEDID snomedid;
 
     public List<SchemeId> getSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, String schemeIds) throws CisException {
+        logger.debug("BulkSchemeIdService.getSchemeIds() token-{} :: schemeName-{} :: schemeIds -{}", token, schemeName, schemeIds);
         String[] schemedIdArray = schemeIds.replaceAll("\\s+", "").split(",");
         List<SchemeId> resSchemeArrayList = new ArrayList<>();
-            boolean able = schemeIdService.isAbleUser(String.valueOf(schemeName), token);
-            if (able) {
-                for (String schemeId : schemedIdArray) {
-                    if (schemeId == null || schemeId.isEmpty()) {
-                        logger.error("error getSchemeIds():: SchemeId is null.");
-                        throw new CisException(HttpStatus.BAD_REQUEST, "SchemeId is null.");
-                    } else {
-                        boolean isValidScheme = false;
-                        if ("SNOMEDID".equalsIgnoreCase(schemeName.toString().toUpperCase())) {
-                            isValidScheme = SNOMEDID.validSchemeId(schemeId);
-                        } else if ("CTV3ID".equalsIgnoreCase(schemeName.toString().toUpperCase())) {
-                            isValidScheme = CTV3ID.validSchemeId(schemeId);
-                        }
+        boolean able = schemeIdService.isAbleUser(String.valueOf(schemeName), token);
+        if (able) {
+            for (String schemeId : schemedIdArray) {
+                if (schemeId == null || schemeId.isEmpty()) {
+                    logger.error("error getSchemeIds():: SchemeId is null.");
+                    throw new CisException(HttpStatus.BAD_REQUEST, "SchemeId is null.");
+                } else {
+                    boolean isValidScheme = false;
+                    if ("SNOMEDID".equalsIgnoreCase(schemeName.toString().toUpperCase())) {
+                        isValidScheme = SNOMEDID.validSchemeId(schemeId);
+                    } else if ("CTV3ID".equalsIgnoreCase(schemeName.toString().toUpperCase())) {
+                        isValidScheme = CTV3ID.validSchemeId(schemeId);
+                    }
                    /* if (!isValidScheme) {
                         throw new APIException(HttpStatus.BAD_REQUEST, "Not a valid schemeId");
                     }*/
 
-                        ArrayList<String> schemeIdsArrayList = new ArrayList<String>(Arrays.asList(schemedIdArray));
-                        resSchemeArrayList = bulkSchemeIdRepository.findBySchemeAndSchemeIdIn(schemeName.toString().toUpperCase(), List.of(schemedIdArray));
-                        // resSchemeArrayList push
-                        List<String> respSchemeIdArray = new ArrayList<>();
-                        for (int i = 0; i < resSchemeArrayList.size(); i++) {
-                            SchemeId schemeIdBulkObj = resSchemeArrayList.get(i);
-                            respSchemeIdArray.add(schemeIdBulkObj.getSchemeId());
-                        }
-                        Set<String> rqSet = new HashSet<>(respSchemeIdArray);
-                        Set<String> respSet = new HashSet<>(schemeIdsArrayList);
-                        Set<String> resultDiff = new HashSet<>(rqSet);
-                        respSet.removeAll(resultDiff);
-                        if (respSet.size() > 0) {
-                            for (String diffSchemeId :
-                                    respSet) {
-                                SchemeId schemeIdBulkObj = getFreeRecord(String.valueOf(schemeName)/*.toString()*/, diffSchemeId, null, "true");
-                                resSchemeArrayList.add(schemeIdBulkObj);
-                            }
+                    ArrayList<String> schemeIdsArrayList = new ArrayList<String>(Arrays.asList(schemedIdArray));
+                    resSchemeArrayList = bulkSchemeIdRepository.findBySchemeAndSchemeIdIn(schemeName.toString().toUpperCase(), List.of(schemedIdArray));
+                    // resSchemeArrayList push
+                    List<String> respSchemeIdArray = new ArrayList<>();
+                    for (int i = 0; i < resSchemeArrayList.size(); i++) {
+                        SchemeId schemeIdBulkObj = resSchemeArrayList.get(i);
+                        respSchemeIdArray.add(schemeIdBulkObj.getSchemeId());
+                    }
+                    Set<String> rqSet = new HashSet<>(respSchemeIdArray);
+                    Set<String> respSet = new HashSet<>(schemeIdsArrayList);
+                    Set<String> resultDiff = new HashSet<>(rqSet);
+                    respSet.removeAll(resultDiff);
+                    if (respSet.size() > 0) {
+                        for (String diffSchemeId :
+                                respSet) {
+                            SchemeId schemeIdBulkObj = getFreeRecord(String.valueOf(schemeName)/*.toString()*/, diffSchemeId, null, "true");
+                            resSchemeArrayList.add(schemeIdBulkObj);
                         }
                     }
-                }//validate schemeId
-            } else {
-                logger.error("error getSchemeIds():: No permission for the selected operation.");
-                throw new CisException(HttpStatus.BAD_REQUEST, "No permission for the selected operation");
-            }
+                }
+            }//validate schemeId
+        } else {
+            logger.error("error getSchemeIds():: No permission for the selected operation.");
+            throw new CisException(HttpStatus.BAD_REQUEST, "No permission for the selected operation");
+        }
+        logger.info("BulkSchemeIdService.getSchemeIds() - Response :: {}", resSchemeArrayList);
         return resSchemeArrayList;
     }
 
 
     public SchemeId getFreeRecord(String schemeName, String diffSchemeId, String systemId, String autoSysId) throws CisException {
+        logger.debug("BulkSchemeIdService.getFreeRecord() schemeName - {} :: diffSchemeId - {}:: systemId - {} :: autoSysId - {}", schemeName, diffSchemeId, systemId, autoSysId);
         Map<String, Object> schemeIdRecord = getNewRecord(schemeName, diffSchemeId, systemId);
         schemeIdRecord.put("status", "available");
-        return insertSchemeIdRecord(schemeIdRecord);
+        SchemeId SchemeId = insertSchemeIdRecord(schemeIdRecord);
+        logger.info("BulkSchemeIdService.getFreeRecord() - Response :: {}", SchemeId);
+        return SchemeId;
     }
 
     private SchemeId insertSchemeIdRecord(Map<String, Object> schemeIdRecord) throws CisException {
+        logger.debug("BulkSchemeIdService.insertSchemeIdRecord() schemeIdRecord - {}", schemeIdRecord);
         String error;
         SchemeId schemeIdBulk = null;
         String scheme = null;
@@ -149,18 +155,15 @@ public class BulkSchemeIdService {
                     modified_at = (LocalDateTime) mapObj.getValue();
                 }
             }
-            //refactor changes
             SchemeId schemeId1 = SchemeId.builder().scheme(String.valueOf(scheme)).schemeId(String.valueOf(schemeId))
                     .sequence(sequence).checkDigit(checkDigit).systemId(systemId).status(status).author(author).software(software).jobId(jobId)
                     .build();
             bulkSchemeIdRepository.save(schemeId1);
-            //bulkSchemeIdRepository.insertWithQuery(String.valueOf(scheme), schemeId.toString(), sequence, checkDigit, systemId, status, author, software, expirationDate, jobId, created_at, modified_at);
-            //refactor changes
             Optional<SchemeId> schemeDB = bulkSchemeIdRepository.findBySchemeAndSchemeId(String.valueOf(scheme), schemeId.toString());
-            schemeIdBulk = schemeDB.isPresent()?schemeDB.get():null;
+            schemeIdBulk = schemeDB.isPresent() ? schemeDB.get() : null;
             return schemeIdBulk;
         } catch (Exception e) {
-            logger.error("error insertSchemeIdRecord():: {}",e.getMessage());
+            logger.error("error insertSchemeIdRecord():: {}", e.getMessage());
             error = e.getMessage();
         }
         if (error != null) {
@@ -180,6 +183,7 @@ public class BulkSchemeIdService {
                 }
 
             } else {
+                logger.info("BulkSchemeIdService.insertSchemeIdRecord() - Response :: {}", schemeIdBulk);
                 return schemeIdBulk;
             }
         }
@@ -189,6 +193,7 @@ public class BulkSchemeIdService {
 
 
     public Map<String, Object> getNewRecord(String schemeName, String diffSchemeId, String systemId) {
+        logger.debug("BulkSchemeIdService.getNewRecord() schemeName-{} :: diffSchemeId - {}:: systemId - {}", schemeName, diffSchemeId, systemId);
         Map<String, Object> schemeIdRecord = new LinkedHashMap<>();
         schemeIdRecord.put("scheme", schemeName);
         schemeIdRecord.put("schemeId", diffSchemeId);
@@ -200,63 +205,66 @@ public class BulkSchemeIdService {
         } else {
             schemeIdRecord.put("systemId", sctIdHelper.guid());
         }
+        logger.info("BulkSchemeIdService.getNewRecord() - Response :: {}", schemeIdRecord);
         return schemeIdRecord;
     }
 
 
     public BulkJob generateSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkGenerationRequestDto schemeIdBulkDto) throws CisException {
+        logger.debug("BulkSchemeIdService.generateSchemeIds() token - {} :: schemeName - {} :: schemeIdBulkDto - {}", token, schemeName, schemeIdBulkDto);
+        SchemeIdBulkGenerate bulkGenerate = new SchemeIdBulkGenerate();
+        bulkGenerate.setQuantity(schemeIdBulkDto.getQuantity());
+        bulkGenerate.setSystemIds(schemeIdBulkDto.getSystemIds());
+        bulkGenerate.setSoftware(schemeIdBulkDto.getSoftware());
+        bulkGenerate.setComment(schemeIdBulkDto.getComment());
 
-            SchemeIdBulkGenerate bulkGenerate = new SchemeIdBulkGenerate();
-            bulkGenerate.setQuantity(schemeIdBulkDto.getQuantity());
-            bulkGenerate.setSystemIds(schemeIdBulkDto.getSystemIds());
-            bulkGenerate.setSoftware(schemeIdBulkDto.getSoftware());
-            bulkGenerate.setComment(schemeIdBulkDto.getComment());
 
-
-            boolean able = schemeIdService.isAbleUser(String.valueOf(schemeName), token);
-            if (!able) {
-                logger.error("error generateSchemeIds():: No permission for the selected operation");
-                throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
-            }
-            if ((schemeIdBulkDto.getSystemIds().length != 0 && (schemeIdBulkDto.getSystemIds().length != schemeIdBulkDto.getQuantity()))) {
-                logger.error("error generateSchemeIds():: SystemIds quantity is not equal to quantity requirement.");
-                throw new CisException(HttpStatus.BAD_REQUEST, "SystemIds quantity is not equal to quantity requirement");
-            }
-            if (schemeIdBulkDto.getSystemIds() != null || schemeIdBulkDto.getSystemIds().length == 0) {
-                bulkGenerate.setAutoSysId(true);
-            }
-            bulkGenerate.setType(JobTypeConstants.GENERATE_SCHEMEIDS);
-            bulkGenerate.setAuthor(token.getName());
-            bulkGenerate.setModel(ModelsConstants.SCHEME_ID);
-            bulkGenerate.setScheme(schemeName);
-            /*SchemeIdBulkGenerationRequestDto requestDto = new SchemeIdBulkGenerationRequestDto(schemeIdBulkDto.getQuantity(), schemeIdBulkDto.getSystemIds(),
-                    schemeIdBulkDto.getSoftware(), schemeIdBulkDto.getComment(), true, schemeIdBulkDto.getAuthor(),schemeIdBulkDto.getModel(),schemeIdBulkDto.getScheme(),schemeIdBulkDto.getType());
-*/
+        boolean able = schemeIdService.isAbleUser(String.valueOf(schemeName), token);
+        if (!able) {
+            logger.error("error generateSchemeIds():: No permission for the selected operation");
+            throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
+        }
+        if ((schemeIdBulkDto.getSystemIds().length != 0 && (schemeIdBulkDto.getSystemIds().length != schemeIdBulkDto.getQuantity()))) {
+            logger.error("error generateSchemeIds():: SystemIds quantity is not equal to quantity requirement.");
+            throw new CisException(HttpStatus.BAD_REQUEST, "SystemIds quantity is not equal to quantity requirement");
+        }
+        if (schemeIdBulkDto.getSystemIds() != null || schemeIdBulkDto.getSystemIds().length == 0) {
+            bulkGenerate.setAutoSysId(true);
+        }
+        bulkGenerate.setType(JobTypeConstants.GENERATE_SCHEMEIDS);
+        bulkGenerate.setAuthor(token.getName());
+        bulkGenerate.setModel(ModelsConstants.SCHEME_ID);
+        bulkGenerate.setScheme(schemeName);
 // Type is set here not as an attribute
-            BulkJob bulk = new BulkJob();
-            try {
-                ObjectMapper objectMapper = new ObjectMapper();
-                String regString = objectMapper.writeValueAsString(bulkGenerate);
-                bulk.setName(JobTypeConstants.GENERATE_SCHEMEIDS);
-                bulk.setStatus("0");
-                bulk.setRequest(regString);
+        BulkJob bulk = new BulkJob();
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            String regString = objectMapper.writeValueAsString(bulkGenerate);
+            bulk.setName(JobTypeConstants.GENERATE_SCHEMEIDS);
+            bulk.setStatus("0");
+            bulk.setRequest(regString);
 
-            } catch (JsonProcessingException e) {
-                logger.error("error generateSchemeIds():: {}",e.getMessage());
-                throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
-            }
+        } catch (JsonProcessingException e) {
+            logger.error("error generateSchemeIds():: {}", e.getMessage());
+            throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
 
-            BulkJob resultJob = this.bulkJobRepository.save(bulk);
-            return resultJob;
+        BulkJob resultJob = this.bulkJobRepository.save(bulk);
+        logger.info("BulkSchemeIdService.generateSchemeIds() - Response :: {}", resultJob);
+        return resultJob;
     }
 
     // Register SchemeId
 
     public BulkJob registerSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkRegisterRequestDto request) throws CisException {
-            return this.registerBulkSchemeIds(token,schemeName, request);
+        logger.debug("BulkSchemeIdService.registerSchemeIds() token - {} :: schemeName - {} :: request - {}", token, schemeName, request);
+        BulkJob bulk = this.registerBulkSchemeIds(token, schemeName, request);
+        logger.info("BulkSchemeIdService.registerSchemeIds() - Response :: {}", bulk);
+        return bulk;
     }
 
-    public BulkJob registerBulkSchemeIds(AuthenticateResponseDto token,SchemeName schemeName, SchemeIdBulkRegisterRequestDto schemeIdBulkRegisterDto) throws CisException {
+    public BulkJob registerBulkSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkRegisterRequestDto schemeIdBulkRegisterDto) throws CisException {
+        logger.debug("BulkSchemeIdService.registerBulkSchemeIds() token - {} ::schemeName- {} :: schemeIdBulkRegisterDto - {}", token, schemeName, schemeIdBulkRegisterDto);
         BulkJob bulkJob = new BulkJob();
         if (schemeIdService.isAbleUser(String.valueOf(schemeName), token)) {
             SchemeIdBulkRegister bulkRegister = new SchemeIdBulkRegister();
@@ -273,11 +281,6 @@ public class BulkSchemeIdService {
             bulkRegister.setModel(ModelsConstants.SCHEME_ID);
             bulkRegister.setScheme(schemeName.toString());
 
-           /* SchemeIdBulkRegisterRequestDto requestDto = new SchemeIdBulkRegisterRequestDto(schemeIdBulkRegisterDto.getRecords(), schemeIdBulkRegisterDto.getSoftware(),
-                    schemeIdBulkRegisterDto.getComment(),
-                    schemeIdBulkRegisterDto.getAuthor(),
-                    schemeIdBulkRegisterDto.getModel(),schemeIdBulkRegisterDto.getScheme(),schemeIdBulkRegisterDto.getType());
-*/
             BulkJob bulk = new BulkJob();
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
@@ -287,11 +290,12 @@ public class BulkSchemeIdService {
                 bulk.setRequest(regString);
 
             } catch (JsonProcessingException e) {
-                logger.error("error registerBulkSchemeIds():: {}",e.getMessage());
+                logger.error("error registerBulkSchemeIds():: {}", e.getMessage());
                 throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
             }
 
             BulkJob resultJob = this.bulkJobRepository.save(bulk);
+            logger.info("BulkSchemeIdService.registerBulkSchemeIds() - Response :: {}", resultJob);
             return resultJob;
 
         } else {
@@ -305,20 +309,15 @@ public class BulkSchemeIdService {
 
 
     public BulkJob reserveSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkReserveRequestDto request) throws CisException {
-            return this.reserveBulkSchemeIds(token,schemeName, request);
+        logger.debug("BulkSchemeIdService.reserveSchemeIds() token - {} :: schemeName - {} :: request - {}", token, schemeName, request);
+        BulkJob bulkJob = this.reserveBulkSchemeIds(token, schemeName, request);
+        logger.info("BulkSchemeIdService.reserveSchemeIds() - Response :: {}", bulkJob);
+        return bulkJob;
     }
 
-    public BulkJob reserveBulkSchemeIds(AuthenticateResponseDto token,SchemeName schemeName, SchemeIdBulkReserveRequestDto request) throws CisException {
+    public BulkJob reserveBulkSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkReserveRequestDto request) throws CisException {
+        logger.debug("BulkSchemeIdService.reserveBulkSchemeIds() token - {} ::schemeName -  {} :: request - {}", token, schemeName, request);
         BulkJob bulkJob = new BulkJob();
-/*
-* {
-  "quantity": 0,
-  "software": "string",
-  "expirationDate": "string",
-  "comment": "string"
-}
-* */
-        //request body change
         if (schemeIdService.isAbleUser(String.valueOf(schemeName), token)) {
 
             SchemeIdBulkReserve bulkReserve = new SchemeIdBulkReserve();
@@ -336,11 +335,6 @@ public class BulkSchemeIdService {
             bulkReserve.setAuthor(token.getName());
             bulkReserve.setScheme(schemeName.toString());
 
-          /*  SchemeIdBulkReserveRequestDto requestDto=new SchemeIdBulkReserveRequestDto(request.getQuantity(),
-                    request.getSoftware(),request.getExpirationDate(),
-                    request.getComment(), request.getAuthor(), request.getModel(),
-                    request.getScheme(), request.getType());
-*/
             BulkJob bulk = new BulkJob();
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
@@ -350,11 +344,12 @@ public class BulkSchemeIdService {
                 bulk.setRequest(regString);
 
             } catch (JsonProcessingException e) {
-                logger.error("error reserveBulkSchemeIds():: {}",e.getMessage());
+                logger.error("error reserveBulkSchemeIds():: {}", e.getMessage());
                 throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
             }
 
             BulkJob resultJob = this.bulkJobRepository.save(bulk);
+            logger.info("BulkSchemeIdService.reserveBulkSchemeIds() - Response :: {}", resultJob);
             return resultJob;
 
         } else {
@@ -367,10 +362,14 @@ public class BulkSchemeIdService {
     //deprecateSchemeIds
 
     public BulkJob deprecateSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
-            return this.deprecateBulkSchemeIds(token,schemeName, request);
+        logger.debug("BulkSchemeIdService.deprecateSchemeIds() token - {} ::schemeName- {} :: request - {}", token, schemeName, request);
+        BulkJob bulk = this.deprecateBulkSchemeIds(token, schemeName, request);
+        logger.info("BulkSchemeIdService.deprecateSchemeIds() - Response :: {}", bulk);
+        return bulk;
     }
 
-    public BulkJob deprecateBulkSchemeIds(AuthenticateResponseDto token,SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
+    public BulkJob deprecateBulkSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
+        logger.debug("BulkSchemeIdService.deprecateBulkSchemeIds() token - {} :: schemeName - {} :: request - {} ", token, schemeName, request);
         BulkJob bulkJob = new BulkJob();
         if (schemeIdService.isAbleUser(String.valueOf(schemeName), token)) {
             BulkSchemeIdUpdate bulkSchemeIdUpdate = new BulkSchemeIdUpdate();
@@ -387,9 +386,6 @@ public class BulkSchemeIdService {
             bulkSchemeIdUpdate.setAuthor(token.getName());
             bulkSchemeIdUpdate.setScheme(schemeName.toString());/*schemeName.schemeName.toUpperCase();*/
 
-            /*SchemeIdBulkDeprecateRequestDto requestDto=new SchemeIdBulkDeprecateRequestDto(request.getSchemeIds(),
-                    request.getSoftware(),request.getComment(), request.getAuthor(), request.getModel(),
-                    request.getScheme(), request.getType());*/
             return createJob(bulkSchemeIdUpdate, "deprecate");
 
         } else {
@@ -399,8 +395,9 @@ public class BulkSchemeIdService {
         }
     }
 
-    //requestbody change
+
     public BulkJob createJob(BulkSchemeIdUpdate bulkSchemeIdUpdate, String functionType) throws CisException {
+        logger.debug("BulkSchemeIdService.createJob()bulkSchemeIdUpdate- {} :: functionType-{}", bulkSchemeIdUpdate, functionType);
         BulkJob bulk = new BulkJob();
         try {
             ObjectMapper objectMapper = new ObjectMapper();
@@ -420,20 +417,25 @@ public class BulkSchemeIdService {
         }
 
         BulkJob resultJob = this.bulkJobRepository.save(bulk);
+        logger.info("BulkSchemeIdService.createJob() - Response :: {}", resultJob);
         return resultJob;
     }
 
 //releaseSchemeIds
 
     public BulkJob releaseSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
-            return this.releaseBulkSchemeIds(token,schemeName, request);
+        logger.debug("BulkSchemeIdService.releaseSchemeIds() token - {} ::schemeName- {} :: request -{}", token, schemeName, request);
+        BulkJob bulkJob = this.releaseBulkSchemeIds(token, schemeName, request);
+        logger.info("BulkSchemeIdService.releaseSchemeIds() - Response :: {}", bulkJob);
+        return bulkJob;
     }
 
-    public BulkJob releaseBulkSchemeIds(AuthenticateResponseDto token,SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
+    public BulkJob releaseBulkSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
+        logger.debug("BulkSchemeIdService.releaseBulkSchemeIds() token - {} ::schemeName- {} :: request - {}", token, schemeName, request);
         BulkJob bulkJob = new BulkJob();
 
         if (schemeIdService.isAbleUser(String.valueOf(schemeName), token)) {
-//requestbody change
+
             BulkSchemeIdUpdate bulkSchemeIdUpdate = new BulkSchemeIdUpdate();
             bulkSchemeIdUpdate.setSchemeIds(request.getSchemeIds());
             bulkSchemeIdUpdate.setSoftware(request.getSoftware());
@@ -449,10 +451,9 @@ public class BulkSchemeIdService {
             bulkSchemeIdUpdate.setAuthor(token.getName());
             bulkSchemeIdUpdate.setScheme(schemeName.toString());/*schemeName.schemeName.toUpperCase();*/
 
-           /* SchemeIdBulkDeprecateRequestDto requestDto=new SchemeIdBulkDeprecateRequestDto(request.getSchemeIds(),
-                    request.getSoftware(),request.getComment(), request.getAuthor(), request.getModel(),
-                    request.getScheme(), request.getType());*/
-            return createJob(bulkSchemeIdUpdate, "release");
+            BulkJob bulk = createJob(bulkSchemeIdUpdate, "release");
+            logger.info("BulkSchemeIdService.releaseBulkSchemeIds() - Response :: {}", bulk);
+            return bulk;
 
 
         } else {
@@ -464,13 +465,17 @@ public class BulkSchemeIdService {
 
     //publishSchemeIds
     public BulkJob publishSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
-            return this.publishBulkSchemeIds(token,schemeName, request);
+        logger.debug("BulkSchemeIdService.publishSchemeIds() token-{} ::schemeName- {} :: request -{}", token, schemeName, request);
+        BulkJob bulk = this.publishBulkSchemeIds(token, schemeName, request);
+        logger.info("BulkSchemeIdService.publishSchemeIds() - Response :: {}", bulk);
+        return bulk;
     }
 
-    public BulkJob publishBulkSchemeIds(AuthenticateResponseDto token,SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
+    public BulkJob publishBulkSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
+        logger.debug("BulkSchemeIdService.publishBulkSchemeIds() token-{} ::schemeName- {} :: request -{}", token, schemeName, request);
         BulkJob bulkJob = new BulkJob();
         if (schemeIdService.isAbleUser(String.valueOf(schemeName), token)) {
-            //requestbody change
+
             BulkSchemeIdUpdate bulkSchemeIdUpdate = new BulkSchemeIdUpdate();
             bulkSchemeIdUpdate.setSchemeIds(request.getSchemeIds());
             bulkSchemeIdUpdate.setSoftware(request.getSoftware());
@@ -486,10 +491,9 @@ public class BulkSchemeIdService {
             bulkSchemeIdUpdate.setAuthor(token.getName());
             bulkSchemeIdUpdate.setScheme(schemeName.toString());/*schemeName.schemeName.toUpperCase();*/
 
-           /* SchemeIdBulkDeprecateRequestDto requestDto=new SchemeIdBulkDeprecateRequestDto(request.getSchemeIds(),
-                    request.getSoftware(),request.getComment(), request.getAuthor(), request.getModel(),
-                    request.getScheme(), request.getType());*/
-            return createJob(bulkSchemeIdUpdate, "publish");
+            BulkJob bulk = createJob(bulkSchemeIdUpdate, "publish");
+            logger.info("BulkSchemeIdService.publishBulkSchemeIds() - Response :: {}", bulk);
+            return bulk;
 
         } else {
             logger.error("error publishBulkSchemeIds():: No permission for the selected operation.");
