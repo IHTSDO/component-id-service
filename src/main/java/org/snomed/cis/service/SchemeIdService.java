@@ -212,7 +212,7 @@ public class SchemeIdService {
             }
     }
 
-    private SchemeId getFreeRecords(String schemeName, String schemeid) throws CisException {
+    public SchemeId getFreeRecords(String schemeName, String schemeid) throws CisException {
         Map<String, Object> schemeIdRecord = getNewRecord(schemeName, schemeid);
         schemeIdRecord.put("status", "Available");
         return insertSchemeIdRecord(schemeIdRecord);
@@ -471,13 +471,14 @@ public class SchemeIdService {
     //List
     private SchemeId setNewSchemeIdRecord(SchemeName schemeName, SchemeIdReserveRequest request, String reserve) throws CisException {
         SchemeId record = setAvailableSchemeIdRecord2NewStatus(schemeName, request, reserve);
+        //TO DO
         try {
             if (record != null) {
                 return record;
             } else {
-                SchemeId schemeIdRec = counterMode(schemeName, request, reserve);
+                String  schemeIdRec = counterMode(schemeName, request, reserve);
                 if (schemeIdRec != null) {
-                    return schemeIdRec;
+                    return null;
                 } else {
                     logger.error("error setNewSchemeIdRecord():: Error");
                     throw new CisException(HttpStatus.NOT_FOUND, "Error");
@@ -529,8 +530,8 @@ public class SchemeIdService {
 
     }
 
-    public SchemeId counterMode(SchemeName schemeName, SchemeIdReserveRequest request, String reserve) throws CisException {
-        SchemeId newSchemeId = getNextSchemeId(schemeName, request);
+    public String counterMode(SchemeName schemeName, SchemeIdReserveRequest request, String reserve) throws CisException {
+        String newSchemeId = getNextSchemeId(schemeName, request);
         if (newSchemeId != null) {
             SchemeId schemeIdRecord = getSchemeIdsByschemeIdList(schemeName.toString(), newSchemeId.toString());
             SchemeId updatedrecord;
@@ -550,7 +551,7 @@ public class SchemeIdService {
                     schemeIdRecord.setJobId(null);
                     // outputSchemeRec = bulkSchemeIdRepository.save(schemeIdRecords.get(0));
                     updatedrecord = updateSchemeIdRecord(schemeIdRecord, schemeName.toString());
-                    return updatedrecord;
+                    return updatedrecord.toString();
                 } else {
                     counterMode(schemeName, request, reserve);
                 }
@@ -559,13 +560,24 @@ public class SchemeIdService {
         return newSchemeId;
     }
 
-    private SchemeId getNextSchemeId(SchemeName schemeName, SchemeIdReserveRequest request) {
+    private String getNextSchemeId(SchemeName schemeName, SchemeIdReserveRequest request) {
         Optional<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeName.toString());
         SchemeIdBase schemeIdBase = null;
-        if(schemeIdBaseList.isPresent())
-        schemeIdBase.setIdBase(schemeIdBaseList.get().getIdBase());
+        String nextId = null;
+
+        if(schemeIdBaseList.isPresent()) {
+            if (schemeName.toString().toUpperCase().equalsIgnoreCase("SNOMEDID")) {
+                if(schemeIdBaseList.isPresent())
+                    nextId = SNOMEDID.getNextId(schemeIdBaseList.get().getIdBase());
+            }
+            else if (schemeName.toString().toUpperCase().equalsIgnoreCase("CTV3ID")) {
+                if(schemeIdBaseList.isPresent())
+                    nextId = CTV3ID.getNextId(schemeIdBaseList.get().getIdBase());
+            }
+            schemeIdBase.setIdBase(nextId);
+        }
         schemeIdBaseRepository.save(schemeIdBase);
-        return null;//List<SchmeId>
+        return nextId;
     }
 
     public SchemeId updateSchemeIdRecord(SchemeId schemeId, String schemeName) {
