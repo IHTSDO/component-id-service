@@ -69,7 +69,7 @@ public class BulkSctidService {
     }
 
     public List<Sctid> validScts(String ids) throws CisException {
-
+        logger.debug("BulkSctidService.validScts() ids-{}", ids);
         String idsWthtSpace = ids.replaceAll("\\s+", "");
         String[] sctidsArray = idsWthtSpace.split(",");
         ArrayList<String> sctidsReqArray = new ArrayList<String>(Arrays.asList(sctidsArray));
@@ -91,11 +91,12 @@ public class BulkSctidService {
                 resArr.add(sctidObj);
             }
         }
+        logger.info("BulkSctidService.validScts() - Response :: {}", resArr);
         return resArr;
     }
 
     public List<Sctid> postValidScts(SctIdRequest ids) throws CisException {
-
+        logger.debug("BulkSctidService.postValidScts() ids :: {}", ids);
         String idsWthtSpace = ids.getSctids().replaceAll("\\s+", "");
         String[] sctidsArray = idsWthtSpace.split(",");
         ArrayList<String> sctidsReqArray = new ArrayList<String>(Arrays.asList(sctidsArray));
@@ -117,10 +118,12 @@ public class BulkSctidService {
                 resArr.add(sctidObj);
             }
         }
+        logger.info("BulkSctidService.postValidScts() - Response :: {}", resArr);
         return resArr;
     }
 
     public void validSctidCheck(ArrayList<String> sctidsArray) throws CisException {
+        logger.debug("BulkSctidService.validSctidCheck() sctidsArray :: {} ", sctidsArray);
         for (int i = 0; i < sctidsArray.size(); i++) {
             if (!(sctIdHelper.validSCTId(sctidsArray.get(i))))
                 logger.error("error getSchemeIds():: Not a Valid Sctid: {}", sctidsArray.get(i));
@@ -129,13 +132,16 @@ public class BulkSctidService {
     }
 
     public Sctid getFreeRecord(String sctId, String systemId) {
+        logger.debug("BulkSctidService.getFreeRecord() sctId :: {} , systemId :: {} ", sctId, systemId);
         Map<String, Object> sctIdRecord = getNewRecord(sctId, systemId);
         sctIdRecord.put("status", "available");
         var newRecord = insertSCTIDRecord(sctIdRecord);
+        logger.info("BulkSctidService.getFreeRecord() - Response :: {}", newRecord);
         return newRecord;
     }
 
     public Sctid insertSCTIDRecord(Map<String, Object> sctIdRecord) {
+        logger.debug("BulkSctidService.insertSCTIDRecord() sctIdRecord - {} ", sctIdRecord);
         String sctid = null;
         long sequence = 0;
         int namespace = 0;
@@ -167,10 +173,12 @@ public class BulkSctidService {
                 .partitionId(partitionId).checkDigit(checkDigit).systemId(systemId).status(status)
                 .build();
         Sctid sct = repo.save(sctObj);
+        logger.info("BulkSctidService.insertSCTIDRecord() - Response :: {}", sct);
         return sct;
     }
 
     public Map<String, Object> getNewRecord(String sctIdInput, String inpSystemId) {
+        logger.debug("BulkSctidService.getNewRecord() sctIdInput - {} :: inpSystemId - {}", sctIdInput, inpSystemId);
         Map<String, Object> sctIdRecord = new LinkedHashMap<>();
         sctIdRecord.put("sctid", sctIdInput);
         sctIdRecord.put("sequence", sctIdHelper.getSequence(sctIdInput));
@@ -183,26 +191,29 @@ public class BulkSctidService {
         } else {
             sctIdRecord.put("systemId", sctIdHelper.guid());
         }
+        logger.info("BulkSctidService.getNewRecord() - Response :: {}", sctIdRecord);
         return sctIdRecord;
     }
 
 
     public List<Sctid> getSctidBySystemIds(String systemIdStr, Integer namespaceId) {
-
+        logger.debug("BulkSctidService.getSctidBySystemIds() systemIdStr - {} :: namespaceId - {} :: schemeIds -{}", systemIdStr, namespaceId);
         String[] systemIdsArray = systemIdStr.replaceAll("\\s+", "").split(",");
-
-        /* fetch the sctid id record with systemId and namespaceId */
-
-        // return repo.findSctidBySystemIds(Arrays.asList(systemIdsArray), namespaceId);
-        return repo.findBySystemIdInAndNamespace(Arrays.asList(systemIdsArray), namespaceId);
+        List<Sctid> sctidList = repo.findBySystemIdInAndNamespace(Arrays.asList(systemIdsArray), namespaceId);
+        logger.info("BulkSctidService.getSctidBySystemIds() - Response :: {}", sctidList);
+        return sctidList;
 
     }
 
     public BulkJob registerSctids(AuthenticateResponseDto token, RegistrationDataDTO request) throws CisException {
-        return this.registerScts(token, request);
+        logger.debug("BulkSctidService.registerSctids() token-{} :: request-{} ", token, request);
+        BulkJob bulk = this.registerScts(token, request);
+        logger.info("BulkSctidService.registerSctids() - Response :: {}", bulk);
+        return bulk;
     }
 
     public BulkJob registerScts(AuthenticateResponseDto token, RegistrationDataDTO registrationData) throws CisException {
+        logger.debug("BulkSctidService.registerScts() token-{} :: registrationData - {} ", token, registrationData);
         BulkJob resultJob = new BulkJob();
         if (this.isAbleUser(registrationData.getNamespace().toString(), token)) {
             SctidBulkRegister sctidBulkRegister = new SctidBulkRegister();
@@ -247,6 +258,7 @@ public class BulkSctidService {
                     }
 
                     resultJob = this.bulkJobRepository.save(bulk);
+                    logger.info("BulkSctidService.registerScts() - Response :: {}", resultJob);
                 }
             }
         } else {
@@ -257,15 +269,18 @@ public class BulkSctidService {
     }
 
     public boolean isAbleUser(String namespace, AuthenticateResponseDto authenticateResponseDto) {
+        logger.debug("BulkSctidService.isAbleUser() namespace - {} :: authenticateResponseDto - {} :: schemeIds -{}", namespace, authenticateResponseDto);
         List<String> groups = authenticateResponseDto.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
         boolean isAble = false;
         if (groups.contains("component-identifier-service-admin") || hasNamespacePermission(namespace, authenticateResponseDto)) {
             isAble = true;
         }
+        logger.info("BulkSctidService.isAbleUser() - Response :: {}", isAble);
         return isAble;
     }
 
     public boolean hasNamespacePermission(String namespace, AuthenticateResponseDto authenticateResponseDto) {
+        logger.debug("BulkSctidService.hasNamespacePermission() namespace - {} :: authenticateResponseDto - {} ", namespace, authenticateResponseDto);
         boolean able = false;
         if (!"false".equalsIgnoreCase(namespace)) {
             List<PermissionsNamespace> permissionsNamespaceList = permissionsNamespaceRepository.findByNamespace(Integer.valueOf(namespace));
@@ -279,7 +294,6 @@ public class BulkSctidService {
             }
             if (!able) {
                 List<String> roleAsGroups = authenticateResponseDto.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
-                ;
                 for (String group : roleAsGroups) {
                     if (group == "namespace-" + namespace)
                         able = true;
@@ -290,11 +304,13 @@ public class BulkSctidService {
                 return able;
             }
         }
+        logger.info("BulkSctidService.hasNamespacePermission() - Response :: {}", able);
         return able;
 
     }
 
     public BulkJobResponseDto generateSctids(AuthenticateResponseDto token, SCTIDBulkGenerationRequestDto sctidBulkGenerationRequestDto) throws CisException {
+        logger.debug("BulkSctidService.generateSctids() token-{} :: sctidBulkGenerationRequestDto-{} :", token, sctidBulkGenerationRequestDto);
         SctidBulkGenerate bulkGenerate = new SctidBulkGenerate();
         bulkGenerate.setNamespace(sctidBulkGenerationRequestDto.getNamespace());
         bulkGenerate.setPartitionId(sctidBulkGenerationRequestDto.getPartitionId());
@@ -338,7 +354,7 @@ public class BulkSctidService {
         String reqAsString = "";
         try {
             reqAsString = objectMapper.writeValueAsString(bulkGenerate);
-        }catch (JsonProcessingException e){
+        } catch (JsonProcessingException e) {
             throw new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "error while parsing json");
         }
         String jsonFormattedString = reqAsString.replaceAll("\\\\", "");
@@ -410,6 +426,7 @@ public class BulkSctidService {
 
                         } else {
                             BulkJobResponseDto bulkJobResponseDto = new BulkJobResponseDto(bulkJob);
+                            logger.info("BulkSchemeIdService.generateSctids() - Response :: {}", bulkJobResponseDto);
                             return bulkJobResponseDto;
                         }
                     }
@@ -418,6 +435,7 @@ public class BulkSctidService {
             }
         } else {
             BulkJobResponseDto bulkJobResponseDto = new BulkJobResponseDto(bulkJob);
+            logger.info("BulkSctidService.generateSctids() - Response :: {}", bulkJobResponseDto);
             return bulkJobResponseDto;
         }
 
@@ -426,15 +444,18 @@ public class BulkSctidService {
     }
 
     public boolean isSchemeAbleUser(String schemeName, AuthenticateResponseDto authToken) {
+        logger.debug("BulkSctidService.isSchemeAbleUser() schemeName-{} :: authToken -{}", schemeName, authToken);
         List<String> groups = authToken.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
         boolean isAble = false;
         if (groups.contains("component-identifier-service-admin") || hasSchemePermission(schemeName, authToken)) {
             isAble = true;
         }
+        logger.info("BulkSctidService.isSchemeAbleUser() - Response :: {}", isAble);
         return isAble;
     }
 
     public boolean hasSchemePermission(String schemeName, AuthenticateResponseDto authToken) {
+        logger.debug("BulkSctidService.hasSchemePermission() tauthTokenoken-{} :: schemeName-{} ", authToken, schemeName);
         boolean able = false;
         if (!"false".equalsIgnoreCase(schemeName)) {
             List<PermissionsScheme> permissionsSchemesList = permissionsSchemeRepository.findByScheme(schemeName);
@@ -454,11 +475,13 @@ public class BulkSctidService {
                 }
             }
         }
+        logger.info("BulkSctidService.hasSchemePermission() - Response :: {}", able);
         return able;
     }
 
     //Deprecate API
     public BulkJob deprecateSctid(AuthenticateResponseDto token, BulkSctRequestDTO deprecateBulkSctRequestDTO) throws CisException {
+        logger.debug("BulkSctidService.deprecateSctid() token-{} :: deprecateBulkSctRequestDTO-{} ", token, deprecateBulkSctRequestDTO);
         BulkJob resultJob = new BulkJob();
         BulkSctRequest bulkSctRequest = new BulkSctRequest();
         bulkSctRequest.setSctids(deprecateBulkSctRequestDTO.getSctids());
@@ -509,11 +532,13 @@ public class BulkSctidService {
             }
 
         }
+        logger.info("BulkSctidService.deprecateSctid() - Response :: {}", resultJob);
         return resultJob;
     }
 
     //Publish API
     public BulkJob publishSctid(AuthenticateResponseDto token, BulkSctRequestDTO publishBulkSctRequestDTO) throws CisException {
+        logger.debug("BulkSctidService.publishSctid() token-{} :: publishBulkSctRequestDTO-{} ", token, publishBulkSctRequestDTO);
         BulkJob resultJob = new BulkJob();
         BulkSctRequest bulkSctRequest = new BulkSctRequest();
         bulkSctRequest.setSctids(publishBulkSctRequestDTO.getSctids());
@@ -564,11 +589,13 @@ public class BulkSctidService {
             }
 
         }
+        logger.info("BulkSctidService.publishSctid() - Response :: {}", resultJob);
         return resultJob;
     }
 
     //Release Sctid API
     public BulkJob releaseSctid(AuthenticateResponseDto token, BulkSctRequestDTO releaseBulkSctRequestDTO) throws CisException {
+        logger.debug("BulkSctidService.releaseSctid() token-{} :: releaseBulkSctRequestDTO-{} ", token, releaseBulkSctRequestDTO);
         BulkJob resultJob = new BulkJob();
         BulkSctRequest bulkSctRequest = new BulkSctRequest();
         bulkSctRequest.setSctids(releaseBulkSctRequestDTO.getSctids());
@@ -620,12 +647,13 @@ public class BulkSctidService {
             }
 
         }
+        logger.info("BulkSctidService.releaseSctid() - Response :: {}", resultJob);
         return resultJob;
     }
 
     public BulkJob reserveSctids(AuthenticateResponseDto authToken, SCTIDBulkReservationRequestDto sctidBulkReservationRequestDto) throws CisException {
+        logger.debug("BulkSctidService.reserveSctids() token-{} :: sctidBulkReservationRequestDto - {} ", authToken, sctidBulkReservationRequestDto);
         BulkJob output = new BulkJob();
-        //UserDTO userObj = this.getAuthenticatedUser();
         boolean able = isAbleUser(sctidBulkReservationRequestDto.getNamespace().toString(), authToken);
         if (able)
             output = bulkReserveSctids(sctidBulkReservationRequestDto, authToken.getName());
@@ -633,10 +661,12 @@ public class BulkSctidService {
             logger.error("error reserveSctids():: No permission for the selected operation.");
             throw new CisException(HttpStatus.FORBIDDEN, "No permission for the selected operation");
         }
+        logger.info("BulkSctidService.reserveSctids() - Response :: {}", output);
         return output;
     }
 
     private BulkJob bulkReserveSctids(SCTIDBulkReservationRequestDto sctidBulkReservationRequestDto, String username) throws CisException {
+        logger.debug("BulkSctidService.bulkReserveSctids() sctidBulkReservationRequestDto - {} :: username-{} ", sctidBulkReservationRequestDto, username);
         SctidBulkReserve sctidBulkReserve = new SctidBulkReserve();
         sctidBulkReserve.setNamespace(sctidBulkReservationRequestDto.getNamespace());
         sctidBulkReserve.setPartitionId(sctidBulkReservationRequestDto.getPartitionId());
@@ -671,10 +701,9 @@ public class BulkSctidService {
                 throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
             }
             bulkJob = bulkJobRepository.save(bulkJob);
+            logger.info("BulkSctidService.bulkReserveSctids() - Response :: {}", bulkJob);
             return bulkJob;
 
         }
     }
-
-
 }

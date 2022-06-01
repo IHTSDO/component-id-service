@@ -7,10 +7,7 @@ import org.snomed.cis.dto.AuthenticateResponseDto;
 import org.snomed.cis.dto.GetStatsResponseDto;
 import org.snomed.cis.dto.QueryCountByNamespaceDto;
 import org.snomed.cis.pojo.Config;
-import org.snomed.cis.repository.PermissionsNamespaceRepository;
-import org.snomed.cis.repository.PermissionsSchemeRepository;
-import org.snomed.cis.repository.SchemeIdBaseRepository;
-import org.snomed.cis.repository.SctidRepository;
+import org.snomed.cis.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -40,7 +37,11 @@ public class StatsService {
     @Autowired
     private PermissionsNamespaceRepository permissionsNamespaceRepository;
 
+    @Autowired
+    NamespaceRepository namespaceRepository;
+
     public GetStatsResponseDto getStats(String userName, AuthenticateResponseDto authenticateResponseDto) {
+        logger.debug("Request Received : userName-{} :: AuthenticateResponseDto - {} ", userName, authenticateResponseDto);
         GetStatsResponseDto getStatsResponseDto = new GetStatsResponseDto();
 
         List<String> users = new LinkedList<>();
@@ -65,7 +66,8 @@ public class StatsService {
             List<QueryCountByNamespaceDto> queryCountByNamespaceDtosWithNull = sctidRepository.getCountByNamespace();
             List<QueryCountByNamespaceDto> queryCountByNamespaceDtos = queryCountByNamespaceDtosWithNull.stream().filter(d -> d.getNamespace() != null).collect(Collectors.toList());
 
-            Long namespaceCount = (long) queryCountByNamespaceDtos.size();
+            //Long namespaceCount = (long) queryCountByNamespaceDtos.size();
+            long namespaceCount = namespaceRepository.count();
 
             for (QueryCountByNamespaceDto result : queryCountByNamespaceDtos) {
                 if (result.getCount() > 0) {
@@ -106,6 +108,7 @@ public class StatsService {
             namespacesMap.put("total", totalCount);
             getStatsResponseDto.setNamespaces(namespacesMap);
         }
+        logger.info("getStats()- Response: {}", getStatsResponseDto);
         return getStatsResponseDto;
     }
 }

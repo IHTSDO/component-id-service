@@ -26,21 +26,28 @@ public class SchemeIdDM {
             limitR = Integer.parseInt(limit);
         if (null!=skip && !skip.isEmpty())
             skipTo = Integer.parseInt(skip);
-        String swhere ="";
+        StringBuffer swhere = new StringBuffer("");
+        StringBuffer whereResult = new StringBuffer("");
         if (!systemId.isEmpty() && null!=systemId) {
             objQuery = systemId;
-            swhere += " And " + "systemId" + "=" +"'"+ (objQuery)+"'";
+            //swhere += " And " + "systemId" + "=" +"'"+ (objQuery)+"'";
+            swhere = swhere.append(" And ").append("systemId").append("=").append("'").append((objQuery))
+                    .append("'");
         }
-        if (swhere!=""){
-            swhere = " WHERE " + swhere.substring(5);
+        if (!(swhere.toString().equalsIgnoreCase(""))){
+           // swhere = " WHERE " + swhere.substring(5);
+            whereResult.append(" WHERE ").append(swhere.substring(5));
         }
-        String sql;
+        StringBuffer sql = new StringBuffer();
         if (limitR>0 && (skipTo==0)) {
-            sql = "SELECT * FROM schemeid" + swhere + " order by schemeId limit " + limit;
+            //sql = "SELECT * FROM schemeid" + whereResult + " order by schemeId limit " + limit;
+            sql.append("SELECT * FROM schemeid").append(whereResult).append(" order by schemeId limit ")
+                    .append(limit);
         }else{
-            sql = "SELECT * FROM schemeid" + swhere + " order by schemeId";
+            //sql = "SELECT * FROM schemeid" + whereResult + " order by schemeId";
+            sql.append("SELECT * FROM schemeid").append(whereResult).append(" order by schemeId");
         }
-        Query genQuery = entityManager.createNativeQuery(sql,SchemeId.class);
+        Query genQuery = entityManager.createNativeQuery(sql.toString(),SchemeId.class);
         SchemeId resultList = (SchemeId) genQuery.getResultList();
         //System.out.println("tst:"+genQuery.getResultList().get(0).toString());
         /*if ((skipTo==0)) {
