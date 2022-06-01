@@ -17,7 +17,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import springfox.documentation.annotations.ApiIgnore;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -58,14 +60,14 @@ public class AuthenticationController {
     }
 
     @PostMapping("/users/logout")
-    public ResponseEntity<EmptyDto> logout(@RequestBody @Valid LogoutRequestDto logoutRequestDto) throws CisException {
+    public ResponseEntity<EmptyDto> logout(@RequestParam String token, @RequestBody @Valid LogoutRequestDto logoutRequestDto) throws CisException {
         return authenticationService.logout(logoutRequestDto);
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<AuthenticateResponseDto> authenticate(Authentication authentication) throws CisException {
-        Token token = (Token) authentication;
-        return new ResponseEntity<>(token.getAuthenticateResponseDto(), HttpStatus.OK);
+    public ResponseEntity<AuthenticateResponseDto> authenticate(@RequestParam(required = false) String token, @ApiIgnore Authentication authentication) throws CisException {
+        Token authToken = (Token) authentication;
+        return new ResponseEntity<>(authToken.getAuthenticateResponseDto(), HttpStatus.OK);
     }
 
 }

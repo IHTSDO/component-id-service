@@ -38,7 +38,7 @@ public class PublicSCTIDInfoAPIController {
     })
     @GetMapping("/sct/namespaces")
     @ResponseBody
-    public List<NamespaceDto> getNamespaces()
+    public List<NamespaceDto> getNamespaces(@RequestParam String token)
     {
         logger.info("Request received for getNamespaces() - No Param");
         return namespaceService.getNamespaceslist();
@@ -46,7 +46,7 @@ public class PublicSCTIDInfoAPIController {
 
     @GetMapping("/sct/check/{sctid}")
     @ResponseBody
-    public CheckSctidResponseDTO checkSctid(@PathVariable String sctid) throws CisException {
+    public CheckSctidResponseDTO checkSctid(@RequestParam String token, @PathVariable String sctid) throws CisException {
         logger.info("Request received for - sctid :: {}", sctid);
         return sctidService.checkSctid(sctid);
     }

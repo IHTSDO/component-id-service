@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
-import javax.print.DocFlavor;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -56,7 +55,6 @@ public class SchemeIdService {
 
     @Autowired
     StateMachine stateMachine;
-
     public boolean isAbleUser(String schemeName, AuthenticateResponseDto authToken) throws CisException {
         logger.debug("Request Received : schemeName-{} :: authToken - {} ", schemeName, authToken);
         List<String> groups = authToken.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
