@@ -55,6 +55,7 @@ public class SchemeIdService {
 
     @Autowired
     StateMachine stateMachine;
+
     public boolean isAbleUser(String schemeName, AuthenticateResponseDto authToken) throws CisException {
         logger.debug("Request Received : schemeName-{} :: authToken - {} ", schemeName, authToken);
         List<String> groups = authToken.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
@@ -106,9 +107,6 @@ public class SchemeIdService {
         logger.debug("Request Received : limit - {} :: skip - {} :: schemeName-{} :: authToken - {} ", limit, skip, schemeName, authToken);
         List<SchemeId> schemeidList = new ArrayList<>();
         if (this.isAbleUser("false", authToken)) {
-            //ArrayList<String> schemeIdsArrayList = new ArrayList<String>(Arrays.asList(schemedIdArray));
-
-            // String[] objQuery = (schemeName.toString()).split(",");
             var limitR = 100;
             var skipTo = 0;
             if (limit != null)
@@ -125,22 +123,18 @@ public class SchemeIdService {
             if (objQuery.size() > 0) {
                 for (var query :
                         objQuery.entrySet()) {
-                   // swhere += " And " + query.getKey() + "=" + "'" + (query.getValue()) + "'";
                     swhere.append(" And ").append(query.getKey()).append("=").append("'").append((query.getValue()))
                             .append("'");
                 }
             }
             if (!(swhere.toString().equalsIgnoreCase(""))) {
-               // swhere = " WHERE " + swhere.substring(5);
                 whereResult.append(" WHERE ").append(swhere.substring(5));
             }
-            StringBuffer sql =new StringBuffer();
+            StringBuffer sql = new StringBuffer();
             if ((limitR > 0) && (skipTo == 0)) {
-                //sql = "Select * FROM schemeid" + whereResult + " order by schemeId limit " + limitR;
                 sql.append("Select * FROM schemeid").append(whereResult).append(" order by schemeId limit ")
                         .append(limitR);
             } else {
-                //sql = "Select * FROM schemeid" + whereResult + " order by schemeId";
                 sql.append("Select * FROM schemeid").append(whereResult).append(" order by schemeId");
             }
             Query genQuery = entityManager.createNativeQuery(sql.toString(), SchemeId.class);
@@ -206,7 +200,7 @@ public class SchemeIdService {
         return record;
     }
 
-    private SchemeId getFreeRecords(String schemeName, String schemeid) throws CisException {
+    public SchemeId getFreeRecords(String schemeName, String schemeid) throws CisException {
         logger.debug("Request Received : schemeName-{} :: schemeid - {} ", schemeName, schemeid);
         Map<String, Object> schemeIdRecord = getNewRecord(schemeName, schemeid);
         schemeIdRecord.put("status", "Available");
@@ -603,12 +597,12 @@ public class SchemeIdService {
             objQuery.put("scheme", schemeName.toString());
         }
         //String supdate = "";
-StringBuffer supdate = new StringBuffer("");
-        String updateResult="";
+        StringBuffer supdate = new StringBuffer("");
+        String updateResult = "";
         for (var query :
                 objQuery.entrySet()) {
             if (!"schemeId".equalsIgnoreCase(query.toString()) && !"schemeName".equalsIgnoreCase(query.toString())) {
-               // supdate += " ," + query.getKey() + "=" + (query.getValue());
+                // supdate += " ," + query.getKey() + "=" + (query.getValue());
                 supdate.append(" ,").append(query.getKey()).append("=").append((query.getValue()));
             }
 
@@ -637,31 +631,23 @@ StringBuffer supdate = new StringBuffer("");
             limitR = Integer.parseInt(limit);
         if (skip != null)
             skipTo = Integer.parseInt(skip);
-        /*Map<String, String> objQuery = new HashMap<String, String>();
-        if (null != schemeName) {
-            objQuery.put("schemeName", schemeName.toString());
-        }*/
 
         StringBuffer swhere = new StringBuffer("");
         StringBuffer whereResult = new StringBuffer();
         if (objQuery.size() > 0) {
             for (var query :
                     objQuery.entrySet()) {
-                //swhere += " And " + query.getKey() + "=" + "'" + query.getValue() + "'";
                 swhere = swhere.append(" And ").append(query.getKey()).append("=").append("'")
                         .append(query.getValue()).append("'");
             }
         }
         if (!(swhere.toString().equalsIgnoreCase(""))) {
-           // swhere = " WHERE " + swhere.substring(5);
             whereResult.append(" WHERE ").append(swhere.substring(5));
         }
         StringBuffer sql = new StringBuffer();
         if ((limitR > 0) && (skipTo == 0)) {
-           // sql = "SELECT * FROM schemeId" + swhere + " order by schemeId limit " + limit;
             sql.append("SELECT * FROM schemeId").append(whereResult).append(" order by schemeId limit ").append(limit);
         } else {
-           // sql = "SELECT * FROM schemeId" + swhere + " order by schemeId";
             sql.append("SELECT * FROM schemeId").append(whereResult).append(" order by schemeId");
         }
         Query genQuery = entityManager.createNativeQuery(sql.toString(), SchemeId.class);
@@ -684,7 +670,6 @@ StringBuffer supdate = new StringBuffer("");
             logger.info("findschemeRecord() - Response::{}", newRows);
             return newRows;
         }
-        // return schemeidList;
     }
 
 
@@ -714,7 +699,6 @@ StringBuffer supdate = new StringBuffer("");
                 if (schemeIdRec != null) {
                     return schemeIdRec;
                 } else {
-                    //request body change
                     schemeIdRec = setNewSchemeIdRecordGen(schemeName, generateRequest, stateMachine.actions.get("generate"));
                 }
             } else {
@@ -795,7 +779,6 @@ StringBuffer supdate = new StringBuffer("");
                 schemeIdRecords.get(0).setComment(request.getComment());
                 schemeIdRecords.get(0).setJobId(null);
                 updatedrecord = bulkSchemeIdRepository.save(schemeIdRecords.get(0));
-                //updatedrecord = updateSchemeIdRecord(schemeIdRecords.get(0), schemeName);
                 return updatedrecord;
             } else {
                 updatedrecord = counterModeGen(schemeName, request, generate);
