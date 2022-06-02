@@ -449,11 +449,11 @@ public class NamespaceService {
         }
     }
 
-    public String deleteNamespacePermissionsOfUser(String namespaceId, AuthenticateResponseDto authenticateResponseDto) throws CisException {
+    public String deleteNamespacePermissionsOfUser(String namespaceId, String username, AuthenticateResponseDto authenticateResponseDto) throws CisException {
         logger.debug("NamespaceService.deleteNamespacePermissionsOfUser() namespaceId-{} :: AuthenticateResponseDto-{} ", namespaceId, authenticateResponseDto);
         if (isAbleToEdit(Integer.valueOf(namespaceId), authenticateResponseDto)) {
             JSONObject response = new JSONObject();
-            permissionsNamespaceRepository.deleteByNamespaceAndUsername(Integer.valueOf(namespaceId), authenticateResponseDto.getName());
+            permissionsNamespaceRepository.deleteByNamespaceAndUsername(Integer.valueOf(namespaceId), username);
             response.put("message", "Success");
             logger.info("deleteNamespacePermissionsOfUser() Response :: {}", response.toString());
             return response.toString();

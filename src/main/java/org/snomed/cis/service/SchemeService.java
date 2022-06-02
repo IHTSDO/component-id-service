@@ -189,11 +189,11 @@ public class SchemeService {
 
     }
 
-    public String createSchemePermissions(String schemeName, String role, AuthenticateResponseDto authenticateResponseDto) throws CisException {
+    public String createSchemePermissions(String schemeName, String userName, String role, AuthenticateResponseDto authenticateResponseDto) throws CisException {
         logger.debug("Request Received : schemeName-{} :: role-{} :: authToken - {} ", schemeName, role, authenticateResponseDto);
         if (isAbleToEdit(schemeName, authenticateResponseDto)) {
             JSONObject response = new JSONObject();
-            PermissionsScheme permissionsScheme = new PermissionsScheme(schemeName, authenticateResponseDto.getName(), role);
+            PermissionsScheme permissionsScheme = new PermissionsScheme(schemeName, userName, role);
             permissionsSchemeRepository.save(permissionsScheme);
             response.put("message", "Success");
             logger.info("createSchemePermissions() Response:{}", response.toString());
