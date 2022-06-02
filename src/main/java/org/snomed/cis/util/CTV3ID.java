@@ -5,21 +5,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class CTV3ID {
 
-    static String baseDigits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    static final String baseDigits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
     public static boolean validSchemeId(String schemeId) {
         if (schemeId == null || schemeId.isEmpty() || schemeId.isBlank() || schemeId.length() != 5) {
             return false;
         }
-        for (var i = 0; i < 5; i++) {
-            if (i == 4) {
-                if (baseDigits.indexOf(schemeId.substring(i)) < 0 && !(schemeId.substring(i).equalsIgnoreCase("."))) {
-                    return false;
-                }
-            } else {
-                if (baseDigits.indexOf(schemeId.substring(i, i + 1)) < 0 && !(schemeId.substring(i, i + 1).equalsIgnoreCase("."))) {
-                    return false;
-                }
+        for (int i = 0; i < 5; i++) {
+            String schemeIdSubStr = schemeId.substring(i,i+1);
+            if(!baseDigits.contains(schemeIdSubStr) && !schemeIdSubStr.equals(".")){
+                return false;
             }
         }
         return true;
