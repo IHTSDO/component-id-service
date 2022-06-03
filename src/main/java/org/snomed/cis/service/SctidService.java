@@ -255,6 +255,9 @@ public class SctidService {
             output.setSoftware(newSct.getSoftware());
             output.setExpirationDate(newSct.getExpirationDate());
             output.setComment(newSct.getComment());
+            output.setJobId(newSct.getJobId());
+            output.setCreated_at(newSct.getCreated_at());
+            output.setModified_at(newSct.getModified_at());
             if (!includeAdditionalIds.isEmpty() && includeAdditionalIds.equalsIgnoreCase("true")) {
                 List<SchemeId> schemeResult = getSchemeIds(newSct.getSystemId(), "10", "0");
                 output.setAdditionalIds(schemeResult);
@@ -440,10 +443,14 @@ public class SctidService {
 
 
         if (bulkSctidService.isAbleUser((generationData.getNamespace()).toString(), authToken)) {
-            if ((generationData.getNamespace() == 0 && (!generationData.getPartitionId().substring(0, 1).equalsIgnoreCase("0")))
-                    || (generationData.getNamespace() != 0 && !generationData.getPartitionId().substring(0, 1).equalsIgnoreCase("1"))) {
+            if (
+                    (generationData.getPartitionId().isBlank() || generationData.getPartitionId().isEmpty())
+                    ||
+                    ((generationData.getNamespace() == 0 && (!generationData.getPartitionId().substring(0, 1).equalsIgnoreCase("0")))
+                    || (generationData.getNamespace() != 0 && !generationData.getPartitionId().substring(0, 1).equalsIgnoreCase("1")))
+            ) {
                 logger.error("error generateSctid():: Namespace and partitionId parameters are not consistent.");
-                throw new CisException(HttpStatus.ACCEPTED, "Namespace and partitionId parameters are not consistent.");
+                throw new CisException(HttpStatus.BAD_REQUEST, "Namespace and partitionId parameters are not consistent.");
             }
             if (generationData.getSystemId().isBlank()) {
 
@@ -558,8 +565,8 @@ public class SctidService {
         Map<String, Object> queryObject = new HashMap<>();
         if (null != sctidReservationRequest.getNamespace() && !sctidReservationRequest.getPartitionId().isBlank()) {
             queryObject.put("namespace", sctidReservationRequest.getNamespace());
-            queryObject.put("partitionId", sctidReservationRequest.getPartitionId());
-            queryObject.put("status", stateMachine.statuses.get("available"));
+            queryObject.put("partitionId", "'"+sctidReservationRequest.getPartitionId()+"'");
+            queryObject.put("status", "'"+stateMachine.statuses.get("available")+"'");
             sctIdRecords = this.findSctWithIndexAndLimit(queryObject, "1", null);
             if (!sctIdRecords.isEmpty() && sctIdRecords.size() > 0) {
                 var newStatus = stateMachine.getNewStatus(sctIdRecords.get(0).getStatus(), action);
@@ -571,6 +578,10 @@ public class SctidService {
                 } else {
                     result = sctIdDM.counterMode(sctidReservationRequest, action);
                 }
+            }
+            else
+            {
+                result = sctIdDM.counterMode(sctidReservationRequest, action);
             }
         }
         logger.info("setAvailableSCTIDRecord2NewStatus() - Response :: {}", result);
@@ -793,8 +804,8 @@ public class SctidService {
         reserveRequest.setComment(reservationData.getComment());
 
         if (bulkSctidService.isAbleUser((reservationData.getNamespace()).toString(), token)) {
-            if ((reservationData.getNamespace() == 0 && reservationData.getPartitionId().substring(0, 1) != "0")
-                    || (reservationData.getNamespace() != 0 && reservationData.getPartitionId().substring(0, 1) != "1")) {
+            if ((reservationData.getNamespace() == 0 && !(reservationData.getPartitionId().substring(0, 1).equalsIgnoreCase("0")))
+                    || (reservationData.getNamespace() != 0 && !(reservationData.getPartitionId().substring(0, 1).equalsIgnoreCase("1")))) {
                 logger.error("error reserveSctid():: Namespace and partitionId parameters are not consistent.");
                 throw new CisException(HttpStatus.ACCEPTED, ("Namespace and partitionId parameters are not consistent."));
             }

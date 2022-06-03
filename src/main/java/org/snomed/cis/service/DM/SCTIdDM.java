@@ -17,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Component
@@ -73,7 +75,8 @@ public class SCTIdDM {
         if (null != sctIdRecord) {
             var newStatus = stateMachine.getNewStatus(sctIdRecord.getStatus(), stateMachine.actions.get("register"));
             if (null != newStatus) {
-                if (!sctidRegistrationRequest.getSystemId().isEmpty()) {
+                if (!sctidRegistrationRequest.getSystemId().isEmpty() && !sctidRegistrationRequest.getSystemId().isBlank()
+                && null!=sctidRegistrationRequest.getSystemId()) {
                     sctIdRecord.setSystemId(sctidRegistrationRequest.getSystemId());
                 }
                 sctIdRecord.setStatus(newStatus);
@@ -141,16 +144,14 @@ public class SCTIdDM {
         var newStatus = stateMachine.getNewStatus(sctIdRecord.getStatus(), action);
         if (null != newStatus) {
 
-           /* if (operation. && operation.systemId.trim() != "") {
-                sctIdRecord.systemId = operation.systemId;
-            }*/
             sctIdRecord.setStatus(newStatus);
-            /*sctIdRecord.setAuthor(); = operation.author;
-            sctIdRecord.setSoftware(); = operation.software;
-            sctIdRecord.setExpirationDate(); = operation.expirationDate;
-            sctIdRecord.setComment(); = operation.comment;
-
-            sctIdRecord.setJobId(null);*/
+            sctIdRecord.setAuthor(operation.getAuthor());
+            sctIdRecord.setSoftware(operation.getSoftware());
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            LocalDateTime expirationDate = LocalDateTime.parse(operation.getExpirationDate(), formatter);
+            sctIdRecord.setExpirationDate(expirationDate);
+            sctIdRecord.setComment(operation.getComment());
+            sctIdRecord.setJobId(null);
             Sctid updatedRecord = sctidRepository.save(sctIdRecord);
             result = updatedRecord;
         } else {
@@ -193,16 +194,15 @@ public class SCTIdDM {
         var newStatus = stateMachine.getNewStatus(sctIdRecord.getStatus(), action);
         if (null != newStatus) {
 
-           /* if (operation. && operation.systemId.trim() != "") {
-                sctIdRecord.systemId = operation.systemId;
-            }*/
+            if (!operation.getSystemId().isBlank() && !operation.getSystemId().isEmpty() && null!=operation.getSystemId()) {
+                sctIdRecord.setSystemId(operation.getSystemId());
+            }
             sctIdRecord.setStatus(newStatus);
-            /*sctIdRecord.setAuthor(); = operation.author;
-            sctIdRecord.setSoftware(); = operation.software;
-            sctIdRecord.setExpirationDate(); = operation.expirationDate;
-            sctIdRecord.setComment(); = operation.comment;
+            sctIdRecord.setAuthor(operation.getAuthor());
+            sctIdRecord.setSoftware(operation.getSoftware());
+            sctIdRecord.setComment(operation.getComment());
 
-            sctIdRecord.setJobId(null);*/
+            sctIdRecord.setJobId(null);
             Sctid updatedRecord = sctidRepository.save(sctIdRecord);
             result = updatedRecord;
         } else {

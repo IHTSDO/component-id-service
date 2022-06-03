@@ -467,7 +467,10 @@ public class NamespaceService {
         logger.debug("NamespaceService.createNamespacePermissionsOfUser() namespaceId-{} :: username - {} :: role - {} :: AuthenticateResponseDto-{} ", namespaceId, username, role, authenticateResponseDto);
         if (isAbleToEdit(Integer.valueOf(namespaceId), authenticateResponseDto)) {
             PermissionsNamespace permissionsNamespace = new PermissionsNamespace(Integer.valueOf(namespaceId), username, role);
-            permissionsNamespaceRepository.save(permissionsNamespace);
+             Optional<PermissionsNamespace> result = permissionsNamespaceRepository.findByNamespaceAndUsernameAndRole(Integer.valueOf(namespaceId), username, role);
+            if(result.isPresent())
+                throw new CisException(HttpStatus.BAD_REQUEST,"ER_DUP_ENTRY: Duplicate entry "+"'"+namespaceId+"-"+username +"'"+ " for key 'PRIMARY'");
+             permissionsNamespaceRepository.save(permissionsNamespace);
             JSONObject response = new JSONObject();
             response.put("message", "Success");
             logger.info("createNamespacePermissionsOfUser() Response :: {}", response.toString());

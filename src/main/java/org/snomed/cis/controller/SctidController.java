@@ -53,7 +53,7 @@ public class SctidController {
     }
 
     @GetMapping("/sct/check/{sctid}")
-    public ResponseEntity<CheckSctidResponseDTO> checkSctid(@RequestParam String token, @PathVariable String sctid) throws CisException {
+    public ResponseEntity<CheckSctidResponseDTO> checkSctid(@RequestParam(required = false) String token, @PathVariable String sctid) throws CisException {
         logger.info("Request received for - sctid :: {} ", sctid);
         return ResponseEntity.ok(sctidService.checkSctid(sctid));
     }

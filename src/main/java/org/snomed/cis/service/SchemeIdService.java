@@ -589,12 +589,12 @@ public class SchemeIdService {
     }
 
     public SchemeId updateSchemeIdRecord(SchemeId schemeId, String schemeName) {
-        logger.debug("Request Received : schemeId-{} :: authToken - {} ", schemeId, schemeName);
+        logger.debug("Request Received : schemeId-{} :: authToken - {} ", schemeId.getSchemeId(), schemeName);
         Map<String, String> objQuery = new HashMap<String, String>();
 
         if (null != schemeId) {
-            objQuery.put("schemeId", String.valueOf(schemeId));
-            objQuery.put("scheme", schemeName.toString());
+            objQuery.put("schemeId", "'"+schemeId.getSchemeId()+"'");
+            objQuery.put("scheme", "'"+schemeName.toString()+"'");
         }
         //String supdate = "";
         StringBuffer supdate = new StringBuffer("");
@@ -614,8 +614,8 @@ public class SchemeIdService {
                 " And schemeId=" + schemeId;*/
         StringBuffer sql = new StringBuffer();
         sql.append("UPDATE schemeId SET ").append(updateResult).append(" ,modified_at=now() WHERE scheme=")
-                .append(schemeName).append(" And schemeId=").append(schemeId);
-        Query genQuery = entityManager.createQuery(sql.toString());
+                .append("'").append(schemeName).append("'").append(" And schemeId=").append("'").append(schemeId.getSchemeId()).append("'");
+        Query genQuery = entityManager.createQuery(sql.toString(),SchemeId.class);
         SchemeId resultList = (SchemeId) genQuery.getResultList();
         logger.info("updateSchemeIdRecord() - Response::{}", resultList);
         return resultList;
@@ -916,8 +916,8 @@ public class SchemeIdService {
                 schemeId.setExpirationDate(request.getExpirationDate());
                 schemeIdrecord.setComment(request.getComment());
                 schemeIdrecord.setJobId(null);
-                //schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
-                schemeId = updateSchemeIdRecord(schemeIdrecord, schemeName.toString());
+                schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
+                //schemeId = updateSchemeIdRecord(schemeIdrecord, schemeName.toString());
             } else {
                 logger.error("error registerNewSchemeId():: Cannot register SchemeId:{}, current status:{}", request.getSchemeId(), schemeIdrecord.getStatus());
                 throw new CisException(HttpStatus.BAD_REQUEST, "Cannot register SchemeId:" + request.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
