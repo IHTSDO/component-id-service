@@ -129,38 +129,38 @@ public class BulkSchemeIdService {
         Set<Map.Entry<String, Object>> s = schemeIdRecord.entrySet();
         try {
             for (Map.Entry<String, Object> mapObj : s) {
-                if (mapObj.getKey() == "scheme") {
+                if (mapObj.getKey().equalsIgnoreCase("scheme")) {
                     scheme = (String) mapObj.getValue();
-                } else if (mapObj.getKey() == "schemeId") {
+                } else if (mapObj.getKey().equalsIgnoreCase("schemeId")) {
                     schemeId = (String) mapObj.getValue();
-                } else if (mapObj.getKey() == "sequence") {
+                } else if (mapObj.getKey().equalsIgnoreCase("sequence")) {
                     sequence = (Integer) mapObj.getValue();
-                } else if (mapObj.getKey() == "checkDigit") {
+                } else if (mapObj.getKey().equalsIgnoreCase("checkDigit")) {
                     checkDigit = (Integer) mapObj.getValue();
-                } else if (mapObj.getKey() == "systemId") {
+                } else if (mapObj.getKey().equalsIgnoreCase("systemId")) {
                     systemId = (String) mapObj.getValue();
-                } else if (mapObj.getKey() == "status") {
+                } else if (mapObj.getKey().equalsIgnoreCase("status")) {
                     status = (String) mapObj.getValue();
-                } else if (mapObj.getKey() == "author") {
+                } else if (mapObj.getKey().equalsIgnoreCase("author")) {
                     author = (String) mapObj.getValue();
-                } else if (mapObj.getKey() == "software") {
+                } else if (mapObj.getKey().equalsIgnoreCase("software")) {
                     software = (String) mapObj.getValue();
-                } else if (mapObj.getKey() == "expirationDate") {
+                } else if (mapObj.getKey().equalsIgnoreCase("expirationDate")) {
                     expirationDate = (LocalDateTime) mapObj.getValue();
-                } else if (mapObj.getKey() == "jobId") {
+                } else if (mapObj.getKey().equalsIgnoreCase("jobId")) {
                     jobId = (Integer) mapObj.getValue();
-                } else if (mapObj.getKey() == "created_at") {
+                } else if (mapObj.getKey().equalsIgnoreCase("created_at")) {
                     created_at = (LocalDateTime) mapObj.getValue();
-                } else if (mapObj.getKey() == "modified_at") {
+                } else if (mapObj.getKey().equalsIgnoreCase("modified_at")) {
                     modified_at = (LocalDateTime) mapObj.getValue();
                 }
             }
             SchemeId schemeId1 = SchemeId.builder().scheme(String.valueOf(scheme)).schemeId(String.valueOf(schemeId))
                     .sequence(sequence).checkDigit(checkDigit).systemId(systemId).status(status).author(author).software(software).jobId(jobId)
-                    .build();
-            bulkSchemeIdRepository.save(schemeId1);
-            Optional<SchemeId> schemeDB = bulkSchemeIdRepository.findBySchemeAndSchemeId(String.valueOf(scheme), schemeId.toString());
-            schemeIdBulk = schemeDB.isPresent() ? schemeDB.get() : null;
+                    .expirationDate(expirationDate).created_at(created_at).modified_at(modified_at).build();
+            schemeIdBulk = bulkSchemeIdRepository.save(schemeId1);
+            //Optional<SchemeId> schemeDB = bulkSchemeIdRepository.findBySchemeAndSchemeId(String.valueOf(scheme), schemeId.toString());
+            //schemeIdBulk = schemeDB.isPresent() ? schemeDB.get() : null;
             return schemeIdBulk;
         } catch (Exception e) {
             logger.error("error insertSchemeIdRecord():: {}", e.getMessage());

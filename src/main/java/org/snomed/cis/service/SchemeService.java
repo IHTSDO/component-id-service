@@ -193,10 +193,11 @@ public class SchemeService {
         logger.debug("Request Received : schemeName-{} :: role-{} :: authToken - {} ", schemeName, role, authenticateResponseDto);
         if (isAbleToEdit(schemeName, authenticateResponseDto)) {
             JSONObject response = new JSONObject();
-            PermissionsScheme permissionsScheme = new PermissionsScheme(schemeName, userName, role);
+            PermissionsScheme permissionsScheme = PermissionsScheme.builder().scheme(schemeName)
+                    .username(userName).role(role).build();
             Optional<PermissionsScheme> permissionsScheme1 = permissionsSchemeRepository.findBySchemeAndUsernameAndRole(schemeName, userName, role);
-            if(permissionsScheme1.isPresent())
-                throw new CisException(HttpStatus.BAD_REQUEST,"ER_DUP_ENTRY: Duplicate entry "+"'"+schemeName+"-"+userName +"'"+ " for key 'PRIMARY'");
+            if (permissionsScheme1.isPresent())
+                throw new CisException(HttpStatus.BAD_REQUEST, "ER_DUP_ENTRY: Duplicate entry " + "'" + schemeName + "-" + userName + "'" + " for key 'PRIMARY'");
             permissionsSchemeRepository.save(permissionsScheme);
             response.put("message", "Success");
             logger.info("createSchemePermissions() Response:{}", response.toString());
