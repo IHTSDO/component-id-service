@@ -40,22 +40,22 @@ public class AuthorizationController {
     }
 
     @GetMapping("/users/{username}/groups")
-    public ResponseEntity<List<String>> getUserGroups(@RequestParam String token, @ApiIgnore Authentication authentication) {
+    public ResponseEntity<List<String>> getUserGroups(@RequestParam String token,@ApiIgnore Authentication authentication) {
         Token authToken = (Token) authentication;
         return new ResponseEntity<>(authorizationService.getUserGroups(authToken.getAuthenticateResponseDto()), HttpStatus.OK);
     }
 
     @DeleteMapping("/users/{username}/groups/{groupName}")
-    public ResponseEntity<EmptyDto> deleteMember(@RequestParam String token, @PathVariable String groupName, @ApiIgnore Authentication authentication) {
+    public ResponseEntity<EmptyDto> deleteMember(@RequestParam String token,@PathVariable String username, @PathVariable String groupName, @ApiIgnore Authentication authentication) {
         Token authToken = (Token) authentication;
-        authorizationService.deleteMember(authToken.getUserName(), groupName);
+        authorizationService.deleteMember(username, groupName);
         return new ResponseEntity<>(new EmptyDto(), HttpStatus.OK);
     }
 
     @PostMapping("/users/{username}/groups/{groupName}")
-    public ResponseEntity<EmptyDto> addMember(@RequestParam String token, @PathVariable String groupName, @ApiIgnore Authentication authentication) {
+    public ResponseEntity<EmptyDto> addMember(@RequestParam String token,@PathVariable String username, @PathVariable String groupName, @ApiIgnore Authentication authentication) {
         Token authToken = (Token) authentication;
-        authorizationService.addMember(authToken.getUserName(), groupName);
+        authorizationService.addMember(username, groupName);
         return new ResponseEntity<>(new EmptyDto(), HttpStatus.OK);
     }
 
@@ -70,38 +70,38 @@ public class AuthorizationController {
     }
 
     @GetMapping(value = "/sct/namespaces/{namespaceId}/permissions")
-    public ResponseEntity<List<PermissionsNamespace>> getNamespacePermissions(@RequestParam String token, @PathVariable String namespaceId) throws CisException {
+    public ResponseEntity<List<PermissionsNamespace>> getNamespacePermissions(@RequestParam String token,@PathVariable String namespaceId) throws CisException {
         return new ResponseEntity<>(namespaceService.getNamespacePermissions(namespaceId), HttpStatus.OK);
     }
 
     @DeleteMapping("/sct/namespaces/{namespaceId}/permissions/{username}")
-    public ResponseEntity<String> deleteNamespacePermissionsOfUser(@RequestParam String token, @PathVariable String namespaceId, @ApiIgnore Authentication authentication) throws CisException {
+    public ResponseEntity<String> deleteNamespacePermissionsOfUser(@RequestParam String token,@PathVariable String namespaceId, @PathVariable String username, @ApiIgnore Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return new ResponseEntity<>(namespaceService.deleteNamespacePermissionsOfUser(namespaceId, authToken.getAuthenticateResponseDto()), HttpStatus.OK);
+        return new ResponseEntity<>(namespaceService.deleteNamespacePermissionsOfUser(namespaceId, username, authToken.getAuthenticateResponseDto()), HttpStatus.OK);
     }
 
     @PostMapping("/sct/namespaces/{namespaceId}/permissions/{username}")
-    public ResponseEntity<String> createNamespacePermissionsOfUser(@RequestParam String token, @PathVariable String namespaceId, @RequestParam String role, @ApiIgnore Authentication authentication) throws CisException {
+    public ResponseEntity<String> createNamespacePermissionsOfUser(@RequestParam String token,@PathVariable String namespaceId, @PathVariable String username, @RequestParam String role, @ApiIgnore Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return new ResponseEntity<>(namespaceService.createNamespacePermissionsOfUser(namespaceId, authToken.getUserName(), role, authToken.getAuthenticateResponseDto()), HttpStatus.OK);
+        return new ResponseEntity<>(namespaceService.createNamespacePermissionsOfUser(namespaceId, username, role, authToken.getAuthenticateResponseDto()), HttpStatus.OK);
     }
 
     @GetMapping(value = "/schemes/{schemeName}/permissions")
-    public ResponseEntity<List<PermissionsScheme>> getPermissionsForScheme(@RequestParam String token, @PathVariable String schemeName) throws CisException {
+    public ResponseEntity<List<PermissionsScheme>> getPermissionsForScheme(@RequestParam String token,@PathVariable String schemeName) throws CisException {
         return new ResponseEntity<>(schemeService.getPermissionsForScheme(schemeName), HttpStatus.OK);
     }
 
 
     @DeleteMapping("/schemes/{schemeName}/permissions/{username}")
-    public ResponseEntity<String> deleteSchemePermissions(@RequestParam String token, @PathVariable String schemeName, @PathVariable String username, @ApiIgnore Authentication authentication) throws CisException {
+    public ResponseEntity<String> deleteSchemePermissions(@RequestParam String token,@PathVariable String schemeName, @PathVariable String username, @ApiIgnore Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
         return new ResponseEntity<>(schemeService.deleteSchemePermissions(schemeName, username, authToken.getAuthenticateResponseDto()), HttpStatus.OK);
     }
 
     @PostMapping("/schemes/{schemeName}/permissions/{username}")
-    public ResponseEntity<String> createSchemePermissions(@RequestParam String token, @PathVariable String schemeName, @RequestParam String role, @ApiIgnore Authentication authentication) throws CisException {
+    public ResponseEntity<String> createSchemePermissions(@RequestParam String token,@PathVariable String schemeName, @PathVariable String username, @RequestParam String role, @ApiIgnore Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return new ResponseEntity<>(schemeService.createSchemePermissions(schemeName, role, authToken.getAuthenticateResponseDto()), HttpStatus.OK);
+        return new ResponseEntity<>(schemeService.createSchemePermissions(schemeName, username, role, authToken.getAuthenticateResponseDto()), HttpStatus.OK);
     }
 
 }

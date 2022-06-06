@@ -1,6 +1,8 @@
 package org.snomed.cis.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.snomed.cis.domain.SchemeId;
+import org.springframework.lang.Nullable;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,12 +19,20 @@ public class SctWithSchemeResponseDTO {
     private String software;
     private LocalDateTime expirationDate;
     private String comment;
+    @Nullable
+    private Integer jobId;
+
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime created_at;
+
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime modified_at;
     private List<SchemeId> additionalIds;
 
     public SctWithSchemeResponseDTO() {
     }
 
-    public SctWithSchemeResponseDTO(String sctid, long sequence, int namespace, String partitionId, Integer checkDigit, String systemId, String status, String author, String software, LocalDateTime expirationDate, String comment, List<SchemeId> additionalIds) {
+    public SctWithSchemeResponseDTO(String sctid, long sequence, int namespace, String partitionId, Integer checkDigit, String systemId, String status, String author, String software, LocalDateTime expirationDate, String comment, @Nullable Integer jobId, LocalDateTime created_at, LocalDateTime modified_at, List<SchemeId> additionalIds) {
         this.sctid = sctid;
         this.sequence = sequence;
         this.namespace = namespace;
@@ -34,6 +44,9 @@ public class SctWithSchemeResponseDTO {
         this.software = software;
         this.expirationDate = expirationDate;
         this.comment = comment;
+        this.jobId = jobId;
+        this.created_at = created_at;
+        this.modified_at = modified_at;
         this.additionalIds = additionalIds;
     }
 
@@ -127,6 +140,31 @@ public class SctWithSchemeResponseDTO {
 
     public List<SchemeId> getAdditionalIds() {
         return additionalIds;
+    }
+
+    @Nullable
+    public Integer getJobId() {
+        return jobId;
+    }
+
+    public void setJobId(@Nullable Integer jobId) {
+        this.jobId = jobId;
+    }
+
+    public LocalDateTime getCreated_at() {
+        return created_at;
+    }
+
+    public void setCreated_at(LocalDateTime created_at) {
+        this.created_at = created_at;
+    }
+
+    public LocalDateTime getModified_at() {
+        return modified_at;
+    }
+
+    public void setModified_at(LocalDateTime modified_at) {
+        this.modified_at = modified_at;
     }
 
     public void setAdditionalIds(List<SchemeId> additionalIds) {

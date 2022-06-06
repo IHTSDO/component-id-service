@@ -39,7 +39,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             "/admin/**", //UI resource
             "/info/**", //UI resource
             "/login",
-            "/loginUI"
+            "/loginUI",
+            "/sct/namespaces",
+            "/sct/check/{sctid}"
     };
 
     @Override

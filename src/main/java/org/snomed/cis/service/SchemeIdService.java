@@ -175,9 +175,9 @@ public class SchemeIdService {
         logger.debug("Request Received : schemeName-{} :: schemeid - {} ", schemeName, schemeid);
         SchemeId record = new SchemeId();
         Optional<SchemeId> schemeIdObj = null;
-        if (schemeid == null || schemeid == "") {
+        if (null == schemeid || schemeid.isEmpty() || schemeid.isBlank()) {
             logger.error("error getSchemeIdsByschemeIdList():: Not valid schemeId.");
-            throw new CisException(HttpStatus.UNAUTHORIZED, "Not valid schemeId.");
+            throw new CisException(HttpStatus.BAD_REQUEST, "Not valid schemeId.");
         } else {
             boolean isValidScheme = false;
             if ("SNOMEDID".equalsIgnoreCase(schemeName.toString().toUpperCase())) {
@@ -187,7 +187,7 @@ public class SchemeIdService {
             }
             if (!isValidScheme) {
                 logger.error("error getSchemeIdsByschemeIdList():: Not valid schemeId.");
-                throw new CisException(HttpStatus.UNAUTHORIZED, "Not valid schemeId.");
+                throw new CisException(HttpStatus.BAD_REQUEST, "Not valid schemeId.");
             }
         }
         schemeIdObj = bulkSchemeIdRepository.findBySchemeAndSchemeId(schemeName, schemeid);
@@ -239,58 +239,58 @@ public class SchemeIdService {
         Set<Map.Entry<String, Object>> s = schemeIdRecord.entrySet();
         try {
             for (Map.Entry<String, Object> mapObj : s) {
-                if (mapObj.getKey() == "scheme") {
+                if (mapObj.getKey().equalsIgnoreCase("scheme")) {
                     scheme = (String) mapObj.getValue();
-                } else if (mapObj.getKey() == "schemeId") {
+                } else if (mapObj.getKey().equalsIgnoreCase("schemeId")) {
                     schemeId = (String) mapObj.getValue();
-                } else if (mapObj.getKey() == "sequence") {
+                } else if (mapObj.getKey().equalsIgnoreCase("sequence")) {
                     Object sequenceValue = mapObj.getValue();
                     if (sequenceValue instanceof Integer) {
                         sequence = (Integer) sequenceValue; // 1
                     }
-                } else if (mapObj.getKey() == "checkDigit") {
+                } else if (mapObj.getKey().equalsIgnoreCase("checkDigit")) {
                     Object checkDigitvalue = mapObj.getValue();
                     if (checkDigitvalue instanceof Integer) {
                         checkDigit = (Integer) checkDigitvalue; // 1
                     }
-                } else if (mapObj.getKey() == "systemId") {
+                } else if (mapObj.getKey().equalsIgnoreCase("systemId")) {
                     systemId = (String) mapObj.getValue();
-                } else if (mapObj.getKey() == "status") {
+                } else if (mapObj.getKey().equalsIgnoreCase("status")) {
                     status = (String) mapObj.getValue();
-                } else if (mapObj.getKey() == "author") {
+                } else if (mapObj.getKey().equalsIgnoreCase("author")) {
                     author = (String) mapObj.getValue();
-                } else if (mapObj.getKey() == "software") {
+                } else if (mapObj.getKey().equalsIgnoreCase("software")) {
                     software = (String) mapObj.getValue();
-                } else if (mapObj.getKey() == "expirationDate") {
+                } else if (mapObj.getKey().equalsIgnoreCase("expirationDate")) {
                     expirationDate = (LocalDateTime) mapObj.getValue();
-                } else if (mapObj.getKey() == "jobId") {
+                } else if (mapObj.getKey().equalsIgnoreCase("jobId")) {
                     //jobId = (Integer) mapObj.getValue();
                     Object jobIdvalue = mapObj.getValue();
                     if (jobIdvalue instanceof Integer) {
                         jobId = (Integer) jobIdvalue; // 1
                     }
 
-                } else if (mapObj.getKey() == "created_at") {
+                } else if (mapObj.getKey().equalsIgnoreCase("created_at")) {
                     Object created_atValue = (LocalDateTime) mapObj.getValue();
                     if (created_atValue instanceof LocalDateTime) {
                         created_at = (LocalDateTime) created_atValue;
                     }
-                } else if (mapObj.getKey() == "modified_at") {
+                } else if (mapObj.getKey().equalsIgnoreCase("modified_at")) {
                     Object modified_atValue = (LocalDateTime) mapObj.getValue();
                     if (modified_atValue instanceof LocalDateTime) {
                         modified_at = (LocalDateTime) modified_atValue;
                     }
                 }
             }
-            SchemeId schemeIdObj = SchemeId.builder().scheme(scheme).schemeId(schemeId).sequence(sequence).checkDigit(checkDigit).systemId(systemId).status(status).author(author).software(software).expirationDate(expirationDate).jobId(jobId).build();
+            SchemeId schemeIdObj = SchemeId.builder().scheme(scheme).schemeId(schemeId).sequence(sequence).checkDigit(checkDigit).systemId(systemId).status(status).author(author).software(software).expirationDate(expirationDate).jobId(jobId)
+                    .created_at(created_at).modified_at(modified_at).build();
             SchemeId schemeId1 = bulkSchemeIdRepository.save(schemeIdObj);
             logger.info("insertSchemeIdRecord():Response - {}", schemeId1);
             return schemeId1;
         } catch (Exception e) {
-            error = e.toString();
+            throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
 
-        return null;
     }
 
 
@@ -589,12 +589,12 @@ public class SchemeIdService {
     }
 
     public SchemeId updateSchemeIdRecord(SchemeId schemeId, String schemeName) {
-        logger.debug("Request Received : schemeId-{} :: authToken - {} ", schemeId, schemeName);
+        logger.debug("Request Received : schemeId-{} :: authToken - {} ", schemeId.getSchemeId(), schemeName);
         Map<String, String> objQuery = new HashMap<String, String>();
 
         if (null != schemeId) {
-            objQuery.put("schemeId", String.valueOf(schemeId));
-            objQuery.put("scheme", schemeName.toString());
+            objQuery.put("schemeId", "'" + schemeId.getSchemeId() + "'");
+            objQuery.put("scheme", "'" + schemeName.toString() + "'");
         }
         //String supdate = "";
         StringBuffer supdate = new StringBuffer("");
@@ -614,8 +614,8 @@ public class SchemeIdService {
                 " And schemeId=" + schemeId;*/
         StringBuffer sql = new StringBuffer();
         sql.append("UPDATE schemeId SET ").append(updateResult).append(" ,modified_at=now() WHERE scheme=")
-                .append(schemeName).append(" And schemeId=").append(schemeId);
-        Query genQuery = entityManager.createQuery(sql.toString());
+                .append("'").append(schemeName).append("'").append(" And schemeId=").append("'").append(schemeId.getSchemeId()).append("'");
+        Query genQuery = entityManager.createQuery(sql.toString(), SchemeId.class);
         SchemeId resultList = (SchemeId) genQuery.getResultList();
         logger.info("updateSchemeIdRecord() - Response::{}", resultList);
         return resultList;
@@ -689,7 +689,7 @@ public class SchemeIdService {
             generateRequest.setSoftware(request.getSoftware());
             generateRequest.setComment(request.getComment());
 
-            if (request.getSystemId().isBlank() || request.getSystemId().trim() == "") {
+            if (request.getSystemId().isBlank() || request.getSystemId().isEmpty() || null == request.getSystemId()) {
                 generateRequest.setSystemId(sctIdHelper.guid());
                 generateRequest.setAutoSysId(true);
             }
@@ -866,7 +866,7 @@ public class SchemeIdService {
             registerRequest.setSoftware(request.getSoftware());
             registerRequest.setComment(request.getComment());
 
-            if (request.getSystemId() != null || request.getSystemId() == "") {
+            if (request.getSystemId().isBlank() || request.getSystemId().isEmpty() || request.getSystemId() == null) {
                 registerRequest.setSystemId(sctIdHelper.guid());
                 registerRequest.setAutoSysId(true);
                 registerRequest.setAuthor(registerRequest.getAuthor());
@@ -916,8 +916,8 @@ public class SchemeIdService {
                 schemeId.setExpirationDate(request.getExpirationDate());
                 schemeIdrecord.setComment(request.getComment());
                 schemeIdrecord.setJobId(null);
-                //schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
-                schemeId = updateSchemeIdRecord(schemeIdrecord, schemeName.toString());
+                schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
+                //schemeId = updateSchemeIdRecord(schemeIdrecord, schemeName.toString());
             } else {
                 logger.error("error registerNewSchemeId():: Cannot register SchemeId:{}, current status:{}", request.getSchemeId(), schemeIdrecord.getStatus());
                 throw new CisException(HttpStatus.BAD_REQUEST, "Cannot register SchemeId:" + request.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());

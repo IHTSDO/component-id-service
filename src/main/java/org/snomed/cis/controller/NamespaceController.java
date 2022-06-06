@@ -32,7 +32,7 @@ public class NamespaceController {
     }
 
     @GetMapping("/sct/namespaces")
-    public ResponseEntity<List<NamespaceDto>> getNamespaces(@RequestParam String token) throws CisException {
+    public ResponseEntity<List<NamespaceDto>> getNamespaces(@RequestParam(required = false) String token) throws CisException {
         logger.info("Request received for - No ReqParam");
         return ResponseEntity.ok(namespaceService.getNamespaces());
     }

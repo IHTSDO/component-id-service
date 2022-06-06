@@ -3,7 +3,10 @@ package org.snomed.cis.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.cis.controller.SecurityController;
-import org.snomed.cis.domain.*;
+import org.snomed.cis.domain.SchemeId;
+import org.snomed.cis.domain.SchemeIdBase;
+import org.snomed.cis.domain.SchemeName;
+import org.snomed.cis.domain.Sctid;
 import org.snomed.cis.dto.*;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.pojo.Config;
@@ -13,20 +16,18 @@ import org.snomed.cis.repository.SchemeIdBaseRepository;
 import org.snomed.cis.repository.SctidRepository;
 import org.snomed.cis.service.DM.SCTIdDM;
 import org.snomed.cis.service.DM.SchemeIdDM;
+import org.snomed.cis.util.CTV3ID;
+import org.snomed.cis.util.SNOMEDID;
 import org.snomed.cis.util.SctIdHelper;
 import org.snomed.cis.util.StateMachine;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.snomed.cis.util.CTV3ID;
-import org.snomed.cis.util.SNOMEDID;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
-import javax.print.DocFlavor;
 import javax.servlet.http.HttpServletRequest;
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -199,14 +200,14 @@ public class SctidService {
 
             if (swhere.toString() != "")
                 sql.append("Select * FROM sctid USE INDEX (nam_par_st)").append(resultWhere).append(" order by sctid limit ").append(limitR);
-                else
+            else
                 sql.append("Select * FROM sctid ").append(resultWhere).append(" order by sctid limit ").append(limitR);
         } else {
 
             if (swhere.toString() != "")
-            sql.append("Select * FROM sctid USE INDEX (nam_par_st)").append(resultWhere).append(" order by sctid");
+                sql.append("Select * FROM sctid USE INDEX (nam_par_st)").append(resultWhere).append(" order by sctid");
             else
-            sql.append("Select * FROM sctid ").append(resultWhere).append(" order by sctid");
+                sql.append("Select * FROM sctid ").append(resultWhere).append(" order by sctid");
         }
         Query genQuery = entityManager.createNativeQuery(sql.toString(), Sctid.class);
         List<Sctid> resultList = genQuery.getResultList();
@@ -255,6 +256,9 @@ public class SctidService {
             output.setSoftware(newSct.getSoftware());
             output.setExpirationDate(newSct.getExpirationDate());
             output.setComment(newSct.getComment());
+            output.setJobId(newSct.getJobId());
+            output.setCreated_at(newSct.getCreated_at());
+            output.setModified_at(newSct.getModified_at());
             if (!includeAdditionalIds.isEmpty() && includeAdditionalIds.equalsIgnoreCase("true")) {
                 List<SchemeId> schemeResult = getSchemeIds(newSct.getSystemId(), "10", "0");
                 output.setAdditionalIds(schemeResult);
@@ -277,10 +281,10 @@ public class SctidService {
 
     public Sctid getSctWithSystemId(AuthenticateResponseDto authToken, Integer namespaceId, String systemId) throws CisException {
         logger.debug("Request Received : AuthenticateResponseDto-{} :: namespaceId - {} :: systemId - {}", authToken, namespaceId, systemId);
-        Sctid sct = new Sctid();
+        Sctid sct = null;
         if (bulkSctidService.isAbleUser(String.valueOf(namespaceId), authToken)) {
             List<Sctid> result = sctidRepository.findBySystemIdAndNamespace(systemId, namespaceId);
-            sct = result.get(0);
+            sct = result.size() > 0 ? result.get(0) : null;
         } else {
             logger.error("error getSctWithSystemId():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
@@ -440,10 +444,14 @@ public class SctidService {
 
 
         if (bulkSctidService.isAbleUser((generationData.getNamespace()).toString(), authToken)) {
-            if ((generationData.getNamespace() == 0 && (!generationData.getPartitionId().substring(0, 1).equalsIgnoreCase("0")))
-                    || (generationData.getNamespace() != 0 && !generationData.getPartitionId().substring(0, 1).equalsIgnoreCase("1"))) {
+            if (
+                    (generationData.getPartitionId().isBlank() || generationData.getPartitionId().isEmpty())
+                            ||
+                            ((generationData.getNamespace() == 0 && (!generationData.getPartitionId().substring(0, 1).equalsIgnoreCase("0")))
+                                    || (generationData.getNamespace() != 0 && !generationData.getPartitionId().substring(0, 1).equalsIgnoreCase("1")))
+            ) {
                 logger.error("error generateSctid():: Namespace and partitionId parameters are not consistent.");
-                throw new CisException(HttpStatus.ACCEPTED, "Namespace and partitionId parameters are not consistent.");
+                throw new CisException(HttpStatus.BAD_REQUEST, "Namespace and partitionId parameters are not consistent.");
             }
             if (generationData.getSystemId().isBlank()) {
 
@@ -558,8 +566,8 @@ public class SctidService {
         Map<String, Object> queryObject = new HashMap<>();
         if (null != sctidReservationRequest.getNamespace() && !sctidReservationRequest.getPartitionId().isBlank()) {
             queryObject.put("namespace", sctidReservationRequest.getNamespace());
-            queryObject.put("partitionId", sctidReservationRequest.getPartitionId());
-            queryObject.put("status", stateMachine.statuses.get("available"));
+            queryObject.put("partitionId", "'" + sctidReservationRequest.getPartitionId() + "'");
+            queryObject.put("status", "'" + stateMachine.statuses.get("available") + "'");
             sctIdRecords = this.findSctWithIndexAndLimit(queryObject, "1", null);
             if (!sctIdRecords.isEmpty() && sctIdRecords.size() > 0) {
                 var newStatus = stateMachine.getNewStatus(sctIdRecords.get(0).getStatus(), action);
@@ -571,6 +579,8 @@ public class SctidService {
                 } else {
                     result = sctIdDM.counterMode(sctidReservationRequest, action);
                 }
+            } else {
+                result = sctIdDM.counterMode(sctidReservationRequest, action);
             }
         }
         logger.info("setAvailableSCTIDRecord2NewStatus() - Response :: {}", result);
@@ -660,17 +670,17 @@ public class SctidService {
         if (queryObject.size() > 0) {
             for (var query :
                     queryObject.entrySet()) {
-               // swhere += " And " + query.getKey() + "=" + (query.getValue());
+                // swhere += " And " + query.getKey() + "=" + (query.getValue());
                 swhere = swhere.append(" And ").append(query.getKey()).append("=").append((query.getValue()));
             }
         }
         if (!(swhere.toString().equalsIgnoreCase(""))) {
-           // swhere = " WHERE " + swhere.substring(5);
+            // swhere = " WHERE " + swhere.substring(5);
             resultWhere.append(" WHERE ").append(swhere.substring(5));
         }
-        StringBuffer sql =new StringBuffer();
+        StringBuffer sql = new StringBuffer();
         if ((limitR > 0) && (skipTo == 0)) {
-           // sql = "SELECT * FROM schemeId" + resultWhere + " order by schemeId limit " + limit;
+            // sql = "SELECT * FROM schemeId" + resultWhere + " order by schemeId limit " + limit;
             sql.append("SELECT * FROM schemeId").append(resultWhere).append(" order by schemeId limit ").append(limit);
         } else {
             sql.append("SELECT * FROM schemeId").append(resultWhere).append(" order by schemeId");
@@ -762,7 +772,7 @@ public class SctidService {
         Integer returnedNamespace = sctIdHelper.getNamespace(registrationData.getSctid());
         if (!(returnedNamespace.equals(registrationData.getNamespace()))) {
             logger.error("error registerSctid():: Namespaces differences between sctId and parameter");
-            throw new CisException(HttpStatus.ACCEPTED, "Namespaces differences between sctId and parameter");
+            throw new CisException(HttpStatus.BAD_REQUEST, "Namespaces differences between sctId and parameter");
         } else {
             if (bulkSctidService.isAbleUser((registrationData.getNamespace()).toString(), authToken)) {
                 if (registrationData.getSystemId().isBlank() || registrationData.getSystemId().isEmpty()) {
@@ -793,10 +803,10 @@ public class SctidService {
         reserveRequest.setComment(reservationData.getComment());
 
         if (bulkSctidService.isAbleUser((reservationData.getNamespace()).toString(), token)) {
-            if ((reservationData.getNamespace() == 0 && reservationData.getPartitionId().substring(0, 1) != "0")
-                    || (reservationData.getNamespace() != 0 && reservationData.getPartitionId().substring(0, 1) != "1")) {
+            if ((reservationData.getNamespace() == 0 && !(reservationData.getPartitionId().substring(0, 1).equalsIgnoreCase("0")))
+                    || (reservationData.getNamespace() != 0 && !(reservationData.getPartitionId().substring(0, 1).equalsIgnoreCase("1")))) {
                 logger.error("error reserveSctid():: Namespace and partitionId parameters are not consistent.");
-                throw new CisException(HttpStatus.ACCEPTED, ("Namespace and partitionId parameters are not consistent."));
+                throw new CisException(HttpStatus.BAD_REQUEST, ("Namespace and partitionId parameters are not consistent."));
             }
             reserveRequest.setAuthor(token.getName());
             Sctid sct = this.reserveSctid(reserveRequest);

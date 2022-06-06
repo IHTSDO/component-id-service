@@ -35,3 +35,4 @@ public class BulkJob {
     private String log;
 
 }
+

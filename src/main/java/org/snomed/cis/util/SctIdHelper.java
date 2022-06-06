@@ -92,7 +92,7 @@ public class SctIdHelper {
             }
             String tmp=sctid.toString();
             String partition=getPartition(tmp);
-            if (partition.substring(0,1)=="1" ){
+            if (partition.substring(0,1).equalsIgnoreCase("1") ){
                 if ( tmp.length()<11){
                     return null;
                 }else{
@@ -194,7 +194,7 @@ public class SctIdHelper {
     }
 
        // if (isValid == "true") {
-        if(isValid.equals("true")) {
+        if(isValid.equalsIgnoreCase("true")) {
             if (!validSCTId(sctid)) {
                 err = "SctId is not valid.";
                 isValid = "false";
@@ -238,7 +238,7 @@ public class SctIdHelper {
                 err += " Check digit error:" + e.getMessage();
             }
 
-            if (isValid == "false" && partitionCtrl && checkDigit != null) {
+            if (isValid.equalsIgnoreCase("false") && partitionCtrl && checkDigit != null) {
                 try {
                     var id = sctid.substring(0, sctid.length() - 1);
                     var cd = verhoeffCompute(id);
@@ -252,7 +252,7 @@ public class SctIdHelper {
             }
             try {
                 tmp = sctid.toString();
-                if (partitionId.substring(0, 1) == "1") {
+                if (partitionId.substring(0, 1).equalsIgnoreCase("1")) {
                     if (tmp.length() > 10) {
                         sequence = Long.valueOf(tmp.substring(0, tmp.length() - 10));
                     }
@@ -264,7 +264,7 @@ public class SctIdHelper {
             }
             try {
                 tmp = sctid.toString();
-                if (partitionId.substring(0, 1) == "1") {
+                if (partitionId.substring(0, 1).equalsIgnoreCase("1")) {
                     if (tmp.length() > 10) {
                         namespaceId = parseInt(tmp.substring(tmp.length() - 10, 7));
                     } else {
@@ -280,7 +280,7 @@ public class SctIdHelper {
             }
             if (null!=namespaceId && partitionCtrl) {
                 //if (partitionId.substring(0, 1) == "1" && namespaceId == 0) {
-                if(partitionId.substring(0,1) == "1" && (namespaceId.equals(0))) {
+                if(partitionId.substring(0,1).equalsIgnoreCase("1") && (namespaceId.equals(0))) {
                     isValid = "false";
                     err += " PartitionId first digit is '1', it identifies an extension SCTID, " +
                             "but no namespace could be identified";
@@ -296,7 +296,7 @@ public class SctIdHelper {
 
             }
 
-            if (isValid == "true") {
+            if (isValid.equalsIgnoreCase("true")) {
                 if (namespaceId == 0) {
                     comment = "Core ";
                 } else {
@@ -334,7 +334,7 @@ public class SctIdHelper {
         checkResp.setNamespaceOrganization("");
         checkResp.setNamespaceContactEmail("");
 
-        if (isValid == "true" && namespaceId != null) {
+        if (isValid.equalsIgnoreCase("true") && namespaceId != null) {
             Optional<Namespace> namespaceObj = namespaceRepository.findById(namespaceId);
            if(namespaceObj.isPresent()) {
                checkResp.setNamespaceOrganization(namespaceObj.get().getOrganizationName());
@@ -351,7 +351,7 @@ public class SctIdHelper {
         Sctid newRec = new Sctid();
         if(!this.validSCTId(sctid))
         {
-            throw new CisException(HttpStatus.ACCEPTED,"Not valid SCTID.");
+            throw new CisException(HttpStatus.BAD_REQUEST,"Not valid SCTID.");
         }
         Optional<Sctid> sctid1 = sctidRepository.findById(sctid);
         if(sctid1.isPresent())
@@ -385,19 +385,19 @@ public class SctIdHelper {
         Set<Map.Entry<String, Object>> s = sctIdRecord.entrySet();
 
         for (Map.Entry<String, Object> it : s) {
-            if (it.getKey() == "sctid") {
+            if (it.getKey().equalsIgnoreCase("sctid")) {
                 sctid = (String) it.getValue();
-            } else if (it.getKey() == "sequence") {
+            } else if (it.getKey().equalsIgnoreCase("sequence")) {
                 sequence = (long) it.getValue();
-            } else if (it.getKey() == "namespace") {
+            } else if (it.getKey().equalsIgnoreCase("namespace")) {
                 namespace = (int) it.getValue();
-            } else if (it.getKey() == "partitionId") {
+            } else if (it.getKey().equalsIgnoreCase("partitionId")) {
                 partitionId = (String) it.getValue();
-            } else if (it.getKey() == "checkDigit") {
+            } else if (it.getKey().equalsIgnoreCase("checkDigit")) {
                 checkDigit = (int) it.getValue();
-            } else if (it.getKey() == "systemId") {
+            } else if (it.getKey().equalsIgnoreCase("systemId")) {
                 systemId = (String) it.getValue();
-            } else if (it.getKey() == "status") {
+            } else if (it.getKey().equalsIgnoreCase("status")) {
                 status = (String) it.getValue();
             }
         }

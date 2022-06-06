@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
-import javax.print.DocFlavor;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -101,7 +100,7 @@ public class BulkJobService {
         if (orderBy.size() > 0) {
             for (var field : orderBy.entrySet()) {
                 dataOrder.append(",").append(field.getKey());
-                if (field.getValue() == "D") {
+                if (field.getValue().equalsIgnoreCase("D")) {
                     dataOrder.append(" desc");
                 }
             }
@@ -114,8 +113,8 @@ public class BulkJobService {
         }
         StringBuffer sql = new StringBuffer();
         if ((null != limit && limit > 0) && ((null == skip || skip == 0))) {
-        sql.append("SELECT ").append("*").append(" FROM bulkJob").append(swhere).append(" order by ")
-                .append(dataOrderOutput).append(" limit ").append(limit);
+            sql.append("SELECT ").append("*").append(" FROM bulkJob").append(swhere).append(" order by ")
+                    .append(dataOrderOutput).append(" limit ").append(limit);
         } else {
             sql.append("SELECT ").append("*").append(" FROM bulkJob").append(swhere).append(" order by ")
                     .append(dataOrderOutput);
@@ -184,7 +183,7 @@ public class BulkJobService {
 
     public List<SchemeId> findSchemeByJobId(Integer jobId) {
         logger.debug("BulkJobService.findSchemeByJobId() jobId :: {}", jobId);
-       // var sql = "SELECT * FROM schemeId WHERE jobId = " + (jobId) + " UNION SELECT * FROM schemeId_log WHERE jobId =  " + (jobId);
+        // var sql = "SELECT * FROM schemeId WHERE jobId = " + (jobId) + " UNION SELECT * FROM schemeId_log WHERE jobId =  " + (jobId);
         StringBuffer sql = new StringBuffer();
         sql.append("SELECT * FROM schemeId WHERE jobId = ").append((jobId))
                 .append(" UNION SELECT * FROM schemeId_log WHERE jobId =  ")

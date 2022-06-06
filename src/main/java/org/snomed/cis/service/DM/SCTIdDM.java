@@ -17,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Component
@@ -49,7 +51,7 @@ public class SCTIdDM {
             List<Sctid> result = sctidRepository.findBySystemIdAndNamespace(sctidRegisterRequest.getSystemId(), sctidRegisterRequest.getNamespace());
             Sctid sct = result.get(0);
             if (!(sct.getSctid().equalsIgnoreCase(sctidRegisterRequest.getSctid()))) {
-                throw new CisException(HttpStatus.ACCEPTED, "SystemId:" + sctidRegisterRequest.getSystemId() + " already exists with SctId:" + sct.getSctid());
+                throw new CisException(HttpStatus.BAD_REQUEST, "SystemId:" + sctidRegisterRequest.getSystemId() + " already exists with SctId:" + sct.getSctid());
             }
             if (sct.getStatus().equalsIgnoreCase(stateMachine.statuses.get("assigned"))) {
                 resultSct = sct;
@@ -73,7 +75,8 @@ public class SCTIdDM {
         if (null != sctIdRecord) {
             var newStatus = stateMachine.getNewStatus(sctIdRecord.getStatus(), stateMachine.actions.get("register"));
             if (null != newStatus) {
-                if (!sctidRegistrationRequest.getSystemId().isEmpty()) {
+                if (!sctidRegistrationRequest.getSystemId().isEmpty() && !sctidRegistrationRequest.getSystemId().isBlank()
+                        && null != sctidRegistrationRequest.getSystemId()) {
                     sctIdRecord.setSystemId(sctidRegistrationRequest.getSystemId());
                 }
                 sctIdRecord.setStatus(newStatus);
@@ -94,10 +97,10 @@ public class SCTIdDM {
     public Sctid getSctid(String sctId) throws CisException {
         Sctid newSct = null;
         if (!sctIdHelper.validSCTId(sctId)) {
-            throw new CisException(HttpStatus.ACCEPTED, "Not valid SCTID.");
+            throw new CisException(HttpStatus.BAD_REQUEST, "Not valid SCTID.");
         } else {
             //refactor Changes
-           Optional<Sctid> sctid = sctidRepository.findById(sctId);
+            Optional<Sctid> sctid = sctidRepository.findById(sctId);
             Sctid sctRec = (sctid.isPresent()) ? sctid.get() : null;
             //refactor Changes
             if (null != sctRec) {
@@ -141,16 +144,14 @@ public class SCTIdDM {
         var newStatus = stateMachine.getNewStatus(sctIdRecord.getStatus(), action);
         if (null != newStatus) {
 
-           /* if (operation. && operation.systemId.trim() != "") {
-                sctIdRecord.systemId = operation.systemId;
-            }*/
             sctIdRecord.setStatus(newStatus);
-            /*sctIdRecord.setAuthor(); = operation.author;
-            sctIdRecord.setSoftware(); = operation.software;
-            sctIdRecord.setExpirationDate(); = operation.expirationDate;
-            sctIdRecord.setComment(); = operation.comment;
-
-            sctIdRecord.setJobId(null);*/
+            sctIdRecord.setAuthor(operation.getAuthor());
+            sctIdRecord.setSoftware(operation.getSoftware());
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            LocalDateTime expirationDate = LocalDateTime.parse(operation.getExpirationDate(), formatter);
+            sctIdRecord.setExpirationDate(expirationDate);
+            sctIdRecord.setComment(operation.getComment());
+            sctIdRecord.setJobId(null);
             Sctid updatedRecord = sctidRepository.save(sctIdRecord);
             result = updatedRecord;
         } else {
@@ -162,7 +163,7 @@ public class SCTIdDM {
     public Integer getNextNumber(SCTIDReserveRequest operation) throws CisException {
         Optional<Partitions> partitionsList = partitionsRepository.findById(new PartitionsPk(operation.getNamespace(), operation.getPartitionId()));
         Integer nextNumber = null;
-        if(partitionsList.isPresent())
+        if (partitionsList.isPresent())
             nextNumber = ((partitionsList.get().getSequence()) + 1);
         return nextNumber;
     }
@@ -172,7 +173,7 @@ public class SCTIdDM {
     public String computeSCTID(SCTIDReserveRequest operation, Integer sequence) {
 
         var tmpNsp = operation.getNamespace().toString();
-        if (tmpNsp == "0") {
+        if (tmpNsp.equalsIgnoreCase("0")) {
             tmpNsp = "";
         }
         var base = sequence.toString() + tmpNsp + operation.getPartitionId();
@@ -193,27 +194,27 @@ public class SCTIdDM {
         var newStatus = stateMachine.getNewStatus(sctIdRecord.getStatus(), action);
         if (null != newStatus) {
 
-           /* if (operation. && operation.systemId.trim() != "") {
-                sctIdRecord.systemId = operation.systemId;
-            }*/
+            if (!operation.getSystemId().isBlank() && !operation.getSystemId().isEmpty() && null != operation.getSystemId()) {
+                sctIdRecord.setSystemId(operation.getSystemId());
+            }
             sctIdRecord.setStatus(newStatus);
-            /*sctIdRecord.setAuthor(); = operation.author;
-            sctIdRecord.setSoftware(); = operation.software;
-            sctIdRecord.setExpirationDate(); = operation.expirationDate;
-            sctIdRecord.setComment(); = operation.comment;
+            sctIdRecord.setAuthor(operation.getAuthor());
+            sctIdRecord.setSoftware(operation.getSoftware());
+            sctIdRecord.setComment(operation.getComment());
 
-            sctIdRecord.setJobId(null);*/
+            sctIdRecord.setJobId(null);
             Sctid updatedRecord = sctidRepository.save(sctIdRecord);
             result = updatedRecord;
-        } else {
-            counterMode(operation, action);
         }
+        /*else {
+            counterMode(operation, action);
+        }*/
         return result;
     }
 
     public Integer getNextNumber(SctidGenerate operation) throws CisException {
         Optional<Partitions> partitionsList = partitionsRepository.findById(new PartitionsPk(operation.getNamespace(), operation.getPartitionId()));
-        if(partitionsList.isPresent()) {
+        if (partitionsList.isPresent()) {
             Integer nextNumber = ((partitionsList.get().getSequence()) + 1);
             Partitions partitions = new Partitions(operation.getNamespace(), operation.getPartitionId(), nextNumber);
             Partitions partOutput = partitionsRepository.save(partitions);
@@ -221,9 +222,7 @@ public class SCTIdDM {
                 return nextNumber;
             else
                 return null;
-        }
-        else
-        {
+        } else {
             return null;
         }
     }
@@ -231,7 +230,7 @@ public class SCTIdDM {
     public String computeSCTID(SctidGenerate operation, Integer sequence) {
 
         var tmpNsp = operation.getNamespace().toString();
-        if (tmpNsp == "0") {
+        if (tmpNsp.equalsIgnoreCase("0")) {
             tmpNsp = "";
         }
         var base = sequence.toString() + tmpNsp + operation.getPartitionId();

@@ -153,19 +153,19 @@ public class BulkSctidService {
         Set<Map.Entry<String, Object>> s = sctIdRecord.entrySet();
 
         for (Map.Entry<String, Object> it : s) {
-            if (it.getKey() == "sctid") {
+            if (it.getKey().equalsIgnoreCase("sctid")) {
                 sctid = (String) it.getValue();
-            } else if (it.getKey() == "sequence") {
+            } else if (it.getKey().equalsIgnoreCase("sequence")) {
                 sequence = (long) it.getValue();
-            } else if (it.getKey() == "namespace") {
+            } else if (it.getKey().equalsIgnoreCase("namespace")) {
                 namespace = (int) it.getValue();
-            } else if (it.getKey() == "partitionId") {
+            } else if (it.getKey().equalsIgnoreCase("partitionId")) {
                 partitionId = (String) it.getValue();
-            } else if (it.getKey() == "checkDigit") {
+            } else if (it.getKey().equalsIgnoreCase("checkDigit")) {
                 checkDigit = (int) it.getValue();
-            } else if (it.getKey() == "systemId") {
+            } else if (it.getKey().equalsIgnoreCase("systemId")) {
                 systemId = (String) it.getValue();
-            } else if (it.getKey() == "status") {
+            } else if (it.getKey().equalsIgnoreCase("status")) {
                 status = (String) it.getValue();
             }
         }
@@ -295,7 +295,7 @@ public class BulkSctidService {
             if (!able) {
                 List<String> roleAsGroups = authenticateResponseDto.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
                 for (String group : roleAsGroups) {
-                    if (group == "namespace-" + namespace)
+                    if (group.equalsIgnoreCase("namespace-" + namespace))
                         able = true;
                     else if (possibleGroups.contains(group))
                         able = true;
@@ -678,10 +678,10 @@ public class BulkSctidService {
         if (((sctidBulkReservationRequestDto.getNamespace() == 0) && (!("0".equalsIgnoreCase(sctidBulkReservationRequestDto.getPartitionId().substring(0, 1)))))
                 || (sctidBulkReservationRequestDto.getNamespace() != 0 && (!("1".equalsIgnoreCase(sctidBulkReservationRequestDto.getPartitionId().substring(0, 1)))))) {
             logger.error("error bulkReserveSctids():: Namespace and partitionId parameters are not consistent.");
-            throw new CisException(HttpStatus.UNAUTHORIZED, "Namespace and partitionId parameters are not consistent.");
+            throw new CisException(HttpStatus.BAD_REQUEST, "Namespace and partitionId parameters are not consistent.");
         } else if (sctidBulkReservationRequestDto.getQuantity() == null || sctidBulkReservationRequestDto.getQuantity() < 1) {
             logger.error("error bulkReserveSctids():: Quantity property cannot be lower to 1.");
-            throw new CisException(HttpStatus.UNAUTHORIZED, "Quantity property cannot be lower to 1.");
+            throw new CisException(HttpStatus.BAD_REQUEST, "Quantity property cannot be lower to 1.");
         }
         {
             sctidBulkReserve.setAuthor(username);

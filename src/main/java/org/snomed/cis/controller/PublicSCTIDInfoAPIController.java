@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 @Api(tags = "Public SCTID Info API", value = "Public SCTID Info API")
-@RestController
-@RequestMapping("/public")
+//@RestController
+//@RequestMapping("/public")
 public class PublicSCTIDInfoAPIController {
     private final Logger logger = LoggerFactory.getLogger(PublicSCTIDInfoAPIController.class);
     @Autowired
@@ -25,7 +25,7 @@ public class PublicSCTIDInfoAPIController {
     @Autowired
     SctidService sctidService;
 
-    @ApiOperation(
+   /* @ApiOperation(
             value="Public SCTID Info API",
             notes="Returns public sctID info API"
                     + "<p>The following properties can be expanded:"
@@ -38,7 +38,7 @@ public class PublicSCTIDInfoAPIController {
     })
     @GetMapping("/sct/namespaces")
     @ResponseBody
-    public List<NamespaceDto> getNamespaces(@RequestParam String token)
+    public List<NamespaceDto> getNamespaces(@RequestParam(required = false) String token)
     {
         logger.info("Request received for getNamespaces() - No Param");
         return namespaceService.getNamespaceslist();
@@ -46,8 +46,8 @@ public class PublicSCTIDInfoAPIController {
 
     @GetMapping("/sct/check/{sctid}")
     @ResponseBody
-    public CheckSctidResponseDTO checkSctid(@RequestParam String token, @PathVariable String sctid) throws CisException {
+    public CheckSctidResponseDTO checkSctid(@RequestParam(required = false) String token, @PathVariable String sctid) throws CisException {
         logger.info("Request received for - sctid :: {}", sctid);
         return sctidService.checkSctid(sctid);
-    }
+    }*/
 }
