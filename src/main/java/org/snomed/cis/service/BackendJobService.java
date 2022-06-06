@@ -21,7 +21,7 @@ import javax.persistence.Query;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class BankEndJobService {
+public class BackendJobService {
     @Autowired
     SchemeIdService schemeIdService;
     @PersistenceContext
