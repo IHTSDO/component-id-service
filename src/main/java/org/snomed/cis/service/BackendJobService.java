@@ -56,26 +56,29 @@ public class BackendJobService {
     }*/
     public List<BulkJobResponseDto> findFieldSelect(Map<String, String> queryObject, Map<String, Integer> queryObj, String limit, String skip, Map<String, String> orderBy) {
         //var record= ;
-        String swhere = "";
+        StringBuffer swhereBuf = new StringBuffer();
         var limitR = 100;
         var skipTo = 0;
         if (limit != null) limitR = Integer.parseInt(limit);
         if (skip != null) skipTo = Integer.parseInt(skip);
         if (queryObject.size() > 0) {
             for (var query : queryObject.entrySet()) {
-                swhere += " And " + query.getKey() + "=" + (query.getValue());
+                swhereBuf.append(" And ").append(query.getKey()).append("=").append(query.getValue());
             }
         }
-        if (swhere != "") {
+        String swhere = swhereBuf.toString();
+        if (!"".equalsIgnoreCase(swhere)) {
             swhere = " WHERE " + swhere.substring(5);
         }
-        String select = "";
+
+        StringBuffer selectBuf = new StringBuffer();
         if (queryObject != null) {
             for (var query : queryObject.entrySet()) {
-                select += "," + query.getKey();
+                selectBuf.append(",").append(query.getKey());
             }
         }
-        if (select != "") {
+        String select = selectBuf.toString();
+        if (!"".equalsIgnoreCase(select)) {
             select = select.substring(1);
         } else {
             select = "*";
@@ -98,14 +101,14 @@ public class BackendJobService {
         } else {
             dataOrder = "id";
         }
-        String sql = null;
+        StringBuffer sqlBuf = new StringBuffer();
         if ((limitR > 0) && (skipTo == 0)) {
-            sql = "SELECT " + select + " FROM bulkJob" + swhere + " order by " + dataOrder + " limit " + limit;
+            sqlBuf.append("SELECT ").append(select).append(" FROM bulkJob").append(swhere).append(" order by ").append(dataOrder).append(" limit ").append(limit);
         } else {
-            sql = "SELECT " + select + " FROM bulkJob" + swhere + " order by " + dataOrder;
+            sqlBuf.append("SELECT ").append(select).append(" FROM bulkJob").append(swhere).append(" order by ").append(dataOrder);
         }
 
-        Query genQuery = entityManager.createNativeQuery(sql, BulkJob.class);
+        Query genQuery = entityManager.createNativeQuery(sqlBuf.toString(), BulkJob.class);
 
         List<BulkJob> bulkJobs = genQuery.getResultList();
         List<BulkJobResponseDto> resultList = new LinkedList<>();
@@ -133,21 +136,23 @@ public class BackendJobService {
     }
 
     public List<SchemeId> saveScheme(List<SchemeId> schemeIds, String scheme) throws CisException {
-        String supdate = "";
+        StringBuffer supdateBuf = new StringBuffer();
         List<SchemeId> resultList = null;
         if (schemeIds.size() > 0) {
             for (SchemeId query : schemeIds) {
                 if (query.getSchemeId() != null && query.getScheme() != null) {
-                    supdate += " ," + query + "=";
+                    supdateBuf.append(" ,").append(query).append("=");
                 }
             }
         }
+        String supdate = supdateBuf.toString();
 
-        if (supdate != "") {
+        if (!"".equalsIgnoreCase(supdate)) {
             supdate = supdate.substring(2);
 
-            String sql = "UPDATE schemid SET " + supdate + " ,modified_at=now() WHERE scheme=" + scheme;
-            Query genQuery = entityManager.createNativeQuery(sql, BulkJob.class);
+            StringBuffer sqlBuf = new StringBuffer();
+            sqlBuf.append("UPDATE schemid SET ").append(supdate).append(" ,modified_at=now() WHERE scheme=").append(scheme);
+            Query genQuery = entityManager.createNativeQuery(sqlBuf.toString(), BulkJob.class);
             resultList = genQuery.getResultList();
             return resultList;
 
