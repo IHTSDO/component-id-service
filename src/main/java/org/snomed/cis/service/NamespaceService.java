@@ -212,14 +212,14 @@ public class NamespaceService {
         return hasNamespacePermission;
     }
 
-    public String updateNamespace(AuthenticateResponseDto authenticateResponseDto, NamespaceDto namespace) throws Exception {
+    public String updateNamespace(AuthenticateResponseDto authenticateResponseDto, NamespaceDto namespace) throws CisException {
         logger.debug("NamespaceService.updateNamespace() authenticateResponseDto-{} :: namespace-{} ", authenticateResponseDto, namespace);
         String result = this.updateNamespaces(authenticateResponseDto, namespace);
         logger.info("updateNamespace() Response-{} ", result);
         return result;
     }
 
-    public String updateNamespaces(AuthenticateResponseDto authenticateResponseDto, NamespaceDto namespace) throws Exception {
+    public String updateNamespaces(AuthenticateResponseDto authenticateResponseDto, NamespaceDto namespace) throws CisException {
         logger.debug("NamespaceService.updateNamespaces() AuthenticateResponseDto-{} :: NamespaceDto-{} ", authenticateResponseDto, namespace);
         if (this.isAbleToEdit(namespace.getNamespace(), authenticateResponseDto)) {
             String result = (editNamespace(namespace.getNamespace(), namespace));
@@ -233,7 +233,7 @@ public class NamespaceService {
         }
     }
 
-    private String editNamespace(Integer namespaceId, NamespaceDto namespaceObj) throws Exception {
+    private String editNamespace(Integer namespaceId, NamespaceDto namespaceObj) throws CisException {
         logger.debug("NamespaceService.editNamespace() namespaceId-{} :: NamespaceDto-{} ", namespaceId, namespaceObj);
         NamespaceDto namespacesObj = new NamespaceDto();
         List<Partitions> partitionsList = null;
@@ -260,7 +260,7 @@ public class NamespaceService {
             response.put("message", "Success");
         } catch (Exception e) {
             logger.error("error editNamespace():: ", e.getMessage());
-            throw new Exception(String.valueOf(response.put("message", e.getMessage())));
+            throw new CisException(HttpStatus.BAD_REQUEST,String.valueOf(response.put("message", e.getMessage())));
         }
         logger.info("editNamespace() Response-{} ", response.toString());
         return response.toString();

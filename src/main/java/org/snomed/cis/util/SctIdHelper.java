@@ -145,7 +145,7 @@ public class SctIdHelper {
                 if ( tmp.length()<11){
                     return null;
                 }else{
-                    return parseInt(tmp.substring(tmp.length()-10,((tmp.length()-10)+7)));
+                    return parseInt(tmp.substring((tmp.length()-10),((tmp.length()-10)+7)));
                 }
             }
             return 0;
@@ -266,7 +266,7 @@ public class SctIdHelper {
                 tmp = sctid.toString();
                 if (partitionId.substring(0, 1).equalsIgnoreCase("1")) {
                     if (tmp.length() > 10) {
-                        namespaceId = parseInt(tmp.substring(tmp.length() - 10, 7));
+                        namespaceId = parseInt(tmp.substring(tmp.length() - 10, (tmp.length() - 10)+7));
                     } else {
                         err += " PartitionId first digit is '1', it identifies an extension SCTID, " +
                                 "but no namespace could be identified";
@@ -326,7 +326,7 @@ public class SctIdHelper {
         checkResp.setSctid(sctid);
         checkResp.setSequence(sequence);
         checkResp.setNamespace(namespaceId);
-        checkResp.setPartitionID(partitionId);
+        checkResp.setPartitionId(partitionId);
         checkResp.setComponentType(comment);
         checkResp.setCheckDigit(checkDigit);
         checkResp.setIsSCTIDValid(isValid);

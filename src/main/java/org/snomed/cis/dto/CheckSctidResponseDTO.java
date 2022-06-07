@@ -4,7 +4,7 @@ public class CheckSctidResponseDTO {
     private String sctid;
     private Long sequence;
     private Integer namespace;
-    private String partitionID;
+    private String partitionId;
     private String componentType;
     private Integer checkDigit;
     private String isSCTIDValid;
@@ -12,11 +12,11 @@ public class CheckSctidResponseDTO {
     private String namespaceOrganization;
     private String namespaceContactEmail;
 
-    public CheckSctidResponseDTO(String sctid, Long sequence, Integer namespace, String partitionID, String componentType, Integer checkDigit, String isSCTIDValid, String errorMessage, String namespaceOrganization, String namespaceContactEmail) {
+    public CheckSctidResponseDTO(String sctid, Long sequence, Integer namespace, String partitionId, String componentType, Integer checkDigit, String isSCTIDValid, String errorMessage, String namespaceOrganization, String namespaceContactEmail) {
         this.sctid = sctid;
         this.sequence = sequence;
         this.namespace = namespace;
-        this.partitionID = partitionID;
+        this.partitionId = partitionId;
         this.componentType = componentType;
         this.checkDigit = checkDigit;
         this.isSCTIDValid = isSCTIDValid;
@@ -50,14 +50,6 @@ public class CheckSctidResponseDTO {
 
     public void setNamespace(Integer namespace) {
         this.namespace = namespace;
-    }
-
-    public String getPartitionID() {
-        return partitionID;
-    }
-
-    public void setPartitionID(String partitionID) {
-        this.partitionID = partitionID;
     }
 
     public String getComponentType() {
@@ -106,5 +98,13 @@ public class CheckSctidResponseDTO {
 
     public void setNamespaceContactEmail(String namespaceContactEmail) {
         this.namespaceContactEmail = namespaceContactEmail;
+    }
+
+    public String getPartitionId() {
+        return partitionId;
+    }
+
+    public void setPartitionId(String partitionId) {
+        this.partitionId = partitionId;
     }
 }
