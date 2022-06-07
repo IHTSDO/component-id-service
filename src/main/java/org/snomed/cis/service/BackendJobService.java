@@ -2,6 +2,8 @@ package org.snomed.cis.service;
 
 import com.google.common.collect.Sets;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snomed.cis.domain.*;
 import org.snomed.cis.dto.BulkJobResponseDto;
 import org.snomed.cis.exception.CisException;
@@ -10,6 +12,7 @@ import org.snomed.cis.service.DM.SCTIdDM;
 import org.snomed.cis.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityManager;
@@ -21,6 +24,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class BackendJobService {
+
+    private final Logger logger = LoggerFactory.getLogger(BackendJobService.class);
+
     @Autowired
     SchemeIdService schemeIdService;
 
@@ -50,10 +56,6 @@ public class BackendJobService {
     @Autowired
     private SctIdHelper sctIdHelper;
 
-    /*public static void main(String[] args) throws CisException {
-        BankEndJobService jobObj=new BankEndJobService();
-        jobObj.runner();
-    }*/
     public List<BulkJobResponseDto> findFieldSelect(Map<String, String> queryObject, Map<String, Integer> queryObj, String limit, String skip, Map<String, String> orderBy) {
         //var record= ;
         StringBuffer swhereBuf = new StringBuffer();
@@ -194,8 +196,9 @@ public class BackendJobService {
         return resultList;
     }
 
-    //@Scheduled(fixedRate = 3000)
+    @Scheduled(fixedRate = 3000)
     public void runner() throws CisException {
+        logger.info("Scheduler run :: BackendJobService :: " + LocalDateTime.now());
         Map<String, String> objQuery1 = new HashMap<String, String>();
         Map<String, Integer> objQuery2 = new HashMap<String, Integer>();
         Map<String, String> objQuery3 = new HashMap<String, String>();
