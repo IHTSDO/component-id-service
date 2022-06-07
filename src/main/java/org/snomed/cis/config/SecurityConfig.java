@@ -41,7 +41,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             "/login",
             "/loginUI",
             "/sct/namespaces",
-            "/sct/check/{sctid}"
+            "/sct/check/**"
     };
 
     @Override
