@@ -45,7 +45,7 @@ public class NamespaceController {
     }
 
     @PutMapping("/sct/namespaces")
-    public ResponseEntity<String> updateNamespace(@RequestParam String token, @RequestBody NamespaceDto namespace, @ApiIgnore Authentication authentication) throws Exception {
+    public ResponseEntity<String> updateNamespace(@RequestParam String token, @RequestBody NamespaceDto namespace, @ApiIgnore Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
         logger.info("Request received for - NamespaceDto :: {} - authenticateResponseDto :: {}", namespace,authToken.getAuthenticateResponseDto());
         return ResponseEntity.ok(namespaceService.updateNamespace(authToken.getAuthenticateResponseDto(),namespace));
