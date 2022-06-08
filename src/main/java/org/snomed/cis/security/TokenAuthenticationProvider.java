@@ -36,10 +36,12 @@ public class TokenAuthenticationProvider implements AuthenticationProvider {
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-
+        Token authToken = (Token)authentication;
         String token = (String) authentication.getPrincipal();
-
-        if (token == null) {
+        if(authToken.getIsPublicEndpoint() && token == null){
+            return authToken;
+        }
+        else if (token == null) {
             throw new AuthenticationCredentialsNotFoundException("token not provided");
         }
         ResponseEntity<AuthenticateResponseDto> authenticateResponse;

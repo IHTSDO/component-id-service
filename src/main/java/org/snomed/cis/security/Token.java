@@ -20,6 +20,8 @@ public class Token extends AbstractAuthenticationToken {
 
     private AuthenticateResponseDto authenticateResponseDto;
 
+    private Boolean isPublicEndpoint;
+
     public Token(String token, String userName, boolean authenticated, List<GrantedAuthority> authorities, AuthenticateResponseDto authenticateResponseDto) {
         super(authorities);
         this.token = token;
@@ -28,15 +30,17 @@ public class Token extends AbstractAuthenticationToken {
         setAuthenticated(authenticated);
     }
 
-    public Token(String token) {
+    public Token(String token, boolean isPublicEndpoint) {
         super(AuthorityUtils.NO_AUTHORITIES);
         this.token = token;
         setAuthenticated(false);
+        this.isPublicEndpoint = isPublicEndpoint;
     }
 
-    public Token() {
+    public Token(boolean isPublicEndpoint) {
         super(AuthorityUtils.NO_AUTHORITIES);
         setAuthenticated(false);
+        this.isPublicEndpoint = isPublicEndpoint;
     }
 
     @Override
