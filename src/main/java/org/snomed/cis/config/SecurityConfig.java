@@ -40,7 +40,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             "/info/**", //UI resource
             "/login",
             "/loginUI",
-            "/sct/check/{sctid}"
+            "/sct/check/**"
     };
 
     @Override
