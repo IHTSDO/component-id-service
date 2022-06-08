@@ -2,30 +2,36 @@ package org.snomed.cis.service;
 
 import com.google.common.collect.Sets;
 import org.json.JSONObject;
-import org.snomed.cis.dto.BulkJobResponseDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snomed.cis.domain.*;
+import org.snomed.cis.dto.BulkJobResponseDto;
 import org.snomed.cis.exception.CisException;
-import org.snomed.cis.repository.BulkSchemeIdRepository;
-import org.snomed.cis.repository.PartitionsRepository;
-import org.snomed.cis.repository.SchemeIdBaseRepository;
-import org.snomed.cis.repository.SctidRepository;
+import org.snomed.cis.repository.*;
 import org.snomed.cis.service.DM.SCTIdDM;
 import org.snomed.cis.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Service
 public class BackendJobService {
+
+    private final Logger logger = LoggerFactory.getLogger(BackendJobService.class);
+
     @Autowired
     SchemeIdService schemeIdService;
+
+    @Autowired
     @PersistenceContext
-    static
     EntityManager entityManager;
     @Autowired
     JobTypeConstants jobType;
@@ -43,37 +49,38 @@ public class BackendJobService {
     BulkSchemeIdRepository schemeIdRepository;
     @Autowired
     SchemeIdBaseRepository schemeIdBaseRepository;
+    @Autowired
+    private BulkJobRepository bulkJobRepository;
 
     int chunk = 1000;
     @Autowired
     private SctIdHelper sctIdHelper;
 
-    /*public static void main(String[] args) throws CisException {
-        BankEndJobService jobObj=new BankEndJobService();
-        jobObj.runner();
-    }*/
-    public static List<BulkJobResponseDto> findFieldSelect(Map<String, String> queryObject, Map<String, Integer> queryObj, String limit, String skip, Map<String, String> orderBy) {
+    public List<BulkJobResponseDto> findFieldSelect(Map<String, String> queryObject, Map<String, Integer> queryObj, String limit, String skip, Map<String, String> orderBy) {
         //var record= ;
-        String swhere = "";
+        StringBuffer swhereBuf = new StringBuffer();
         var limitR = 100;
         var skipTo = 0;
         if (limit != null) limitR = Integer.parseInt(limit);
         if (skip != null) skipTo = Integer.parseInt(skip);
         if (queryObject.size() > 0) {
             for (var query : queryObject.entrySet()) {
-                swhere += " And " + query.getKey() + "=" + (query.getValue());
+                swhereBuf.append(" And ").append(query.getKey()).append("=").append(query.getValue());
             }
         }
-        if (swhere != "") {
+        String swhere = swhereBuf.toString();
+        if (!"".equalsIgnoreCase(swhere)) {
             swhere = " WHERE " + swhere.substring(5);
         }
-        String select = "";
+
+        StringBuffer selectBuf = new StringBuffer();
         if (queryObject != null) {
             for (var query : queryObject.entrySet()) {
-                select += "," + query.getKey();
+                selectBuf.append(",").append(query.getKey());
             }
         }
-        if (select != "") {
+        String select = selectBuf.toString();
+        if (!"".equalsIgnoreCase(select)) {
             select = select.substring(1);
         } else {
             select = "*";
@@ -96,16 +103,22 @@ public class BackendJobService {
         } else {
             dataOrder = "id";
         }
-        String sql = null;
+        StringBuffer sqlBuf = new StringBuffer();
         if ((limitR > 0) && (skipTo == 0)) {
-            sql = "SELECT " + select + " FROM bulkJob" + swhere + " order by " + dataOrder + " limit " + limit;
+            sqlBuf.append("SELECT ").append(select).append(" FROM bulkJob").append(swhere).append(" order by ").append(dataOrder).append(" limit ").append(limit);
         } else {
-            sql = "SELECT " + select + " FROM bulkJob" + swhere + " order by " + dataOrder;
+            sqlBuf.append("SELECT ").append(select).append(" FROM bulkJob").append(swhere).append(" order by ").append(dataOrder);
         }
 
-        Query genQuery = entityManager.createNativeQuery(sql, BulkJob.class);
+        Query genQuery = entityManager.createNativeQuery(sqlBuf.toString(), BulkJob.class);
 
-        List<BulkJobResponseDto> resultList = genQuery.getResultList();
+        List<BulkJob> bulkJobs = genQuery.getResultList();
+        List<BulkJobResponseDto> resultList = new LinkedList<>();
+        for (BulkJob b : bulkJobs) {
+            resultList.add(new BulkJobResponseDto(b));
+
+        }
+
         if ((skipTo == 0)) {
             return resultList;
         } else {
@@ -123,54 +136,69 @@ public class BackendJobService {
             return newRows;
         }
     }
+
     public List<SchemeId> saveScheme(List<SchemeId> schemeIds, String scheme) throws CisException {
-        String supdate = "";
+        StringBuffer supdateBuf = new StringBuffer();
         List<SchemeId> resultList = null;
         if (schemeIds.size() > 0) {
             for (SchemeId query : schemeIds) {
-                if (query.getSchemeId()!=null && query.getScheme()!=null) {
-                    supdate += " ," + query+ "=";
+                if (query.getSchemeId() != null && query.getScheme() != null) {
+                    supdateBuf.append(" ,").append(query).append("=");
                 }
             }
         }
+        String supdate = supdateBuf.toString();
 
-        if (supdate != "") {
+        if (!"".equalsIgnoreCase(supdate)) {
             supdate = supdate.substring(2);
 
-            String sql = "UPDATE schemid SET " + supdate + " ,modified_at=now() WHERE scheme=" +scheme;
-            Query genQuery = entityManager.createNativeQuery(sql, BulkJob.class);
+            StringBuffer sqlBuf = new StringBuffer();
+            sqlBuf.append("UPDATE schemid SET ").append(supdate).append(" ,modified_at=now() WHERE scheme=").append(scheme);
+            Query genQuery = entityManager.createNativeQuery(sqlBuf.toString(), BulkJob.class);
             resultList = genQuery.getResultList();
             return resultList;
 
         }
         return resultList;
     }
-    public  List<BulkJob> save(Map<String, Object> qObj, List<BulkJobResponseDto> bulkJobsRecord) throws CisException {
-        String supdate = "";
-        List<BulkJob> resultList = null;
-        if (qObj.size() > 0) {
-            for (var query : qObj.entrySet()) {
-                if (query.getKey() != "id") {
-                    supdate += " ," + query.getKey() + "=";
+
+    public List<BulkJob> save(Map<String, Object> qObj, List<BulkJobResponseDto> bulkJobsRecord) throws CisException {
+        List<BulkJob> resultList = new LinkedList<>();
+
+        Optional<Map.Entry<String, Object>> idEntryOpt = qObj.entrySet().stream().filter(e -> "id".equalsIgnoreCase(e.getKey())).findFirst();
+        List<Map.Entry<String, Object>> entries = qObj.entrySet().stream().filter(e -> !"id".equalsIgnoreCase(e.getKey())).collect(Collectors.toList());
+
+        if (idEntryOpt.isPresent()) {
+            Integer bulkJobId = (Integer) idEntryOpt.get().getValue();
+            Optional<BulkJob> bulkJobOpt = bulkJobRepository.findById(bulkJobId);
+            if (bulkJobOpt.isPresent()) {
+                BulkJob bulkJob = bulkJobOpt.get();
+                bulkJob.setModified_at(LocalDateTime.now());
+                for (Map.Entry<String, Object> e : entries) {
+                    if ("name".equalsIgnoreCase(e.getKey())) {
+                        bulkJob.setName((String) e.getValue());
+                    } else if ("status".equalsIgnoreCase(e.getKey())) {
+                        bulkJob.setStatus((String) e.getValue());
+                    } else if ("request".equalsIgnoreCase(e.getKey())) {
+                        bulkJob.setRequest((String) e.getValue());
+                    } else if ("created_at".equalsIgnoreCase(e.getKey())) {
+                        bulkJob.setCreated_at((LocalDateTime) e.getValue());
+                    } else if ("modified_at".equalsIgnoreCase(e.getKey())) {
+                        bulkJob.setModified_at((LocalDateTime) e.getValue());
+                    } else if ("log".equalsIgnoreCase(e.getKey())) {
+                        bulkJob.setLog((String) e.getValue());
+                    }
                 }
+                bulkJob = bulkJobRepository.saveAndFlush(bulkJob);
+                resultList.add(bulkJob);
             }
         }
-
-        if (supdate != "") {
-            supdate = supdate.substring(2);
-
-            String sql = "UPDATE bulkJob SET " + supdate + " ,modified_at=now() WHERE id=" + qObj.entrySet();
-            Query genQuery = entityManager.createNativeQuery(sql, BulkJob.class);
-            resultList = genQuery.getResultList();
-            return resultList;
-
-        }
-        processJob(bulkJobsRecord.get(0));
         return resultList;
     }
 
-    //@Scheduled(fixedRate = 3000)
-    public  void runner() throws CisException {
+    @Scheduled(fixedRate = 3000)
+    public void runner() throws CisException {
+        logger.info("Scheduler run :: BackendJobService :: " + LocalDateTime.now());
         Map<String, String> objQuery1 = new HashMap<String, String>();
         Map<String, Integer> objQuery2 = new HashMap<String, Integer>();
         Map<String, String> objQuery3 = new HashMap<String, String>();
@@ -202,17 +230,22 @@ public class BackendJobService {
         List<BulkJobResponseDto> bulkJobsRecord = findFieldSelect(objQuery3, objQuery4, "1", null, objQuery5);
         if (bulkJobsRecord != null && bulkJobsRecord.size() > 0) {
             Map<String, Object> objQuery = new HashMap<String, Object>();
-            objQuery.put("id", bulkJobsRecord.get(0).getId());
+
+            Optional<BulkJobResponseDto> bulkJobResponseDtoOpt = bulkJobsRecord.stream().findFirst();
+            if (bulkJobResponseDtoOpt.isPresent()) {
+                objQuery.put("id", bulkJobResponseDtoOpt.get().getId());
+            }
             objQuery.put("status", "1");
             bulkJobsRecord.get(0).setStatus("1");
             List<BulkJob> job = save(objQuery, bulkJobsRecord);
+            processJob(new BulkJobResponseDto(job.get(0)));
 
         }
     }//runner()
 
     private void processJob(BulkJobResponseDto record) throws CisException {
         String request = record.getRequest();
-       JSONObject requestJson= new JSONObject(request);
+        JSONObject requestJson = new JSONObject(request);
 
 
         if (request == null) {
@@ -227,7 +260,7 @@ public class BackendJobService {
 
             if (jobType.GENERATE_SCTIDS.equalsIgnoreCase(requestJson.getString("type"))) {
 
-                if (record.getSystemId() != null || record.getSystemId().length == 0) {
+                if (record.getSystemId() != null && record.getSystemId().length == 0) {
                     List<String> arrayUuids = new ArrayList<>();
                     for (var i = 0; i < record.getQuantity(); i++) {
                         arrayUuids.add(sctIdHelper.guid());
@@ -599,7 +632,7 @@ public class BackendJobService {
 
             } else if ((jobType.DEPRECATE_SCHEMEIDS).equalsIgnoreCase(requestJson.getString("type"))) {
                 record.setAction(stateMachine.actions.get("deprecate"));
-                List<BulkJobResponseDto> job=updateSchemeId(record);
+                List<BulkJobResponseDto> job = updateSchemeId(record);
                 if (job == null) {
                     lightJob.put("status", "3");
                            /* if (typeof err == "object") {
@@ -626,7 +659,7 @@ public class BackendJobService {
 
             } else if ((jobType.RELEASE_SCHEMEIDS).equalsIgnoreCase(requestJson.getString("type"))) {
                 record.setAction(stateMachine.actions.get("release"));
-                List<BulkJobResponseDto> job=updateSchemeId(record);
+                List<BulkJobResponseDto> job = updateSchemeId(record);
                 if (job == null) {
                     lightJob.put("status", "3");
                            /* if (typeof err == "object") {
@@ -651,10 +684,9 @@ public class BackendJobService {
                 }
 
 
-
             } else if ((jobType.PUBLISH_SCHEMEIDS).equalsIgnoreCase(requestJson.getString("type"))) {
                 record.setAction(stateMachine.actions.get("publish"));
-                List<BulkJobResponseDto> job=updateSchemeId(record);
+                List<BulkJobResponseDto> job = updateSchemeId(record);
                 if (job == null) {
                     lightJob.put("status", "3");
                            /* if (typeof err == "object") {
@@ -687,109 +719,105 @@ public class BackendJobService {
 
     private List<BulkJobResponseDto> updateSchemeId(BulkJobResponseDto record) throws CisException {
         var schemeIdRecord = getSchemeId(record.getScheme(), record.getSchemeId(), record.getSystemId(), record.getAutoSysId());
-try{
-    var cont = 0;
-    List<String> records = new ArrayList<>();
-    var error = false;
-    var scheme = record.getScheme();
-    for (var i = 0; i < record.getRecords().length; i++) {
-        var schemeId = record.getRecords()[i].getSctid();
-        var systemId = record.getRecords()[i].getSystemId();
-       // var schemeIdRecord = getSchemeId(record.getScheme(), record.getSchemeId(), record.getSystemId(), record.getAutoSysId());
-        if (schemeIdRecord.getSchemeId() == schemeId && schemeIdRecord.getSystemId() != systemId) {
-            schemeIdRecord.setSystemId(systemId);
-        }
-        String newStatus;
-        if (stateMachine.getNewStatus(schemeIdRecord.getStatus(),"assigned").equalsIgnoreCase("assigned")){
-            newStatus=stateMachine.getNewStatus(schemeIdRecord.getStatus(),"assigned");
-        }else {
-            newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(), stateMachine.actions.get("register"));
-        }
-        if(newStatus!=null){
-            schemeIdRecord.setStatus(newStatus);
-            schemeIdRecord.setAuthor(record.getAuthor());
-            schemeIdRecord.setSoftware(record.getSoftware());
-            schemeIdRecord.setExpirationDate(record.getExpirationDate());
-            schemeIdRecord.setComment(record.getComment());
-            schemeIdRecord.setJobId(record.getJobId());
-            saveScheme((List<SchemeId>) schemeIdRecord, record.getScheme());
-            cont++;
-            if (cont == record.getRecords().length) {
-                cont = 0;
-                for (var j = 0; j < records.size(); j++) {
-                    // TO DO
-                    List<BulkJob> job = null;/*save((Map<String, Object>) records.get(j), (List<BulkJobResponseDto>) record);*/
-
-                    if (job == null) {
-                        error = true;
-                    }
+        try {
+            var cont = 0;
+            List<String> records = new ArrayList<>();
+            var error = false;
+            var scheme = record.getScheme();
+            for (var i = 0; i < record.getRecords().length; i++) {
+                var schemeId = record.getRecords()[i].getSctid();
+                var systemId = record.getRecords()[i].getSystemId();
+                // var schemeIdRecord = getSchemeId(record.getScheme(), record.getSchemeId(), record.getSystemId(), record.getAutoSysId());
+                if (schemeIdRecord.getSchemeId() == schemeId && schemeIdRecord.getSystemId() != systemId) {
+                    schemeIdRecord.setSystemId(systemId);
+                }
+                String newStatus;
+                if (stateMachine.getNewStatus(schemeIdRecord.getStatus(), "assigned").equalsIgnoreCase("assigned")) {
+                    newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(), "assigned");
+                } else {
+                    newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(), stateMachine.actions.get("register"));
+                }
+                if (newStatus != null) {
+                    schemeIdRecord.setStatus(newStatus);
+                    schemeIdRecord.setAuthor(record.getAuthor());
+                    schemeIdRecord.setSoftware(record.getSoftware());
+                    schemeIdRecord.setExpirationDate(record.getExpirationDate());
+                    schemeIdRecord.setComment(record.getComment());
+                    schemeIdRecord.setJobId(record.getJobId());
+                    saveScheme((List<SchemeId>) schemeIdRecord, record.getScheme());
                     cont++;
-                    if (cont == records.size()) {
-                        return null;
+                    if (cont == record.getRecords().length) {
+                        cont = 0;
+                        for (var j = 0; j < records.size(); j++) {
+                            // TO DO
+                            List<BulkJob> job = null;/*save((Map<String, Object>) records.get(j), (List<BulkJobResponseDto>) record);*/
+
+                            if (job == null) {
+                                error = true;
+                            }
+                            cont++;
+                            if (cont == records.size()) {
+                                return null;
+                            }
+                        }
                     }
+                } else {
+                    error = true;
+                    System.out.println("Cannot register SchemeId:" + schemeIdRecord.getSchemeId() + ", current status: " + schemeIdRecord.getStatus());
+                    return null;
                 }
             }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
-        else{
-            error = true;
-            System.out.println("Cannot register SchemeId:" + schemeIdRecord.getSchemeId() + ", current status: " + schemeIdRecord.getStatus());
-            return null;
-        }
-    }
-}
-catch (Exception e){
-    System.out.println(e.getMessage());
-}
         return null;
     }
 
     private List<BulkJobResponseDto> registerSchemeIds(BulkJobResponseDto record) {
-try{
-    var cont = 0;
-    List<String> records = new ArrayList<>();
-    var error = false;
-    var scheme = record.getScheme();
-    for (var i = 0; i < record.getRecords().length; i++) {
-        var schemeId = record.getRecords()[i].getSctid();
-        var systemId = record.getRecords()[i].getSystemId();
-        var schemeIdRecord = getSchemeId(record.getScheme(), record.getSchemeId(), record.getSystemId(), record.getAutoSysId());
-        if (schemeIdRecord.getSchemeId() == schemeId && schemeIdRecord.getSystemId() != systemId) {
-            schemeIdRecord.setSystemId(systemId);
+        try {
+            var cont = 0;
+            List<String> records = new ArrayList<>();
+            var error = false;
+            var scheme = record.getScheme();
+            for (var i = 0; i < record.getRecords().length; i++) {
+                var schemeId = record.getRecords()[i].getSctid();
+                var systemId = record.getRecords()[i].getSystemId();
+                var schemeIdRecord = getSchemeId(record.getScheme(), record.getSchemeId(), record.getSystemId(), record.getAutoSysId());
+                if (schemeIdRecord.getSchemeId() == schemeId && schemeIdRecord.getSystemId() != systemId) {
+                    schemeIdRecord.setSystemId(systemId);
+                }
+                String newStatus;
+                if (stateMachine.getNewStatus(schemeIdRecord.getStatus(), "assigned").equalsIgnoreCase("assigned")) {
+                    newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(), "assigned");
+                } else {
+                    newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(), stateMachine.actions.get("register"));
+                }
+                if (newStatus != null) {
+                    schemeIdRecord.setStatus(newStatus);
+                    schemeIdRecord.setAuthor(record.getAuthor());
+                    schemeIdRecord.setSoftware(record.getSoftware());
+                    schemeIdRecord.setExpirationDate(record.getExpirationDate());
+                    schemeIdRecord.setComment(record.getComment());
+                    schemeIdRecord.setJobId(record.getJobId());
+                    saveScheme((List<SchemeId>) schemeIdRecord, record.getScheme());
+                } else {
+                    error = true;
+                    System.out.println("Cannot register SchemeId:" + schemeIdRecord.getSchemeId() + ", current status: " + schemeIdRecord.getStatus());
+                    return null;
+                }
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
-        String newStatus;
-        if (stateMachine.getNewStatus(schemeIdRecord.getStatus(),"assigned").equalsIgnoreCase("assigned")){
-            newStatus=stateMachine.getNewStatus(schemeIdRecord.getStatus(),"assigned");
-        }else {
-            newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(), stateMachine.actions.get("register"));
-        }
-        if(newStatus!=null){
-            schemeIdRecord.setStatus(newStatus);
-            schemeIdRecord.setAuthor(record.getAuthor());
-            schemeIdRecord.setSoftware(record.getSoftware());
-            schemeIdRecord.setExpirationDate(record.getExpirationDate());
-            schemeIdRecord.setComment(record.getComment());
-            schemeIdRecord.setJobId(record.getJobId());
-            saveScheme((List<SchemeId>) schemeIdRecord, record.getScheme());
-        }
-        else{
-            error = true;
-            System.out.println("Cannot register SchemeId:" + schemeIdRecord.getSchemeId() + ", current status: " + schemeIdRecord.getStatus());
-            return null;
-        }
-    }
-}
-catch (Exception e){
-    System.out.println(e.getMessage());
-}
-return null;
+        return null;
     }
 
     private List<BulkJobResponseDto> generateSchemeIdSmallRequest(BulkJobResponseDto record) {
         var cont = 0;
         Map<String, Object> obj = new HashMap<String, Object>();
         obj.put("scheme", record.getScheme());
-                         Optional<SchemeIdBase> data=schemeIdBaseRepository.findById(record.getScheme());
-var thisScheme=data;
+        Optional<SchemeIdBase> data = schemeIdBaseRepository.findById(record.getScheme());
+        var thisScheme = data;
         boolean canContinue;
         for (var i = 0; i < record.getQuantity(); i++) {
             canContinue = true;
@@ -799,7 +827,7 @@ var thisScheme=data;
                     var schemeIdRecord = schemeIdRepository.findBySchemeAndSchemeIdIn(record.getScheme(), List.of(record.getSystemId()));
                     if (schemeIdRecord != null) {
                         schemeIdRecord.get(i).setJobId(record.getJobId());
-                        saveScheme(schemeIdRecord,record.getScheme());
+                        saveScheme(schemeIdRecord, record.getScheme());
                         canContinue = false;
                     }
                 }
@@ -808,7 +836,7 @@ var thisScheme=data;
                 }
                 cont++;
                 if (record.getQuantity() == cont) {
-                    saveScheme((List<SchemeId>) thisScheme.get(),record.getScheme());
+                    saveScheme((List<SchemeId>) thisScheme.get(), record.getScheme());
                 }
             } catch (Exception e) {
                 System.out.println(e.getMessage());
@@ -819,7 +847,7 @@ var thisScheme=data;
 
     private void generateScheme(BulkJobResponseDto record, Optional<SchemeIdBase> thisScheme) {
         try {
-            var rec = setAvailableSchemeIdRecord2NewStatus(record,thisScheme);
+            var rec = setAvailableSchemeIdRecord2NewStatus(record, thisScheme);
             if (rec == null) {
                 setNewSchemeIdRecord(record, thisScheme);
             }
@@ -830,42 +858,41 @@ var thisScheme=data;
 
     private SchemeId setNewSchemeIdRecord(BulkJobResponseDto record, Optional<SchemeIdBase> thisScheme) throws CisException {
 
-       try {
-           var previousCode = thisScheme.get().getIdBase();
+        try {
+            var previousCode = thisScheme.get().getIdBase();
 
-           String newSchemeId = null;
-           String schemeName = thisScheme.get().getScheme().toUpperCase();
-           if (schemeName.equalsIgnoreCase("SNOMEDID")) {
-               newSchemeId = SNOMEDID.getNextId(previousCode);
-           } else {
-               newSchemeId = CTV3ID.getNextId(previousCode);
+            String newSchemeId = null;
+            String schemeName = thisScheme.get().getScheme().toUpperCase();
+            if (schemeName.equalsIgnoreCase("SNOMEDID")) {
+                newSchemeId = SNOMEDID.getNextId(previousCode);
+            } else {
+                newSchemeId = CTV3ID.getNextId(previousCode);
 
-           }
-           thisScheme.get().setIdBase(newSchemeId);
-           var scheme = thisScheme.get().getScheme();
-           String[] systemId;
-           var action = record.getAction();
-           if (record.getSystemId() != null) {
-               systemId = record.getSystemId();
-           }
-           var schemeIdRecord = getSchemeId(record.getScheme(), record.getSchemeId(), record.getSystemId(), record.getAutoSysId());
+            }
+            thisScheme.get().setIdBase(newSchemeId);
+            var scheme = thisScheme.get().getScheme();
+            String[] systemId;
+            var action = record.getAction();
+            if (record.getSystemId() != null) {
+                systemId = record.getSystemId();
+            }
+            var schemeIdRecord = getSchemeId(record.getScheme(), record.getSchemeId(), record.getSystemId(), record.getAutoSysId());
 
-           var newStatus = stateMachine.getNewStatus(record.getStatus(), action);
-           if (newStatus != null) {
-               schemeIdRecord.setStatus(newStatus);
-               schemeIdRecord.setAuthor(record.getAuthor());
-               schemeIdRecord.setSoftware(record.getSoftware());
-               schemeIdRecord.setExpirationDate(record.getExpirationDate());
-               schemeIdRecord.setComment(record.getComment());
-               schemeIdRecord.setJobId(record.getJobId());
-               saveScheme((List<SchemeId>) schemeIdRecord, record.getScheme());
-           } else {
-               setNewSchemeIdRecord(record, thisScheme);
-           }
-       }
-       catch (Exception e){
-           System.out.println(e.getMessage());
-       }
+            var newStatus = stateMachine.getNewStatus(record.getStatus(), action);
+            if (newStatus != null) {
+                schemeIdRecord.setStatus(newStatus);
+                schemeIdRecord.setAuthor(record.getAuthor());
+                schemeIdRecord.setSoftware(record.getSoftware());
+                schemeIdRecord.setExpirationDate(record.getExpirationDate());
+                schemeIdRecord.setComment(record.getComment());
+                schemeIdRecord.setJobId(record.getJobId());
+                saveScheme((List<SchemeId>) schemeIdRecord, record.getScheme());
+            } else {
+                setNewSchemeIdRecord(record, thisScheme);
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
         return null;
     }
 
@@ -877,12 +904,11 @@ var thisScheme=data;
         } else if ("CTV3ID".equalsIgnoreCase(scheme.toString().toUpperCase())) {
             isValidScheme = CTV3ID.validSchemeId(schemeId);
         }
-        if(isValidScheme){
-Optional<SchemeId> schemeId1=schemeIdRepository.findBySchemeAndSchemeId(scheme,schemeId);
-if(schemeId1.isPresent())
-{
-    id=schemeIdService.getFreeRecords(scheme,schemeId);
-}
+        if (isValidScheme) {
+            Optional<SchemeId> schemeId1 = schemeIdRepository.findBySchemeAndSchemeId(scheme, schemeId);
+            if (schemeId1.isPresent()) {
+                id = schemeIdService.getFreeRecords(scheme, schemeId);
+            }
         }
         return id;
     }
@@ -891,85 +917,84 @@ if(schemeId1.isPresent())
         SchemeId sctOutput = new SchemeId();
         List<SchemeId> sctList = new ArrayList<>();
         Map<String, Object> queryObject = new HashMap<>();
-            queryObject.put("scheme", generationData.getScheme());
-            queryObject.put("status", "'" + stateMachine.statuses.get("available") + "'");
+        queryObject.put("scheme", generationData.getScheme());
+        queryObject.put("status", "'" + stateMachine.statuses.get("available") + "'");
 
-            sctList = findSchemeIdWithIndexAndLimit(queryObject, "1", null);
-            if (sctList.size() > 0) {
-                var newStatus = stateMachine.getNewStatus(sctList.get(0).getStatus(), stateMachine.actions.get("generate"));
-                if (!newStatus.isBlank()) {
-                    if (null != generationData.getSystemId() && generationData.getSystemId().length == 0) {
-                        sctList.get(0).setSystemId(String.valueOf(generationData.getSystemId()));
-                    }
-                    sctList.get(0).setStatus(newStatus);
-                    sctList.get(0).setAuthor(generationData.getAuthor());
-                    sctList.get(0).setSoftware(generationData.getSoftware());
-                    //Doubt - need to be clarified- there is no ExpirationDate in Request body.
-                    sctList.get(0).setExpirationDate(generationData.getExpirationDate());
-                    sctList.get(0).setComment(generationData.getComment());
-                    sctList.get(0).setJobId(null);
-                    sctList.get(0).setModified_at(generationData.getModified_at());
-                    sctOutput = schemeIdRepository.save(sctList.get(0));
-                } else {
-                    return null;
+        sctList = findSchemeIdWithIndexAndLimit(queryObject, "1", null);
+        if (sctList.size() > 0) {
+            var newStatus = stateMachine.getNewStatus(sctList.get(0).getStatus(), stateMachine.actions.get("generate"));
+            if (!newStatus.isBlank()) {
+                if (null != generationData.getSystemId() && generationData.getSystemId().length == 0) {
+                    sctList.get(0).setSystemId(String.valueOf(generationData.getSystemId()));
                 }
+                sctList.get(0).setStatus(newStatus);
+                sctList.get(0).setAuthor(generationData.getAuthor());
+                sctList.get(0).setSoftware(generationData.getSoftware());
+                //Doubt - need to be clarified- there is no ExpirationDate in Request body.
+                sctList.get(0).setExpirationDate(generationData.getExpirationDate());
+                sctList.get(0).setComment(generationData.getComment());
+                sctList.get(0).setJobId(null);
+                sctList.get(0).setModified_at(generationData.getModified_at());
+                sctOutput = schemeIdRepository.save(sctList.get(0));
             } else {
                 return null;
             }
+        } else {
+            return null;
+        }
 
         return sctOutput;
     }
 
-        public List<SchemeId> findSchemeIdWithIndexAndLimit(Map<String, Object> queryObject, String limit, String skip) {
-            List<SchemeId> sctList;
-            var limitR = 100;
-            var skipTo = 0;
-            if (!limit.isEmpty() && null != limit)
-                limitR = Integer.parseInt(limit);
-            if (null != skip)
-                skipTo = Integer.parseInt(skip);
-            //sctidRepository.findSct(queryObject,limitR,skipTo);
-            String swhere = "";
-            if (queryObject.size() > 0) {
-                for (var query :
-                        queryObject.entrySet()) {
-                    swhere += " And " + query.getKey() + "=" + (query.getValue());
-                }
+    public List<SchemeId> findSchemeIdWithIndexAndLimit(Map<String, Object> queryObject, String limit, String skip) {
+        List<SchemeId> sctList;
+        var limitR = 100;
+        var skipTo = 0;
+        if (!limit.isEmpty() && null != limit)
+            limitR = Integer.parseInt(limit);
+        if (null != skip)
+            skipTo = Integer.parseInt(skip);
+        //sctidRepository.findSct(queryObject,limitR,skipTo);
+        String swhere = "";
+        if (queryObject.size() > 0) {
+            for (var query :
+                    queryObject.entrySet()) {
+                swhere += " And " + query.getKey() + "=" + (query.getValue());
             }
-            if (swhere != "") {
-                swhere = " WHERE " + swhere.substring(5);
-            }
-            String sql;
-            if ((limitR > 0) && (skipTo == 0)) {
-                //sql = "SELECT * FROM sctId" + swhere + " order by sctid limit " + limit;
-
-                sql = "Select * FROM schemeid " + swhere + " order by schemeid limit " + limit;
-            } else {
-                //sql = "SELECT * FROM sctId" + swhere + " order by sctid";
-                sql = "Select * FROM sctid " + swhere + " order by schemeid";
-            }
-            Query genQuery = entityManager.createNativeQuery(sql,Sctid.class);
-            System.out.println("genQuery:"+genQuery);
-            List<SchemeId> resultList =(List<SchemeId> )genQuery.getResultList();
-            if ((skipTo == 0)) {
-                sctList = resultList;
-            } else {
-                var cont = 1;
-                List<SchemeId> newRows = new ArrayList<>();
-                for (var i = 0; i < resultList.size(); i++) {
-                    if (i >= skipTo) {
-                        if (null != limit && limitR > 0 && limitR < cont) {
-                            break;
-                        }
-                        newRows.add(resultList.get(i));
-                        cont++;
-                    }
-                }
-                sctList = newRows;
-            }
-            return sctList;
         }
+        if (swhere != "") {
+            swhere = " WHERE " + swhere.substring(5);
+        }
+        String sql;
+        if ((limitR > 0) && (skipTo == 0)) {
+            //sql = "SELECT * FROM sctId" + swhere + " order by sctid limit " + limit;
 
+            sql = "Select * FROM schemeid " + swhere + " order by schemeid limit " + limit;
+        } else {
+            //sql = "SELECT * FROM sctId" + swhere + " order by sctid";
+            sql = "Select * FROM sctid " + swhere + " order by schemeid";
+        }
+        Query genQuery = entityManager.createNativeQuery(sql, Sctid.class);
+        System.out.println("genQuery:" + genQuery);
+        List<SchemeId> resultList = (List<SchemeId>) genQuery.getResultList();
+        if ((skipTo == 0)) {
+            sctList = resultList;
+        } else {
+            var cont = 1;
+            List<SchemeId> newRows = new ArrayList<>();
+            for (var i = 0; i < resultList.size(); i++) {
+                if (i >= skipTo) {
+                    if (null != limit && limitR > 0 && limitR < cont) {
+                        break;
+                    }
+                    newRows.add(resultList.get(i));
+                    cont++;
+                }
+            }
+            sctList = newRows;
+        }
+        return sctList;
+    }
 
 
     //
@@ -1012,7 +1037,7 @@ if(schemeId1.isPresent())
 
                         if (existingSystemId.size() > 0) {
                             //update
-                            updateJobIdscheme(existingSystemId,record.getScheme(), record.getJobId());
+                            updateJobIdscheme(existingSystemId, record.getScheme(), record.getJobId());
                             if (existingSystemId.size() < sysIdInChunk.size()) {
 
                                 Set<SchemeId> setExistSysId = existingSystemId.stream().collect(Collectors.toSet());
@@ -1027,13 +1052,13 @@ if(schemeId1.isPresent())
 
                     }
                     if (!allExisting) {
-                        Optional<SchemeIdBase> data=schemeIdBaseRepository.findById(record.getScheme());
+                        Optional<SchemeIdBase> data = schemeIdBaseRepository.findById(record.getScheme());
                         if (data.isEmpty()) {
                             System.out.println("Scheme not found for key:" + record.getScheme());
                             return null;
                         }
 
-                        var previousCode=data.get().getIdBase();
+                        var previousCode = data.get().getIdBase();
 
                         List<SchemeId> records = new ArrayList<>();
                         var createAt = new Date();
@@ -1071,7 +1096,7 @@ if(schemeId1.isPresent())
                 }
             }//try
             catch (Exception e) {
-System.out.println("generateSchemeIds error:"+e.getMessage());
+                System.out.println("generateSchemeIds error:" + e.getMessage());
             }
         }//for
         if (insertedCount >= quantityToCreate) {
@@ -1518,7 +1543,7 @@ System.out.println("generateSchemeIds error:"+e.getMessage());
                             insertedCount += records.size();
                             //insertRecords(records,record);
                             sctidRepository.saveAll(records);
-                           // sctidRepository.bulkInsert(newSctid, seq, record.getNamespace(), record.getPartitionId(), sctIdHelper.getCheckDigit(newSctid), systemId, newStatus, record.getAuthor(), record.getSoftware(), record.getExpirationDate(), record.getComment(), record.getJobId(), record.getCreated_at());
+                            // sctidRepository.bulkInsert(newSctid, seq, record.getNamespace(), record.getPartitionId(), sctIdHelper.getCheckDigit(newSctid), systemId, newStatus, record.getAuthor(), record.getSoftware(), record.getExpirationDate(), record.getComment(), record.getJobId(), record.getCreated_at());
 
                         }
 
@@ -1569,8 +1594,8 @@ System.out.println("generateSchemeIds error:"+e.getMessage());
     }
 
 
-    private List<SchemeId> updateJobIdscheme(List<SchemeId> existingSystemId, String scheme,Integer jobId) {
-        List<SchemeId> result = schemeIdRepository.update(existingSystemId,scheme, jobId);
+    private List<SchemeId> updateJobIdscheme(List<SchemeId> existingSystemId, String scheme, Integer jobId) {
+        List<SchemeId> result = schemeIdRepository.update(existingSystemId, scheme, jobId);
         return result;
     }
 
