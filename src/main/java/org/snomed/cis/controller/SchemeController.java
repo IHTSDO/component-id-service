@@ -51,7 +51,7 @@ public class SchemeController {
     }
 
     @GetMapping("/schemes/{schemeName}")
-    public ResponseEntity<SchemeIdBase> getScheme(@PathVariable String schemeName) throws CisException {
+    public ResponseEntity<SchemeIdBase> getScheme(@RequestParam String token, @PathVariable String schemeName) throws CisException {
         logger.info("Request received for - schemeName :: {}", schemeName);
         return ResponseEntity.ok(schemeService.getScheme(schemeName));
     }
