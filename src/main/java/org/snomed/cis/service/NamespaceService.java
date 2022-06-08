@@ -260,7 +260,7 @@ public class NamespaceService {
             response.put("message", "Success");
         } catch (Exception e) {
             logger.error("error editNamespace():: ", e.getMessage());
-            throw new CisException(HttpStatus.BAD_REQUEST,String.valueOf(response.put("message", e.getMessage())));
+            throw new CisException(HttpStatus.BAD_REQUEST, String.valueOf(response.put("message", e.getMessage())));
         }
         logger.info("editNamespace() Response-{} ", response.toString());
         return response.toString();
@@ -324,7 +324,11 @@ public class NamespaceService {
 
     public NamespaceDto getNamespace(String namespaceId) throws CisException {
         logger.debug("NamespaceService.getNamespace() namespaceId-{} ", namespaceId);
-        NamespaceDto namespaceDto = this.getNamespaceId(namespaceId);
+        NamespaceDto namespaceDto = null;
+        if (namespaceId.equalsIgnoreCase("undefined"))
+            namespaceDto = this.getNamespaceId("0");
+        else
+            namespaceDto = this.getNamespaceId(namespaceId);
         logger.info("getNamespace() Response-{} ", namespaceDto);
         return namespaceDto;
     }
@@ -467,10 +471,10 @@ public class NamespaceService {
         logger.debug("NamespaceService.createNamespacePermissionsOfUser() namespaceId-{} :: username - {} :: role - {} :: AuthenticateResponseDto-{} ", namespaceId, username, role, authenticateResponseDto);
         if (isAbleToEdit(Integer.valueOf(namespaceId), authenticateResponseDto)) {
             PermissionsNamespace permissionsNamespace = new PermissionsNamespace(Integer.valueOf(namespaceId), username, role);
-             Optional<PermissionsNamespace> result = permissionsNamespaceRepository.findByNamespaceAndUsernameAndRole(Integer.valueOf(namespaceId), username, role);
-            if(result.isPresent())
-                throw new CisException(HttpStatus.BAD_REQUEST,"ER_DUP_ENTRY: Duplicate entry "+"'"+namespaceId+"-"+username +"'"+ " for key 'PRIMARY'");
-             permissionsNamespaceRepository.save(permissionsNamespace);
+            Optional<PermissionsNamespace> result = permissionsNamespaceRepository.findByNamespaceAndUsernameAndRole(Integer.valueOf(namespaceId), username, role);
+            if (result.isPresent())
+                throw new CisException(HttpStatus.BAD_REQUEST, "ER_DUP_ENTRY: Duplicate entry " + "'" + namespaceId + "-" + username + "'" + " for key 'PRIMARY'");
+            permissionsNamespaceRepository.save(permissionsNamespace);
             JSONObject response = new JSONObject();
             response.put("message", "Success");
             logger.info("createNamespacePermissionsOfUser() Response :: {}", response.toString());
