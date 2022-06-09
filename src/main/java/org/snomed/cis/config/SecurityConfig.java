@@ -40,7 +40,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             "/info/**", //UI resource
             "/login",
             "/loginUI",
-            "/sct/namespaces",
             "/sct/check/**"
     };
 
