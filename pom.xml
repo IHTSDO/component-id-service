@@ -17,7 +17,7 @@
         <java.version>11</java.version>
         <profile>dev</profile>
         <packageName>cis</packageName>
-        <execFinalName>${packageName}-${project.version}.jar</execFinalName>
+        <execFinalName>${packageName}.jar</execFinalName>
     </properties>
     <dependencies>
         <dependency>
@@ -123,6 +123,7 @@
     </dependencies>
 
     <build>
+        <finalName>${packageName}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -146,7 +147,7 @@
                         <configuration>
                             <sourceType>json</sourceType>
                             <sourcePaths>
-                                <sourcePath>${basedir}/src/main/resources/json/${profile}/config.json</sourcePath>
+                                <sourcePath>${basedir}/src/main/resources/config.json</sourcePath>
                             </sourcePaths>
                             <targetPackage>org.snomed.cis.pojo</targetPackage>
                             <includeAdditionalProperties>false</includeAdditionalProperties>

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.text.StringSubstitutor;
 import org.snomed.cis.pojo.Config;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -18,13 +17,10 @@ import java.util.stream.Collectors;
 @Configuration
 public class AppConfig {
 
-    @Value("${spring.profiles.active}")
-    private String activeProfile;
-
     @Bean
     public Config getConfig() throws IOException {
         String fileName = "config.json";
-        InputStream configFileInputStream = new ClassPathResource("json/" + activeProfile + "/" + fileName).getInputStream();
+        InputStream configFileInputStream = new ClassPathResource(fileName).getInputStream();
         String configFileContents = "";
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(configFileInputStream))) {

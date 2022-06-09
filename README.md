@@ -110,15 +110,11 @@ The application has 3 build profiles configured
 
 Command to build jar and deb files
 
-`mvn clean package -Dprofile=<<profileName>>`
+`mvn clean package`
 
-Input parameters:
-1) profileName
-   1) The name of profile based on the deployment environment
-   2) Possible value: dev, stage, prod
 
 Output:
-1) jar file in target folder (Eg. target/cis-0.0.1-SNAPSHOT.jar)
+1) jar file in target folder (Eg. target/cis.jar)
 2) deb file in target folder (Eg. target/cis-0.0.1-SNAPSHOT-all.deb)
 
 
@@ -128,12 +124,11 @@ Deployment requires JRE11 installed on the target machine
 
 Command to deploy the jar file
 
-`java -jar target/cis-0.0.1-SNAPSHOT.jar -Dprofile=<<profileName>>`
+`java -jar target/cis.jar --spring.config.location=<<path to application.yml file>>`
 
 Input parameters:
-1) profileName
-    1) The name of profile based on the deployment environment
-    2) Possible value: dev, stage, prod
+1) spring.config.location
+    1) The path to application.yml file  in target machine which will be used for deployment 
 
 Output:
-1) jar file deployed in target environment
+1) jar file deployed in target machine
