@@ -45,7 +45,7 @@ public class SchemeController {
     }
 
     @GetMapping("/schemes")
-    public ResponseEntity<List<SchemeIdBase>> getSchemes() throws CisException {
+    public ResponseEntity<List<SchemeIdBase>> getSchemes(@RequestParam String token) throws CisException {
         logger.info("Request received for getSchemes() - No Params");
         return ResponseEntity.ok(schemeService.getSchemes());
     }
