@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 
 public class TokenAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
 
-    private String contextPath = "/api";
+    private String contextPath = "";
 
     /*
     Map of public endpoints
@@ -48,7 +48,7 @@ public class TokenAuthenticationFilter extends AbstractAuthenticationProcessingF
         String uri = request.getRequestURI();
         Optional<String> tokenOptional = Optional.empty();
         boolean isPublicEndpoint = isPublicEndpointRequest(request);
-        if (uri.equalsIgnoreCase("/api/authenticate") || uri.equalsIgnoreCase("/api/users/logout")) {
+        if (uri.equalsIgnoreCase("/authenticate") || uri.equalsIgnoreCase("/users/logout")) {
             String requestBody = "";
             try {
                 requestBody = new String(request.getInputStream().readAllBytes());//.getReader().lines().collect(Collectors.joining(System.lineSeparator()));

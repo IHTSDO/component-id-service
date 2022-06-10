@@ -29,7 +29,6 @@ public class RequestManager {
      POST request without payload
      */
     public ResponseEntity<String> postRequestWithoutPayload(String url, MultiValueMap<String, String> headers) throws CisException {
-        logger.debug("RequestManager.postRequestWithoutPayload() {} :: {}", url, headers);
 
         try {
             ResponseEntity<String> response = WebClient.builder().baseUrl(url).build().post()
@@ -46,7 +45,6 @@ public class RequestManager {
     }
 
     public ResponseEntity<String> postRequest(String url, MultiValueMap<String, String> headers, String payload) throws CisException {
-        logger.debug("RequestManager.postRequest() {} :: {}", url, payload);
 
         try {
             ResponseEntity<String> response = WebClient.builder().baseUrl(url).build().post()
@@ -57,7 +55,6 @@ public class RequestManager {
                     .retrieve()
                     .toEntity(String.class)
                     .block();
-            logger.info("RequestManager.postRequest() - Response :: {}", response);
             return response;
         } catch (WebClientResponseException e) {
             logger.error("error postRequest()", e);
