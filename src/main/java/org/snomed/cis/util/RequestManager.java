@@ -36,7 +36,6 @@ public class RequestManager {
                     .retrieve()
                     .toEntity(String.class)
                     .block();
-            logger.info("RequestManager.postRequestWithoutPayload() - Response :: {}", response);
             return response;
         } catch (WebClientResponseException e) {
             logger.error("error postRequestWithoutPayload()", e);
@@ -69,7 +68,6 @@ public class RequestManager {
                     .retrieve()
                     .toEntity(String.class)
                     .block();
-            logger.info("RequestManager.getRequest() - Response :: {}", response);
             return response;
         } catch (WebClientResponseException e) {
             logger.error("error getRequest()", e);
