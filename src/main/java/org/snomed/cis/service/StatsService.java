@@ -41,7 +41,6 @@ public class StatsService {
     NamespaceRepository namespaceRepository;
 
     public GetStatsResponseDto getStats(String userName, AuthenticateResponseDto authenticateResponseDto) {
-        logger.debug("Request Received : userName-{} :: AuthenticateResponseDto - {} ", userName, authenticateResponseDto);
         GetStatsResponseDto getStatsResponseDto = new GetStatsResponseDto();
 
         List<String> users = new LinkedList<>();
