@@ -48,7 +48,7 @@ public class TokenAuthenticationFilter extends AbstractAuthenticationProcessingF
         String uri = request.getRequestURI();
         Optional<String> tokenOptional = Optional.empty();
         boolean isPublicEndpoint = isPublicEndpointRequest(request);
-        if (uri.equalsIgnoreCase("/authenticate") || uri.equalsIgnoreCase("/users/logout")) {
+        if (uri.endsWith("/authenticate") || uri.endsWith("/users/logout")) {
             String requestBody = "";
             try {
                 requestBody = new String(request.getInputStream().readAllBytes());//.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
