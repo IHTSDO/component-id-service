@@ -38,7 +38,6 @@ public class RequestManager {
                     .block();
             return response;
         } catch (WebClientResponseException e) {
-            logger.error("error postRequestWithoutPayload()", e);
             throw new CisException(e.getStatusCode(), e.getResponseBodyAsString());
         }
     }
@@ -56,7 +55,6 @@ public class RequestManager {
                     .block();
             return response;
         } catch (WebClientResponseException e) {
-            logger.error("error postRequest()", e);
             throw new CisException(HttpStatus.INTERNAL_SERVER_ERROR, e.getResponseBodyAsString());
         }
     }
@@ -70,7 +68,6 @@ public class RequestManager {
                     .block();
             return response;
         } catch (WebClientResponseException e) {
-            logger.error("error getRequest()", e);
             throw new CisException(e.getStatusCode(), e.getResponseBodyAsString());
         }
     }

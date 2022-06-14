@@ -8,13 +8,12 @@
         </layout>
     </appender>
 
+    <!--
     <appender name="RollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_PATH}/cis.log</file>
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <Pattern>%d{dd-MM-yyyy HH:mm:ss.SSS} [%thread] %-5level %logger{36}.%M - %msg%n</Pattern>
         </encoder>
-        <!-- rollover - daily OR when the file size reaches 1MB.
-             archive - maintain 30 days logs OR total size of archive is 10GB-->
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${LOG_PATH}/archive/thresh0ld-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <maxFileSize>1MB</maxFileSize>
@@ -22,16 +21,17 @@
             <totalSizeCap>10GB</totalSizeCap>
         </rollingPolicy>
     </appender>
+    -->
 
     <!-- LOG everything at INFO level -->
     <root level="info">
-        <appender-ref ref="RollingFile"/>
+        <!--<appender-ref ref="RollingFile"/>-->
         <appender-ref ref="Console"/>
     </root>
 
     <!-- LOG everything in the mentioned package at TRACE level -->
     <logger name="org.snomed.cis" level="trace" additivity="false">
-        <appender-ref ref="RollingFile"/>
+        <!--<appender-ref ref="RollingFile"/>-->
         <appender-ref ref="Console"/>
     </logger>
 

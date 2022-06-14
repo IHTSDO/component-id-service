@@ -198,7 +198,6 @@ public class BackendJobService {
 
     @Scheduled(fixedRate = 3000)
     public void runner() throws CisException {
-        logger.info("Scheduler run :: BackendJobService :: " + LocalDateTime.now());
         Map<String, String> objQuery1 = new HashMap<String, String>();
         Map<String, Integer> objQuery2 = new HashMap<String, Integer>();
         Map<String, String> objQuery3 = new HashMap<String, String>();
