@@ -445,7 +445,7 @@ public class NamespaceService {
                 return permissionsNamespaceList;
             } else {
                 logger.info("getNamespacePermissions() Response :: {}", "null");
-                return null;
+                return Collections.EMPTY_LIST;
             }
         } catch (Exception e) {
             logger.error("error getSchemeIds():: BAd Request: {}", e.getMessage());
