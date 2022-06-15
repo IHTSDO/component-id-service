@@ -181,7 +181,7 @@
                             <dataSet>
                                 <data>
                                     <src>${project.build.directory}/${execFinalName}</src>
-                                    <dst>app.jar</dst>
+                                    <dst>cis.jar</dst>
                                     <type>file</type>
                                     <mapper>
                                         <type>perm</type>
