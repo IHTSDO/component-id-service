@@ -4,22 +4,6 @@ import javax.validation.constraints.NotNull;
 import java.util.List;
 
 public class SCTIDBulkGenerationRequestDto {
-
-
-    /*
-    * {
-  "namespace": 0,
-  "partitionId": "string",
-  "quantity": 0,
-  "systemIds": [
-    "string"
-  ],
-  "software": "string",
-  "comment": "string",
-  "generateLegacyIds": "false"
-}
-    * */
-
     @NotNull
     private Integer namespace;
     @NotNull
@@ -105,7 +89,6 @@ public class SCTIDBulkGenerationRequestDto {
     }
 
     public SCTIDBulkGenerationRequestDto copy(){
-
         SCTIDBulkGenerationRequestDto copyObj= new SCTIDBulkGenerationRequestDto();
         copyObj.setNamespace(this.getNamespace());
         copyObj.setPartitionId(this.getPartitionId());
@@ -116,6 +99,5 @@ public class SCTIDBulkGenerationRequestDto {
         copyObj.setGenerateLegacyIds(this.getGenerateLegacyIds());
         return copyObj;
     }
-
 
 }
