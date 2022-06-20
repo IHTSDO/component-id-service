@@ -41,7 +41,7 @@ public class AuthenticationService {
             imsResponse = requestManager.postRequest(url, null, payload.toString());
         } catch (CisException e) {
             if (e.getStatus().is4xxClientError()) {
-                throw new CisException(e.getStatus(), "username/password incorrect");
+                throw new CisException(HttpStatus.UNAUTHORIZED, "username/password incorrect");
             } else if (e.getStatus().is5xxServerError()) {
                 throw new CisException(e.getStatus(), "unknown error");
             } else {
@@ -79,7 +79,7 @@ public class AuthenticationService {
             imsResponse = requestManager.getRequest(url, getHttpHeaders(token));
         } catch (CisException e) {
             if (e.getStatus().is4xxClientError()) {
-                throw new CisException(e.getStatus(), "invalid token");
+                throw new CisException(HttpStatus.UNAUTHORIZED, "invalid token");
             } else if (e.getStatus().is5xxServerError()) {
                 throw new CisException(e.getStatus(), "unknown error");
             } else {
