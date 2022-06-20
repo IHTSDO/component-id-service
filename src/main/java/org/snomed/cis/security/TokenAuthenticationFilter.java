@@ -16,10 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.AbstractMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -66,6 +63,21 @@ public class TokenAuthenticationFilter extends AbstractAuthenticationProcessingF
                 }
                 if (tokenOptional.isEmpty()) {
                     tokenOptional = Optional.ofNullable(request.getParameter("token"));
+                }
+            }
+        } else if (uri.endsWith("/sct/namespaces")) {
+            tokenOptional = Optional.empty();
+            String cookieHeaderValue = request.getHeader("cookie");
+            Optional<String> tsAuthorCookieStringOpt = Arrays.stream(cookieHeaderValue.split(";")).filter(c -> c.contains("ts-author")).findAny();
+            if (tsAuthorCookieStringOpt.isPresent()) {
+                String cookieValue = tsAuthorCookieStringOpt.get().substring(tsAuthorCookieStringOpt.get().indexOf("=") + 1);
+                try {
+                    JSONObject cookieValueJsonObj = new JSONObject(cookieValue);
+                    if (cookieValueJsonObj.has("token")) {
+                        tokenOptional = Optional.ofNullable(cookieValueJsonObj.getString("token"));
+                    }
+                } catch (Exception e) {
+                    tokenOptional = Optional.empty();
                 }
             }
         } else {

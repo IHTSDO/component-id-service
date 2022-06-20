@@ -21,5 +21,9 @@ spring:
 logging:
   level:
     org:
+      snomed:
+        cis:
+          security: ERROR
+      springframework: ERROR
       apache:
         tomcat: ERROR
