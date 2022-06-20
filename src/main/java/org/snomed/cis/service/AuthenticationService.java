@@ -36,7 +36,18 @@ public class AuthenticationService {
         JSONObject payload = new JSONObject();
         payload.put("login", loginRequestDto.getUsername());
         payload.put("password", loginRequestDto.getPassword());
-        ResponseEntity<String> imsResponse = requestManager.postRequest(url, null, payload.toString());
+        ResponseEntity<String> imsResponse;
+        try {
+            imsResponse = requestManager.postRequest(url, null, payload.toString());
+        } catch (CisException e) {
+            if (e.getStatus().is4xxClientError()) {
+                throw new CisException(e.getStatus(), "username/password incorrect");
+            } else if (e.getStatus().is5xxServerError()) {
+                throw new CisException(e.getStatus(), "unknown error");
+            } else {
+                throw new CisException(e.getStatus(), "unknown error");
+            }
+        }
 
         //token response value
         String token = cookieUtil.fetchTokenCookieValue(imsResponse);
@@ -63,7 +74,18 @@ public class AuthenticationService {
         String token = authenticateRequestDto.getToken();
         String url = config.getIms().getUrl().getBase() + config.getIms().getUrl().getAuthenticate();
 
-        ResponseEntity<String> imsResponse = requestManager.getRequest(url, getHttpHeaders(token));
+        ResponseEntity<String> imsResponse;
+        try {
+            imsResponse = requestManager.getRequest(url, getHttpHeaders(token));
+        } catch (CisException e) {
+            if (e.getStatus().is4xxClientError()) {
+                throw new CisException(e.getStatus(), "invalid token");
+            } else if (e.getStatus().is5xxServerError()) {
+                throw new CisException(e.getStatus(), "unknown error");
+            } else {
+                throw new CisException(e.getStatus(), "unknown error");
+            }
+        }
 
         ImsGetAccountResponseDto imsGetAccountResponseDto = null;
         try {
