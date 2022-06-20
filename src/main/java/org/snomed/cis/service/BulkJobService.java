@@ -61,7 +61,7 @@ public class BulkJobService {
         Map<String, String> orderBy = new HashMap();
         orderBy.put("created_at", "D");
         result = this.findFieldSelect(queryObject, fields, 100, null, orderBy);
-        logger.info("BulkJobService.getJobs() - Response :: {}", result);
+        logger.debug("BulkJobService.getJobs() - Response :: {}", result);
         return result;
     }
 
