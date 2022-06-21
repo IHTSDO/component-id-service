@@ -40,7 +40,7 @@ public class RequestManager {
         } catch (WebClientResponseException e) {
             throw new CisException(e.getStatusCode(), "client request error");
         } catch (Exception e) {
-            throw new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "unknown errot at server");
+            throw new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "unknown error at server");
         }
     }
 
@@ -59,7 +59,7 @@ public class RequestManager {
         } catch (WebClientResponseException e) {
             throw new CisException(e.getStatusCode(), "client request error");
         } catch (Exception e) {
-            throw new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "unknown errot at server");
+            throw new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "unknown error at server");
         }
     }
 
@@ -74,7 +74,7 @@ public class RequestManager {
         } catch (WebClientResponseException e) {
             throw new CisException(e.getStatusCode(), "client request error");
         } catch (Exception e) {
-            throw new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "unknown errot at server");
+            throw new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "unknown error at server");
         }
     }
 
