@@ -1,6 +1,7 @@
 package org.snomed.cis.service;
 
 import com.google.common.collect.Sets;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,8 +13,8 @@ import org.snomed.cis.service.DM.SCTIdDM;
 import org.snomed.cis.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -51,91 +52,12 @@ public class BackendJobService {
     SchemeIdBaseRepository schemeIdBaseRepository;
     @Autowired
     private BulkJobRepository bulkJobRepository;
+    @Autowired
+    private BulkJobService bulkJobService;
 
     int chunk = 1000;
     @Autowired
     private SctIdHelper sctIdHelper;
-
-    public List<BulkJobResponseDto> findFieldSelect(Map<String, String> queryObject, Map<String, Integer> queryObj, String limit, String skip, Map<String, String> orderBy) {
-        //var record= ;
-        StringBuffer swhereBuf = new StringBuffer();
-        var limitR = 100;
-        var skipTo = 0;
-        if (limit != null) limitR = Integer.parseInt(limit);
-        if (skip != null) skipTo = Integer.parseInt(skip);
-        if (queryObject.size() > 0) {
-            for (var query : queryObject.entrySet()) {
-                swhereBuf.append(" And ").append(query.getKey()).append("=").append(query.getValue());
-            }
-        }
-        String swhere = swhereBuf.toString();
-        if (!"".equalsIgnoreCase(swhere)) {
-            swhere = " WHERE " + swhere.substring(5);
-        }
-
-        StringBuffer selectBuf = new StringBuffer();
-        if (queryObject != null) {
-            for (var query : queryObject.entrySet()) {
-                selectBuf.append(",").append(query.getKey());
-            }
-        }
-        String select = selectBuf.toString();
-        if (!"".equalsIgnoreCase(select)) {
-            select = select.substring(1);
-        } else {
-            select = "*";
-        }
-        var dataOrder = "";
-        if (orderBy != null) {
-            for (var field : orderBy.entrySet()) {
-
-                dataOrder += "," + field;
-                    /*if (orderBy[field]=="D"){
-                        dataOrder += " desc" ;
-                    }*/
-                // To DO
-
-            }
-        }
-
-        if (dataOrder != "") {
-            dataOrder = dataOrder.substring(1);
-        } else {
-            dataOrder = "id";
-        }
-        StringBuffer sqlBuf = new StringBuffer();
-        if ((limitR > 0) && (skipTo == 0)) {
-            sqlBuf.append("SELECT ").append(select).append(" FROM bulkJob").append(swhere).append(" order by ").append(dataOrder).append(" limit ").append(limit);
-        } else {
-            sqlBuf.append("SELECT ").append(select).append(" FROM bulkJob").append(swhere).append(" order by ").append(dataOrder);
-        }
-
-        Query genQuery = entityManager.createNativeQuery(sqlBuf.toString(), BulkJob.class);
-
-        List<BulkJob> bulkJobs = genQuery.getResultList();
-        List<BulkJobResponseDto> resultList = new LinkedList<>();
-        for (BulkJob b : bulkJobs) {
-            resultList.add(new BulkJobResponseDto(b));
-
-        }
-
-        if ((skipTo == 0)) {
-            return resultList;
-        } else {
-            var cont = 1;
-            List<BulkJobResponseDto> newRows = new ArrayList<>();
-            for (var i = 0; i < (resultList.size() / 2); i++) {
-                if (i >= skipTo) {
-                    if (null != limit && limitR > 0 && limitR < cont) {
-                        break;
-                    }
-                    newRows.add(resultList.get(i));
-                    cont++;
-                }
-            }
-            return newRows;
-        }
-    }
 
     public List<SchemeId> saveScheme(List<SchemeId> schemeIds, String scheme) throws CisException {
         StringBuffer supdateBuf = new StringBuffer();
@@ -195,8 +117,41 @@ public class BackendJobService {
         }
         return resultList;
     }
+@Transactional
+    public void updateJobStatus(Map<String, Object> jobRecord,BulkJob bulkJobRecord) throws CisException {
+        StringBuffer supdate = new StringBuffer("");
+        String updateValue;
+        Integer count=0;
+        if (jobRecord.size() > 0)
+            for (var query :
+                    jobRecord.entrySet()) {
+                if (!(query.getKey().equalsIgnoreCase("id"))) {
+                    if(query.getKey().equalsIgnoreCase("status"))
+                    supdate.append(" ,").append(query.getKey()).append("=").append("'").append(query.getValue()).append("'");
+                    else
+                        supdate.append(" ,").append(query.getKey()).append("=").append(query.getValue());
+                }
+            }
+        if (!supdate.toString().equalsIgnoreCase("")) {
+            updateValue = supdate.toString().substring(2);
+            StringBuffer sql = new StringBuffer();
+            sql.append("UPDATE bulkjob SET ").append(updateValue).append(" ,modified_at=now() WHERE id=")
+                    .append(jobRecord.get("id"));
+            BulkJob bulkJob = BulkJob.builder().name(bulkJobRecord.getName()).request(bulkJobRecord.getRequest()).
+                    modified_at(LocalDateTime.now()).created_at(bulkJobRecord.getCreated_at()).
+                    status("1").id((Integer) jobRecord.get("id")).build();
+            int resultList = 0;
+            try {
+                bulkJobRepository.saveAndFlush(bulkJob);
+            }
+            catch(Exception e)
+            {
+                System.out.println("update error:"+e.getMessage());
+            }
+        }
+    }
 
-    @Scheduled(fixedRate = 3000)
+    //@Scheduled(fixedRate = 3000)
     public void runner() throws CisException {
         Map<String, String> objQuery1 = new HashMap<String, String>();
         Map<String, Integer> objQuery2 = new HashMap<String, Integer>();
@@ -204,647 +159,367 @@ public class BackendJobService {
         Map<String, Integer> objQuery4 = new HashMap<String, Integer>();
         Map<String, String> objQuery5 = new HashMap<String, String>();
 
-        if (null == objQuery1) {
+       // if (null == objQuery1) {
             objQuery1.put("status", "1");
-        }
-        if (null == objQuery2) {
+        //}
+        //if (null == objQuery2) {
             objQuery2.put("id", 1);
-        }
+       // }
 
-        List<BulkJobResponseDto> record = findFieldSelect(objQuery1, objQuery2, "1", null, null);
-        if (record != null && record.size() == 0) {
+        List<BulkJob> record = bulkJobService.findFieldSelect(objQuery1, objQuery2, 1, null, null);
+        if (record != null && record.size() > 0) {
             return;
         }
-        if (null == objQuery3) {
+        //if (null == objQuery3) {
             objQuery3.put("status", "0");
-        }
-        if (null == objQuery2) {
-            objQuery2.put("id", 1);
-            objQuery2.put("name", 1);
-            objQuery2.put("request", 1);
-        }
-        if (null == objQuery5) {
+        objQuery3.put("id","811916");
+        //}
+       // if (null == objQuery4) {
+            objQuery4.put("id", 1);
+            objQuery4.put("name", 1);
+            objQuery4.put("request", 1);
+        //}
+       // if (null == objQuery5) {
             objQuery5.put("created_at", "A");
-        }
-        List<BulkJobResponseDto> bulkJobsRecord = findFieldSelect(objQuery3, objQuery4, "1", null, objQuery5);
+       // }
+        List<BulkJob> bulkJobsRecord = bulkJobService.findFieldSelect(objQuery3, objQuery4, 1, null, objQuery5);
         if (bulkJobsRecord != null && bulkJobsRecord.size() > 0) {
-            Map<String, Object> objQuery = new HashMap<String, Object>();
-
-            Optional<BulkJobResponseDto> bulkJobResponseDtoOpt = bulkJobsRecord.stream().findFirst();
-            if (bulkJobResponseDtoOpt.isPresent()) {
-                objQuery.put("id", bulkJobResponseDtoOpt.get().getId());
-            }
-            objQuery.put("status", "1");
+            Map<String, Object> lightJob = new HashMap<String, Object>();
+            lightJob.put("id",bulkJobsRecord.get(0).getId());
+            lightJob.put("status","1");
             bulkJobsRecord.get(0).setStatus("1");
-            List<BulkJob> job = save(objQuery, bulkJobsRecord);
-            processJob(new BulkJobResponseDto(job.get(0)));
-
+            updateJobStatus(lightJob,bulkJobsRecord.get(0));
+            processJob(new BulkJobResponseDto(bulkJobsRecord.get(0)));
+        }
+        else
+        {
+            return;
         }
     }//runner()
 
     private void processJob(BulkJobResponseDto record) throws CisException {
         String request = record.getRequest();
         JSONObject requestJson = new JSONObject(request);
-
-
-        if (request == null) {
-            Map<String, Object> lightJob = new HashMap<String, Object>();
-            lightJob.put("id", record.getId());
-            lightJob.put("status", "3");
-            lightJob.put("log", "Request property is null");
-            save(lightJob, null);
-        } else {
-            Map<String, Object> lightJob = new HashMap<String, Object>();
-            lightJob.put("id", record.getId());
-
-            if (jobType.GENERATE_SCTIDS.equalsIgnoreCase(requestJson.getString("type"))) {
-
-                if (record.getSystemId() != null && record.getSystemId().length == 0) {
-                    List<String> arrayUuids = new ArrayList<>();
-                    for (var i = 0; i < record.getQuantity(); i++) {
-                        arrayUuids.add(sctIdHelper.guid());
-                    }
-                    record.setSystemId(new String[]{String.valueOf(arrayUuids)});
-                    record.autoSysId = true;
-                    stateMachine.actions.get("generate");
-                    if (true) {
-                        List<BulkJobResponseDto> job = generateSctids(record);
-                        if (job == null) {
-                            lightJob.put("status", "3");
-                           /* if (typeof err == "object") {
-                                lightJob.log = JSON.stringify(err);
-                            } else {
-                                lightJob.log = err;
-                            }*/
-                            // Eroor log To DO
-                        } else {
-                            lightJob.put("status", "2");
-                        }
-                        List<BulkJob> job1 = save(lightJob, job);
-                        /*if (err) {
-                            console.log("Error-2 in back end service:" + err);
-                            return;
-                        } else {
-
-                            console.log("End job " + record.name + " - id:" + record.id);
-                        }*/
-                        // Error log for save
-                    } else {
-
-                        List<BulkJobResponseDto> job = generateSctidsSmallRequest(record);
-                        if (job == null) {
-                            lightJob.put("status", "3");
-                           /* if (typeof err == "object") {
-                                lightJob.log = JSON.stringify(err);
-                            } else {
-                                lightJob.log = err;
-                            }*/
-                            // Eroor log To DO
-                        } else {
-                            lightJob.put("status", "2");
-                        }
-                        List<BulkJob> job1 = save(lightJob, job);
-                        try {
-                            if (job == null) {
-                                System.out.println("Error-2 in back end service:");
-                                return;
-                            } else {
-                                System.out.println("End job " + record.getName() + " - id:" + record.getId());
-                            }
-                        } catch (Exception e) {
-                            System.out.println(e.getMessage());
-                        }
-                        // Error log for save
-
-                    }
-                }
-
-            } else if ((jobType.REGISTER_SCTIDS).equalsIgnoreCase(requestJson.getString("type"))) {
-
-                if (true) {
-                    List<BulkJobResponseDto> job = registerSctids(record);
-                    if (job == null) {
-                        lightJob.put("status", "3");
-                           /* if (typeof err == "object") {
-                                lightJob.log = JSON.stringify(err);
-                            } else {
-                                lightJob.log = err;
-                            }*/
-                        // Eroor log To DO
-                    } else {
-                        lightJob.put("status", "2");
-                    }
-                    List<BulkJob> job1 = save(lightJob, job);
-                    try {
-                        if (job1 == null) {
-                            System.out.println("Error-2 in back end service:");
-                            return;
-                        } else {
-                            System.out.println("End job " + record.getName() + " - id:" + record.getId());
-                        }
-                    } catch (Exception e) {
-                        System.out.println(e.getMessage());
-                    }
-                } else {
-                    List<BulkJobResponseDto> job = registerSctidsSmallRequest(record);
-                    if (job == null) {
-                        lightJob.put("status", "3");
-                           /* if (typeof err == "object") {
-                                lightJob.log = JSON.stringify(err);
-                            } else {
-                                lightJob.log = err;
-                            }*/
-                        // Eroor log To DO
-                    } else {
-                        lightJob.put("status", "2");
-                    }
-                    List<BulkJob> job1 = save(lightJob, job);
-                    try {
-                        if (job1 == null) {
-                            System.out.println("Error-2 in back end service:");
-                            return;
-                        } else {
-                            System.out.println("End job " + record.getName() + " - id:" + record.getId());
-                        }
-                    } catch (Exception e) {
-                        System.out.println(e.getMessage());
-                    }
-                    // Error log for save
-
-                }
-            } else if ((jobType.RESERVE_SCTIDS).equalsIgnoreCase(requestJson.getString("type"))) {
-                if (record.getSystemId() == null || record.getSystemId().length == 0) {
-                    List<String> arrayUuids = new ArrayList<>();
-                    for (var i = 0; i < record.getQuantity(); i++) {
-                        arrayUuids.add(sctIdHelper.guid());
-                    }
-                    record.setSystemId(new String[]{String.valueOf(arrayUuids)});
-                }
-                record.setAction(stateMachine.actions.get("reserve"));
-                //
-                if (true) {
-                    List<BulkJobResponseDto> job = generateSctids(record);
-                    if (job == null) {
-                        lightJob.put("status", "3");
-                           /* if (typeof err == "object") {
-                                lightJob.log = JSON.stringify(err);
-                            } else {
-                                lightJob.log = err;
-                            }*/
-                        // Eroor log To DO
-                    } else {
-                        lightJob.put("status", "2");
-                    }
-                    List<BulkJob> job1 = save(lightJob, job);
-                        /*if (err) {
-                            console.log("Error-2 in back end service:" + err);
-                            return;
-                        } else {
-
-                            console.log("End job " + record.name + " - id:" + record.id);
-                        }*/
-                    // Error log for save
-                } else {
-
-                    List<BulkJobResponseDto> job = generateSctidsSmallRequest(record);
-                    if (job == null) {
-                        lightJob.put("status", "3");
-                           /* if (typeof err == "object") {
-                                lightJob.log = JSON.stringify(err);
-                            } else {
-                                lightJob.log = err;
-                            }*/
-                        // Eroor log To DO
-                    } else {
-                        lightJob.put("status", "2");
-                    }
-                    List<BulkJob> job1 = save(lightJob, job);
-                    try {
-                        if (job1 == null) {
-                            System.out.println("Error-2 in back end service:");
-                            return;
-                        } else {
-                            System.out.println("End job " + record.getName() + " - id:" + record.getId());
-                        }
-                    } catch (Exception e) {
-                        System.out.println(e.getMessage());
-                    }
-                    // Error log for save
-
-                }
-                //
-
-            } else if ((jobType.DEPRECATE_SCTIDS).equalsIgnoreCase(requestJson.getString("type"))) {
-                record.setAction(stateMachine.actions.get("deprecate"));
-                List<BulkJobResponseDto> job = updateSctids(record);
-                if (job == null) {
-                    lightJob.put("status", "3");
-                           /* if (typeof err == "object") {
-                                lightJob.log = JSON.stringify(err);
-                            } else {
-                                lightJob.log = err;
-                            }*/
-                    // Eroor log To DO
-                } else {
-                    lightJob.put("status", "2");
-                }
-                List<BulkJob> job1 = save(lightJob, job);
-                try {
-                    if (job1 == null) {
-                        System.out.println("Error-2 in back end service:");
-                        return;
-                    } else {
-                        System.out.println("End job " + record.getName() + " - id:" + record.getId());
-                    }
-                } catch (Exception e) {
-                    System.out.println(e.getMessage());
-                }
-
-            } else if ((jobType.RELEASE_SCTIDS).equalsIgnoreCase(requestJson.getString("type"))) {
-                record.setAction(stateMachine.actions.get("releasse"));
-                List<BulkJobResponseDto> job = updateSctids(record);
-                if (job == null) {
-                    lightJob.put("status", "3");
-                           /* if (typeof err == "object") {
-                                lightJob.log = JSON.stringify(err);
-                            } else {
-                                lightJob.log = err;
-                            }*/
-                    // Eroor log To DO
-                } else {
-                    lightJob.put("status", "2");
-                }
-                List<BulkJob> job1 = save(lightJob, job);
-                try {
-                    if (job1 == null) {
-                        System.out.println("Error-2 in back end service:");
-                        return;
-                    } else {
-                        System.out.println("End job " + record.getName() + " - id:" + record.getId());
-                    }
-                } catch (Exception e) {
-                    System.out.println(e.getMessage());
-                }
-
-            } else if ((jobType.PUBLISH_SCTIDS).equalsIgnoreCase(requestJson.getString("type"))) {
-                record.setAction(stateMachine.actions.get("publish"));
-                List<BulkJobResponseDto> job = updateSctids(record);
-                if (job == null) {
-                    lightJob.put("status", "3");
-                           /* if (typeof err == "object") {
-                                lightJob.log = JSON.stringify(err);
-                            } else {
-                                lightJob.log = err;
-                            }*/
-                    // Eroor log To DO
-                } else {
-                    lightJob.put("status", "2");
-                }
-                List<BulkJob> job1 = save(lightJob, job);
-                try {
-                    if (job1 == null) {
-                        System.out.println("Error-2 in back end service:");
-                        return;
-                    } else {
-                        System.out.println("End job " + record.getName() + " - id:" + record.getId());
-                    }
-                } catch (Exception e) {
-                    System.out.println(e.getMessage());
-                }
-
-            } else if ((jobType.GENERATE_SCHEMEIDS).equalsIgnoreCase(requestJson.getString("type"))) {
-                if (record.getSystemId() == null || record.getSystemId().length == 0) {
-                    List<String> arrayUuids = new ArrayList<>();
-                    for (var i = 0; i < record.getQuantity(); i++) {
-                        arrayUuids.add(sctIdHelper.guid());
-                    }
-                    record.setSystemId(new String[]{String.valueOf(arrayUuids)});
-                }
-                record.setAction(stateMachine.actions.get("generate"));
-                if (true) {
-                    List<BulkJobResponseDto> job = generateSchemeIds(record);
-                    if (job == null) {
-                        lightJob.put("status", "3");
-                           /* if (typeof err == "object") {
-                                lightJob.log = JSON.stringify(err);
-                            } else {
-                                lightJob.log = err;
-                            }*/
-                        // Eroor log To DO
-                    } else {
-                        lightJob.put("status", "2");
-                    }
-                    List<BulkJob> job1 = save(lightJob, job);
-                        /*if (err) {
-                            console.log("Error-2 in back end service:" + err);
-                            return;
-                        } else {
-
-                            console.log("End job " + record.name + " - id:" + record.id);
-                        }*/
-                    // Error log for save
-                } else {
-                    List<BulkJobResponseDto> job = generateSchemeIdSmallRequest(record);
-                    if (job == null) {
-                        lightJob.put("status", "3");
-                           /* if (typeof err == "object") {
-                                lightJob.log = JSON.stringify(err);
-                            } else {
-                                lightJob.log = err;
-                            }*/
-                        // Eroor log To DO
-                    } else {
-                        lightJob.put("status", "2");
-                    }
-                    List<BulkJob> job1 = save(lightJob, job);
-                    try {
-                        if (job1 == null) {
-                            System.out.println("Error-2 in back end service:");
-                            return;
-                        } else {
-                            System.out.println("End job " + record.getName() + " - id:" + record.getId());
-                        }
-                    } catch (Exception e) {
-                        System.out.println(e.getMessage());
-                    }
-                    // Error log for save
-
-                }
-
-            } else if ((jobType.REGISTER_SCHEMEIDS).equalsIgnoreCase(requestJson.getString("type"))) {
-                List<BulkJobResponseDto> job = registerSchemeIds(record);
-                if (job == null) {
-                    lightJob.put("status", "3");
-                           /* if (typeof err == "object") {
-                                lightJob.log = JSON.stringify(err);
-                            } else {
-                                lightJob.log = err;
-                            }*/
-                    // Eroor log To DO
-                } else {
-                    lightJob.put("status", "2");
-                }
-                List<BulkJob> job1 = save(lightJob, job);
-                try {
-                    if (job1 == null) {
-                        System.out.println("Error-2 in back end service:");
-                        return;
-                    } else {
-                        System.out.println("End job " + record.getName() + " - id:" + record.getId());
-                    }
-                } catch (Exception e) {
-                    System.out.println(e.getMessage());
-                }
-
-            } else if ((jobType.RESERVE_SCHEMEIDS).equalsIgnoreCase(requestJson.getString("type"))) {
-                if (record.getSystemId() == null || record.getSystemId().length == 0) {
-                    List<String> arrayUuids = new ArrayList<>();
-                    for (var i = 0; i < record.getQuantity(); i++) {
-                        arrayUuids.add(sctIdHelper.guid());
-                    }
-                    record.setSystemId(new String[]{String.valueOf(arrayUuids)});
-                }
-                record.setAction(stateMachine.actions.get("reserve"));
-                List<BulkJobResponseDto> job = generateSchemeIdSmallRequest(record);
-                if (job == null) {
-                    lightJob.put("status", "3");
-                           /* if (typeof err == "object") {
-                                lightJob.log = JSON.stringify(err);
-                            } else {
-                                lightJob.log = err;
-                            }*/
-                    // Eroor log To DO
-                } else {
-                    lightJob.put("status", "2");
-                }
-                List<BulkJob> job1 = save(lightJob, job);
-                try {
-                    if (job1 == null) {
-                        System.out.println("Error-2 in back end service:");
-                        return;
-                    } else {
-                        System.out.println("End job " + record.getName() + " - id:" + record.getId());
-                    }
-                } catch (Exception e) {
-                    System.out.println(e.getMessage());
-                }
-
-            } else if ((jobType.DEPRECATE_SCHEMEIDS).equalsIgnoreCase(requestJson.getString("type"))) {
-                record.setAction(stateMachine.actions.get("deprecate"));
-                List<BulkJobResponseDto> job = updateSchemeId(record);
-                if (job == null) {
-                    lightJob.put("status", "3");
-                           /* if (typeof err == "object") {
-                                lightJob.log = JSON.stringify(err);
-                            } else {
-                                lightJob.log = err;
-                            }*/
-                    // Eroor log To DO
-                } else {
-                    lightJob.put("status", "2");
-                }
-                List<BulkJob> job1 = save(lightJob, job);
-                try {
-                    if (job1 == null) {
-                        System.out.println("Error-2 in back end service:");
-                        return;
-                    } else {
-                        System.out.println("End job " + record.getName() + " - id:" + record.getId());
-                    }
-                } catch (Exception e) {
-                    System.out.println(e.getMessage());
-                }
-
-
-            } else if ((jobType.RELEASE_SCHEMEIDS).equalsIgnoreCase(requestJson.getString("type"))) {
-                record.setAction(stateMachine.actions.get("release"));
-                List<BulkJobResponseDto> job = updateSchemeId(record);
-                if (job == null) {
-                    lightJob.put("status", "3");
-                           /* if (typeof err == "object") {
-                                lightJob.log = JSON.stringify(err);
-                            } else {
-                                lightJob.log = err;
-                            }*/
-                    // Eroor log To DO
-                } else {
-                    lightJob.put("status", "2");
-                }
-                List<BulkJob> job1 = save(lightJob, job);
-                try {
-                    if (job1 == null) {
-                        System.out.println("Error-2 in back end service:");
-                        return;
-                    } else {
-                        System.out.println("End job " + record.getName() + " - id:" + record.getId());
-                    }
-                } catch (Exception e) {
-                    System.out.println(e.getMessage());
-                }
-
-
-            } else if ((jobType.PUBLISH_SCHEMEIDS).equalsIgnoreCase(requestJson.getString("type"))) {
-                record.setAction(stateMachine.actions.get("publish"));
-                List<BulkJobResponseDto> job = updateSchemeId(record);
-                if (job == null) {
-                    lightJob.put("status", "3");
-                           /* if (typeof err == "object") {
-                                lightJob.log = JSON.stringify(err);
-                            } else {
-                                lightJob.log = err;
-                            }*/
-                    // Eroor log To DO
-                } else {
-                    lightJob.put("status", "2");
-                }
-                List<BulkJob> job1 = save(lightJob, job);
-                try {
-                    if (job1 == null) {
-                        System.out.println("Error-2 in back end service:");
-                        return;
-                    } else {
-                        System.out.println("End job " + record.getName() + " - id:" + record.getId());
-                    }
-                } catch (Exception e) {
-                    System.out.println(e.getMessage());
-                }
-
-
+        //if Request is not Present in record set Status to 3 and save bulkJob
+        boolean isTypePresent = false;
+        if(!requestJson.isEmpty()&&null!=requestJson)
+        {
+            if(null!=requestJson.get("type"))
+            {
+                if(!(requestJson.get("type").toString().isEmpty()) && !(requestJson.get("type").toString().isBlank()))
+                    isTypePresent = true;
             }
-
-
-        }// request not null
-    }
-
-    private List<BulkJobResponseDto> updateSchemeId(BulkJobResponseDto record) throws CisException {
-        var schemeIdRecord = getSchemeId(record.getScheme(), record.getSchemeId(), record.getSystemId(), record.getAutoSysId());
-        try {
-            var cont = 0;
-            List<String> records = new ArrayList<>();
-            var error = false;
-            var scheme = record.getScheme();
-            for (var i = 0; i < record.getRecords().length; i++) {
-                var schemeId = record.getRecords()[i].getSctid();
-                var systemId = record.getRecords()[i].getSystemId();
-                // var schemeIdRecord = getSchemeId(record.getScheme(), record.getSchemeId(), record.getSystemId(), record.getAutoSysId());
-                if (schemeIdRecord.getSchemeId() == schemeId && schemeIdRecord.getSystemId() != systemId) {
-                    schemeIdRecord.setSystemId(systemId);
-                }
-                String newStatus;
-                if (stateMachine.getNewStatus(schemeIdRecord.getStatus(), "assigned").equalsIgnoreCase("assigned")) {
-                    newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(), "assigned");
-                } else {
-                    newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(), stateMachine.actions.get("register"));
-                }
-                if (newStatus != null) {
-                    schemeIdRecord.setStatus(newStatus);
-                    schemeIdRecord.setAuthor(record.getAuthor());
-                    schemeIdRecord.setSoftware(record.getSoftware());
-                    schemeIdRecord.setExpirationDate(record.getExpirationDate());
-                    schemeIdRecord.setComment(record.getComment());
-                    schemeIdRecord.setJobId(record.getJobId());
-                    saveScheme((List<SchemeId>) schemeIdRecord, record.getScheme());
-                    cont++;
-                    if (cont == record.getRecords().length) {
-                        cont = 0;
-                        for (var j = 0; j < records.size(); j++) {
-                            // TO DO
-                            List<BulkJob> job = null;/*save((Map<String, Object>) records.get(j), (List<BulkJobResponseDto>) record);*/
-
-                            if (job == null) {
-                                error = true;
-                            }
-                            cont++;
-                            if (cont == records.size()) {
-                                return null;
-                            }
-                        }
-                    }
-                } else {
-                    error = true;
-                    System.out.println("Cannot register SchemeId:" + schemeIdRecord.getSchemeId() + ", current status: " + schemeIdRecord.getStatus());
-                    return null;
-                }
-            }
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
         }
-        return null;
-    }
 
-    private List<BulkJobResponseDto> registerSchemeIds(BulkJobResponseDto record) {
-        try {
-            var cont = 0;
-            List<String> records = new ArrayList<>();
-            var error = false;
-            var scheme = record.getScheme();
-            for (var i = 0; i < record.getRecords().length; i++) {
-                var schemeId = record.getRecords()[i].getSctid();
-                var systemId = record.getRecords()[i].getSystemId();
-                var schemeIdRecord = getSchemeId(record.getScheme(), record.getSchemeId(), record.getSystemId(), record.getAutoSysId());
-                if (schemeIdRecord.getSchemeId() == schemeId && schemeIdRecord.getSystemId() != systemId) {
-                    schemeIdRecord.setSystemId(systemId);
-                }
-                String newStatus;
-                if (stateMachine.getNewStatus(schemeIdRecord.getStatus(), "assigned").equalsIgnoreCase("assigned")) {
-                    newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(), "assigned");
-                } else {
-                    newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(), stateMachine.actions.get("register"));
-                }
-                if (newStatus != null) {
-                    schemeIdRecord.setStatus(newStatus);
-                    schemeIdRecord.setAuthor(record.getAuthor());
-                    schemeIdRecord.setSoftware(record.getSoftware());
-                    schemeIdRecord.setExpirationDate(record.getExpirationDate());
-                    schemeIdRecord.setComment(record.getComment());
-                    schemeIdRecord.setJobId(record.getJobId());
-                    saveScheme((List<SchemeId>) schemeIdRecord, record.getScheme());
-                } else {
-                    error = true;
-                    System.out.println("Cannot register SchemeId:" + schemeIdRecord.getSchemeId() + ", current status: " + schemeIdRecord.getStatus());
-                    return null;
-                }
-            }
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-        return null;
-    }
-
-    private List<BulkJobResponseDto> generateSchemeIdSmallRequest(BulkJobResponseDto record) {
-        var cont = 0;
-        Map<String, Object> obj = new HashMap<String, Object>();
-        obj.put("scheme", record.getScheme());
-        Optional<SchemeIdBase> data = schemeIdBaseRepository.findById(record.getScheme());
-        var thisScheme = data;
-        boolean canContinue;
-        for (var i = 0; i < record.getQuantity(); i++) {
-            canContinue = true;
+        if (requestJson.isEmpty() || null == requestJson || !isTypePresent){
+            BulkJob bulkJob = BulkJob.builder().id(record.getId()).status("3")
+                    .name(record.getName())
+                    .log("Request property is null")
+                    .build();
             try {
-                record.systemId = record.getSystemId();
-                if (!record.autoSysId) {
-                    var schemeIdRecord = schemeIdRepository.findBySchemeAndSchemeIdIn(record.getScheme(), List.of(record.getSystemId()));
-                    if (schemeIdRecord != null) {
-                        schemeIdRecord.get(i).setJobId(record.getJobId());
-                        saveScheme(schemeIdRecord, record.getScheme());
-                        canContinue = false;
-                    }
-                }
-                if (canContinue) {
-                    generateScheme(record, thisScheme);
-                }
-                cont++;
-                if (record.getQuantity() == cont) {
-                    saveScheme((List<SchemeId>) thisScheme.get(), record.getScheme());
-                }
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
+                bulkJobRepository.save(bulkJob);
             }
-        }//for
-        return null;
+            catch(Exception e)
+            {
+                throw new CisException(HttpStatus.BAD_REQUEST,e.getMessage());
+            }
+        }
+        else {
+            requestJson.put("jobId",record.getId());
+            BulkJob finalBulkJobStatus = BulkJob.builder().id(record.getId()).build();
+            Map<String, Object> lightJob = new HashMap<String, Object>();
+            lightJob.put("id", record.getId());
+
+            if (
+                    jobType.GENERATE_SCTIDS.equalsIgnoreCase(requestJson.getString("type"))
+                    ||
+                            ((jobType.RESERVE_SCTIDS).equalsIgnoreCase(requestJson.getString("type")))
+            ) {
+                JSONArray list = (JSONArray) requestJson.get("systemIds");
+                // ArrayList list= (ArrayList) requestJson.get("systemIds");
+                 Integer quantity = (Integer)requestJson.get("quantity");
+                requestJson.put("autoSysId", false);
+                if (null==list && list.length() == 0) {
+                    List<String> arrayUuids = new ArrayList<>();
+                    for (var i = 0; i < quantity; i++) {
+                        arrayUuids.add(sctIdHelper.guid());
+                    }
+                    requestJson.put("systemIds", arrayUuids);
+                    requestJson.put("autoSysId", true);
+                }
+                if( jobType.GENERATE_SCTIDS.equalsIgnoreCase(requestJson.getString("type")))
+                    requestJson.put("action",stateMachine.actions.get("generate"));
+                else if((jobType.RESERVE_SCTIDS).equalsIgnoreCase(requestJson.getString("type")))
+                    requestJson.put("action",stateMachine.actions.get("reserve"));
+                        String result;
+                        String updatedStatus = null;
+                        String log = null;
+                        try {
+                            result = generateSctids(requestJson);
+                            if(result.equalsIgnoreCase("failure"))
+                            {
+                                updatedStatus = "3";
+                                log = "Sctid Not Processed.";
+                            }
+                            else {
+                                updatedStatus = "2";
+                                log = null;
+                            }
+                        }
+                        catch(Exception e)
+                        {
+                            updatedStatus = "3";
+                            log = "Sctid Not Processed."+e.getMessage();
+                            //lightJob.put("status","3");
+                            //lightJob.put("log","Sctid Not Processed."+e.getMessage());
+                        }
+                        try {
+                            bulkJobRepository.updateBulkJobStatus(updatedStatus, log, requestJson.getInt("jobId"));
+                        }
+                        catch(Exception e)
+                        {
+                            System.out.println("exception s:"+e.getMessage());
+                        }
+                }
+
+             else if ((jobType.REGISTER_SCTIDS).equalsIgnoreCase(requestJson.getString("type"))) {
+
+                    String jobFinalStatus = registerSctids(requestJson);
+                String updatedStatus = null;
+                String log = null;
+                    if (!jobFinalStatus.equalsIgnoreCase("success")) {
+                        updatedStatus = "3";
+                        log = "Register Sctid Not Processed.";
+                    } else {
+                        updatedStatus = "2";
+                    }
+                bulkJobRepository.updateBulkJobStatus(updatedStatus,log,requestJson.getInt("jobId"));
+            }
+
+             else if ((jobType.DEPRECATE_SCTIDS).equalsIgnoreCase(requestJson.getString("type"))) {
+                requestJson.put("action",stateMachine.actions.get("deprecate"));
+                String job = updateSctids(requestJson);
+                String updatedStatus = null;
+                String log = null;
+                if (!job.equalsIgnoreCase("success")) {
+                    updatedStatus = "3";
+                    log = job;
+                } else {
+                    updatedStatus = "2";
+                }
+                bulkJobRepository.updateBulkJobStatus(updatedStatus,log,requestJson.getInt("jobId"));
+            }
+             else if ((jobType.RELEASE_SCTIDS).equalsIgnoreCase(requestJson.getString("type"))) {
+                requestJson.put("action",stateMachine.actions.get("release"));
+                String job = updateSctids(requestJson);
+                String updatedStatus = null;
+                String log = null;
+                if (!job.equalsIgnoreCase("success")) {
+                    updatedStatus = "3";
+                    log = job;
+                } else {
+                    updatedStatus = "2";
+                }
+                bulkJobRepository.updateBulkJobStatus(updatedStatus,log,requestJson.getInt("jobId"));
+            }
+             else if ((jobType.PUBLISH_SCTIDS).equalsIgnoreCase(requestJson.getString("type"))) {
+                requestJson.put("action",stateMachine.actions.get("publish"));
+                String job = updateSctids(requestJson);
+                String updatedStatus = null;
+                String log = null;
+                if (!job.equalsIgnoreCase("success")) {
+                    updatedStatus = "3";
+                    log = job;
+                } else {
+                    updatedStatus = "2";
+                }
+                bulkJobRepository.updateBulkJobStatus(updatedStatus,log,requestJson.getInt("jobId"));
+            }
+             else if ((jobType.GENERATE_SCHEMEIDS).equalsIgnoreCase(requestJson.getString("type"))) {
+                JSONArray list = (JSONArray) requestJson.get("systemIds");
+                Integer quantity = (Integer)requestJson.get("quantity");
+                requestJson.put("autoSysId", false);
+                if (null==list && list.length() == 0) {
+                    List<String> arrayUuids = new ArrayList<>();
+                    for (var i = 0; i < quantity; i++) {
+                        arrayUuids.add(sctIdHelper.guid());
+                    }
+                    requestJson.put("systemIds", arrayUuids);
+                    requestJson.put("autoSysId", true);
+                }
+                requestJson.put("action",stateMachine.actions.get("generate"));
+                    String job = generateSchemeIds(requestJson);
+                String updatedStatus = null;
+                String log = null;
+                    if (!job.equalsIgnoreCase("success")) {
+                        updatedStatus = "3";
+                        log = job;
+                    } else {
+                        updatedStatus = "2";
+                    }
+                bulkJobRepository.updateBulkJobStatus(updatedStatus,log,requestJson.getInt("jobId"));
+            }
+             else if ((jobType.REGISTER_SCHEMEIDS).equalsIgnoreCase(requestJson.getString("type"))) {
+               String job = registerSchemeIds(requestJson);
+                String updatedStatus = null;
+                String log = null;
+                if (!job.equalsIgnoreCase("success")) {
+                    updatedStatus = "3";
+                    log = job;
+                } else {
+                    updatedStatus = "2";
+                }
+                bulkJobRepository.updateBulkJobStatus(updatedStatus,log,requestJson.getInt("jobId"));
+            }
+             else if ((jobType.RESERVE_SCHEMEIDS).equalsIgnoreCase(requestJson.getString("type"))) {
+                JSONArray list = (JSONArray) requestJson.get("systemIds");
+                Integer quantity = (Integer)requestJson.get("quantity");
+                requestJson.put("autoSysId", false);
+                if (null==list && list.length() == 0) {
+                    List<String> arrayUuids = new ArrayList<>();
+                    for (var i = 0; i < quantity; i++) {
+                        arrayUuids.add(sctIdHelper.guid());
+                    }
+                    requestJson.put("systemIds", arrayUuids);
+                    requestJson.put("autoSysId", true);
+                }
+                 requestJson.put("action",stateMachine.actions.get("reserve"));
+               String job = generateSchemeIdSmallRequest(requestJson);
+                String updatedStatus = null;
+                String log = null;
+                if (!job.equalsIgnoreCase("success")) {
+                    //lightJob.put("status", "3");
+                    updatedStatus = "3";
+                    log = job;
+                } else {
+                    updatedStatus = "2";
+                }
+                bulkJobRepository.updateBulkJobStatus(updatedStatus,log,requestJson.getInt("jobId"));
+            }
+             else if ((jobType.DEPRECATE_SCHEMEIDS).equalsIgnoreCase(requestJson.getString("type"))) {
+                requestJson.put("action",stateMachine.actions.get("deprecate"));
+                String job = updateSchemeId(requestJson);
+                String updatedStatus = null;
+                String log = null;
+                if (!job.equalsIgnoreCase("success")){
+                    updatedStatus = "3";
+                    log = job;
+                } else {
+                    updatedStatus = "2";
+                }
+                bulkJobRepository.updateBulkJobStatus(updatedStatus,log,requestJson.getInt("jobId"));
+            }
+             else if ((jobType.RELEASE_SCHEMEIDS).equalsIgnoreCase(requestJson.getString("type"))) {
+                requestJson.put("action",stateMachine.actions.get("release"));
+                String updatedStatus = null;
+                String log = null;
+                String job = updateSchemeId(requestJson);
+                if (!job.equalsIgnoreCase("success")) {
+                    updatedStatus = "3";
+                    log = job;
+                } else {
+                    updatedStatus = "2";
+                }
+                bulkJobRepository.updateBulkJobStatus(updatedStatus,log,requestJson.getInt("jobId"));
+            }
+             else if ((jobType.PUBLISH_SCHEMEIDS).equalsIgnoreCase(requestJson.getString("type"))) {
+                requestJson.put("action",stateMachine.actions.get("publish"));
+                String job = updateSchemeId(requestJson);
+                String updatedStatus = null;
+                String log = null;
+                if (!job.equalsIgnoreCase("success")){
+                    updatedStatus = "3";
+                    log = job;
+                } else {
+                    updatedStatus = "2";
+                }
+                bulkJobRepository.updateBulkJobStatus(updatedStatus,log,requestJson.getInt("jobId"));
+            }
+
+
+        }
     }
 
-    private void generateScheme(BulkJobResponseDto record, Optional<SchemeIdBase> thisScheme) {
+    private String updateSchemeId(JSONObject record) throws CisException {
+        String scheme = record.getString("scheme");
+        JSONArray schemeIdArr = record.getJSONArray("schemeIds");
+        List<SchemeId> records = new ArrayList<>();
+        for (int i=0;i<schemeIdArr.length();i++)
+        {
+            String schemeId  = schemeIdArr.getJSONObject(i).toString();
+            SchemeId schemeIdRecord = getSchemeId(scheme, schemeId, "");
+            if(null!=schemeIdRecord)
+            {
+                String newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(),record.getString("action")) ;
+                if(null!=newStatus)
+                {
+                    schemeIdRecord.setStatus(newStatus);
+                    schemeIdRecord.setAuthor(record.getString("author"));
+                    schemeIdRecord.setSoftware(record.getString("software"));
+                    schemeIdRecord.setComment(record.getString("comment"));
+                    schemeIdRecord.setJobId(record.getInt("jobId"));
+                    records.add(schemeIdRecord);
+                }
+                else
+                {
+                    return ("Cannot " + record.getString("action") + " SchemeId:" + schemeIdRecord.getSchemeId() + ", current status: " + schemeIdRecord.getStatus());
+                }
+            }
+            else
+            {
+                return "error Fetching SchemeId Record with Scheme:"+scheme+" and schemeId:"+ schemeId;
+            }
+        }
+        try {
+            schemeIdRepository.saveAll(records);
+        }
+        catch(Exception e)
+        {
+            return "Exception while saving schemeRecords:"+e.getMessage();
+        }
+
+        return "success";
+    }
+
+    private String registerSchemeIds(JSONObject record) {
+        try {
+            var cont = 0;
+            List<SchemeId> records = new ArrayList<>();
+            var error = false;
+            var scheme = record.getString("scheme");
+            int quantityToRegister = record.getJSONArray("records").length();
+            for (var i = 0; i < quantityToRegister; i++) {
+                JSONArray records1  = record.getJSONArray("records");
+                JSONObject schemeWithSystmId = records1.getJSONObject(i-1);
+                String schemeId = schemeWithSystmId.getString("schemeId");
+                String systemId = schemeWithSystmId.getString("systemId");
+                var schemeIdRecord = getSchemeId(scheme, schemeId, systemId);
+                String newStatus;
+                if (schemeIdRecord.getStatus().equalsIgnoreCase(stateMachine.statuses.get("assigned"))) {
+                    newStatus = stateMachine.statuses.get("assigned");
+                } else {
+                    newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(), stateMachine.actions.get("register"));
+                }
+                if (newStatus != null && !newStatus.isEmpty()) {
+                    schemeIdRecord.setStatus(newStatus);
+                    schemeIdRecord.setAuthor(record.getString("author"));
+                    schemeIdRecord.setSoftware(record.getString("software"));
+                    schemeIdRecord.setExpirationDate((record.has("expirationDate"))? (LocalDateTime) record.get("expirationDate") :null);
+                    schemeIdRecord.setComment(record.getString("comment"));
+                    schemeIdRecord.setJobId(record.getInt("jobId"));
+                    records.add(schemeIdRecord);
+                } else {
+                    return ("Cannot register SchemeId:" + schemeIdRecord.getSchemeId() + ", current status: " + schemeIdRecord.getStatus());
+                }
+            }
+            schemeIdRepository.saveAll(records);
+        } catch (Exception e) {
+            return (e.getMessage());
+        }
+        return "success";
+    }
+
+    private void generateScheme(JSONObject record, Optional<SchemeIdBase> thisScheme) {
         try {
             var rec = setAvailableSchemeIdRecord2NewStatus(record, thisScheme);
             if (rec == null) {
@@ -855,7 +530,7 @@ public class BackendJobService {
         }
     }
 
-    private SchemeId setNewSchemeIdRecord(BulkJobResponseDto record, Optional<SchemeIdBase> thisScheme) throws CisException {
+    private String setNewSchemeIdRecord(JSONObject record, Optional<SchemeIdBase> thisScheme) throws CisException {
 
         try {
             var previousCode = thisScheme.get().getIdBase();
@@ -870,32 +545,35 @@ public class BackendJobService {
             }
             thisScheme.get().setIdBase(newSchemeId);
             var scheme = thisScheme.get().getScheme();
-            String[] systemId;
-            var action = record.getAction();
-            if (record.getSystemId() != null) {
-                systemId = record.getSystemId();
+            String systemId = "";
+            var action = record.getString("action");
+            List<String> systemIdsList = (List<String>) record.get("systemIds");
+            if (systemIdsList != null && systemIdsList.size()>0) {
+                systemId = systemIdsList.get(0);
             }
-            var schemeIdRecord = getSchemeId(record.getScheme(), record.getSchemeId(), record.getSystemId(), record.getAutoSysId());
+            var schemeIdRecord = getSchemeId(scheme, newSchemeId,systemId);
 
-            var newStatus = stateMachine.getNewStatus(record.getStatus(), action);
+            var newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(), action);
             if (newStatus != null) {
                 schemeIdRecord.setStatus(newStatus);
-                schemeIdRecord.setAuthor(record.getAuthor());
-                schemeIdRecord.setSoftware(record.getSoftware());
-                schemeIdRecord.setExpirationDate(record.getExpirationDate());
-                schemeIdRecord.setComment(record.getComment());
-                schemeIdRecord.setJobId(record.getJobId());
-                saveScheme((List<SchemeId>) schemeIdRecord, record.getScheme());
+                schemeIdRecord.setAuthor(record.getString("author"));
+                schemeIdRecord.setSoftware(record.getString("software"));
+                schemeIdRecord.setExpirationDate((record.has("expirationDate"))? (LocalDateTime) record.get("expirationDate") :null);
+                schemeIdRecord.setComment(record.getString("comment"));
+                schemeIdRecord.setJobId(record.getInt("jobId"));
+                schemeIdRepository.save(schemeIdRecord);
+                //saveScheme((List<SchemeId>) schemeIdRecord, record.getScheme());
             } else {
                 setNewSchemeIdRecord(record, thisScheme);
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
+            return e.getMessage();
         }
-        return null;
+        return "success";
     }
 
-    private SchemeId getSchemeId(String scheme, String schemeId, String[] systemId, Boolean autoSysId) throws CisException, CisException {
+    private SchemeId getSchemeId(String scheme, String schemeId, String systemId) throws CisException, CisException {
         boolean isValidScheme = false;
         SchemeId id = new SchemeId();
         if ("SNOMEDID".equalsIgnoreCase(scheme.toString().toUpperCase())) {
@@ -906,54 +584,80 @@ public class BackendJobService {
         if (isValidScheme) {
             Optional<SchemeId> schemeId1 = schemeIdRepository.findBySchemeAndSchemeId(scheme, schemeId);
             if (schemeId1.isPresent()) {
-                id = schemeIdService.getFreeRecords(scheme, schemeId);
+                id = getFreeRecords(scheme, schemeId,systemId);
             }
+        }
+        else
+        {
+            id = null;
         }
         return id;
     }
+    public SchemeId getFreeRecords(String schemeName, String schemeid,String systemId) throws CisException {
+        logger.debug("Request Received : schemeName-{} :: schemeid - {} ", schemeName, schemeid);
+        Map<String, Object> schemeIdRecord = getNewRecord(schemeName, schemeid,systemId);
+        schemeIdRecord.put("status", stateMachine.statuses.get("available"));
+        return schemeIdService.insertSchemeIdRecord(schemeIdRecord);
+    }
 
-    private SchemeId setAvailableSchemeIdRecord2NewStatus(BulkJobResponseDto generationData, Optional<SchemeIdBase> thisScheme) {
-        SchemeId sctOutput = new SchemeId();
-        List<SchemeId> sctList = new ArrayList<>();
+    private Map<String, Object> getNewRecord(String schemeName, String schemeid,String systemId) {
+        logger.debug("Request Received : schemeName-{} :: schemeid - {} ", schemeName, schemeid);
+        Map<String, Object> schemeIdRecord = new LinkedHashMap<>();
+        schemeIdRecord.put("scheme", schemeName);
+        schemeIdRecord.put("schemeId", schemeid);
+        schemeIdRecord.put("sequence", null);
+        schemeIdRecord.put("checkDigit", null);
+        schemeIdRecord.put("systemId", (!(systemId.isBlank()))?systemId:sctIdHelper.guid());
+        logger.info("getNewRecord():Response - {}", schemeIdRecord);
+        return schemeIdRecord;
+    }
+
+    private String setAvailableSchemeIdRecord2NewStatus(JSONObject generationData, Optional<SchemeIdBase> thisScheme) {
+        SchemeId schemeOutput = new SchemeId();
+        List<SchemeId> schemeList = new ArrayList<>();
         Map<String, Object> queryObject = new HashMap<>();
-        queryObject.put("scheme", generationData.getScheme());
+        queryObject.put("scheme", thisScheme.get().getScheme());
         queryObject.put("status", "'" + stateMachine.statuses.get("available") + "'");
-
-        sctList = findSchemeIdWithIndexAndLimit(queryObject, "1", null);
-        if (sctList.size() > 0) {
-            var newStatus = stateMachine.getNewStatus(sctList.get(0).getStatus(), stateMachine.actions.get("generate"));
-            if (!newStatus.isBlank()) {
-                if (null != generationData.getSystemId() && generationData.getSystemId().length == 0) {
-                    sctList.get(0).setSystemId(String.valueOf(generationData.getSystemId()));
-                }
-                sctList.get(0).setStatus(newStatus);
-                sctList.get(0).setAuthor(generationData.getAuthor());
-                sctList.get(0).setSoftware(generationData.getSoftware());
-                //Doubt - need to be clarified- there is no ExpirationDate in Request body.
-                sctList.get(0).setExpirationDate(generationData.getExpirationDate());
-                sctList.get(0).setComment(generationData.getComment());
-                sctList.get(0).setJobId(null);
-                sctList.get(0).setModified_at(generationData.getModified_at());
-                sctOutput = schemeIdRepository.save(sctList.get(0));
-            } else {
-                return null;
+try {
+    schemeList = findSchemeIdWithIndexAndLimit(queryObject, "1", null);
+    if (schemeList.size() > 0) {
+        var newStatus = stateMachine.getNewStatus(schemeList.get(0).getStatus(), generationData.getString("action"));
+        if (!newStatus.isBlank()) {
+            List<String> systemIdList = (List<String>) generationData.get("systemIds");
+            if (null != systemIdList && systemIdList.size() > 0) {
+                schemeList.get(0).setSystemId(systemIdList.get(0));
             }
+            schemeList.get(0).setStatus(newStatus);
+            schemeList.get(0).setAuthor(generationData.getString("author"));
+            schemeList.get(0).setSoftware(generationData.getString("software"));
+            //Doubt - need to be clarified- there is no ExpirationDate in Request body.
+            schemeList.get(0).setExpirationDate(generationData.has("expirationDate") ? (LocalDateTime) generationData.get("expirationDate") : null);
+            schemeList.get(0).setComment(generationData.getString("comment"));
+            schemeList.get(0).setJobId(generationData.getInt("jobId"));
+            schemeList.get(0).setModified_at(LocalDateTime.now());
+            schemeOutput = schemeIdRepository.save(schemeList.get(0));
         } else {
             return null;
         }
-
-        return sctOutput;
+    } else {
+        return null;
+    }
+}
+catch(Exception e)
+{
+    return e.getMessage();
+}
+        return "success";
     }
 
     public List<SchemeId> findSchemeIdWithIndexAndLimit(Map<String, Object> queryObject, String limit, String skip) {
-        List<SchemeId> sctList;
+        List<SchemeId> schemeIdList;
         var limitR = 100;
         var skipTo = 0;
         if (!limit.isEmpty() && null != limit)
             limitR = Integer.parseInt(limit);
         if (null != skip)
             skipTo = Integer.parseInt(skip);
-        //sctidRepository.findSct(queryObject,limitR,skipTo);
         String swhere = "";
         if (queryObject.size() > 0) {
             for (var query :
@@ -973,11 +677,11 @@ public class BackendJobService {
             //sql = "SELECT * FROM sctId" + swhere + " order by sctid";
             sql = "Select * FROM sctid " + swhere + " order by schemeid";
         }
-        Query genQuery = entityManager.createNativeQuery(sql, Sctid.class);
+        Query genQuery = entityManager.createNativeQuery(sql, SchemeId.class);
         System.out.println("genQuery:" + genQuery);
         List<SchemeId> resultList = (List<SchemeId>) genQuery.getResultList();
         if ((skipTo == 0)) {
-            sctList = resultList;
+            schemeIdList = resultList;
         } else {
             var cont = 1;
             List<SchemeId> newRows = new ArrayList<>();
@@ -990,53 +694,39 @@ public class BackendJobService {
                     cont++;
                 }
             }
-            sctList = newRows;
+            schemeIdList = newRows;
         }
-        return sctList;
+        return schemeIdList;
     }
 
 
     //
-    private List<BulkJobResponseDto> generateSchemeIds(BulkJobResponseDto record) {
+    private String generateSchemeIds(JSONObject record) {
         Map<String, Object> obj = new HashMap<String, Object>();
-        obj.put("scheme", record.getScheme());
-        //
-        var newStatus = stateMachine.getNewStatus(record.getStatus(), stateMachine.actions.get("generate"));
+        obj.put("scheme", record.getString("scheme"));
         Set<String> sysIdInChunk = new HashSet<String>();
         int insertedCount = 0;
-        int quantityToCreate = record.getQuantity();
-
+        int quantityToCreate = record.getInt("quantity");
+        JSONArray systemIdsList = (JSONArray) record.get("systemIds");
         for (int i = 1; i <= quantityToCreate; i++) {
 
-            if (sysIdInChunk.contains(record.getSystemId()[i - 1])) {
+            if (sysIdInChunk.contains(systemIdsList.get(i - 1))) {
                 quantityToCreate--;
             } else {
-                sysIdInChunk.add(record.getSystemId()[i - 1]);
+                sysIdInChunk.add((String) systemIdsList.get(i - 1));
             }
 
             try {
-                if (i % chunk == 0 || i == (record.getQuantity())) {
+                if (i % chunk == 0 || i == (quantityToCreate)) {
                     Set<String> diff = new HashSet<String>();
                     boolean allExisting = false;
-                    /*int n = sysIdInChunk.size();
-                    String arr[] = new String[n];
-                    int a = 0;
-                    for (String x : sysIdInChunk) {
-                        arr[a++] = x;
-                    }*/
-
-                    // String[] sysIdToCreate = arr;
                     String[] sysIdToCreate = converttoArray(sysIdInChunk);
-                    if (!record.getAutoSysId()) {
-
-                        Map<String, Object> obj1 = new HashMap<>();
-                        obj1.put("systemIds", sysIdToCreate);
-                        obj1.put("scheme", record.getScheme());
-                        List<SchemeId> existingSystemId = schemeIdRepository.findBySchemeAndSystemId(record.getScheme(), String.valueOf(sysIdToCreate));
+                    if (!record.getBoolean("autoSysId")) {
+                        List<SchemeId> existingSystemId = schemeIdRepository.findBySchemeAndSchemeIdIn(record.getString("scheme"), List.of(sysIdToCreate));
 
                         if (existingSystemId.size() > 0) {
                             //update
-                            updateJobIdscheme(existingSystemId, record.getScheme(), record.getJobId());
+                            updateJobIdscheme(existingSystemId, record.getString("scheme"), record.getInt("jobId"));
                             if (existingSystemId.size() < sysIdInChunk.size()) {
 
                                 Set<SchemeId> setExistSysId = existingSystemId.stream().collect(Collectors.toSet());
@@ -1051,178 +741,128 @@ public class BackendJobService {
 
                     }
                     if (!allExisting) {
-                        Optional<SchemeIdBase> data = schemeIdBaseRepository.findById(record.getScheme());
+                        int n1 = diff.size();
+                        String differ[] = new String[n1];
+                        if (diff.size() > 0) {
+                            sysIdToCreate = diff.toArray(differ);
+                        }
+
+                        Optional<SchemeIdBase> data = schemeIdBaseRepository.findById(record.getString("scheme"));
                         if (data.isEmpty()) {
-                            System.out.println("Scheme not found for key:" + record.getScheme());
-                            return null;
+                           return "Scheme not found for key:" + record.getString("scheme");
                         }
 
                         var previousCode = data.get().getIdBase();
 
                         List<SchemeId> records = new ArrayList<>();
-                        var createAt = new Date();
+                        LocalDateTime createAt = LocalDateTime.now();
 
                         for (String systemId : sysIdToCreate) {
+                            String newSchemeId;
+                            if(record.getString("scheme").toUpperCase().equalsIgnoreCase("SNOMEDID"))
+                                newSchemeId = SNOMEDID.getNextId(previousCode);
+                            else
+                                newSchemeId = CTV3ID.getNextId(previousCode);
 
-                            List<String> rec = new ArrayList<>();
-                            String newSchemeid = record.getScheme().toUpperCase();
-                            rec.set(0, newSchemeid);
-                            rec.set(1, record.getSchemeId());
-                            rec.set(2, String.valueOf(sctIdHelper.getSequence(newSchemeid)));
-//partitionId
-                            rec.set(3, String.valueOf(sctIdHelper.getCheckDigit(newSchemeid)));
-                            rec.set(4, systemId);
-                            rec.set(5, newStatus);
-                            rec.set(6, record.getAuthor());
-                            rec.set(7, record.getSoftware());
-                            rec.set(8, String.valueOf(record.getExpirationDate()));
-                            rec.set(9, record.getComment());
-                            rec.set(10, String.valueOf(record.getJobId()));
-                            rec.set(11, String.valueOf(record.getCreated_at()));
-                            rec.set(12, String.valueOf(record.getModified_at()));
-
-                            records.add((SchemeId) rec);
-                            insertedCount += records.size();
-                            //insertRecords(records,record);
-                            //schemeIdRepository.insertWithQuery(newSchemeid, record.getSchemeId(), record.getNamespace(), record.getPartitionId(), sctIdHelper.getCheckDigit(newSctid), systemId, newStatus, record.getAuthor(), record.getSoftware(), record.getExpirationDate(), record.getComment(), record.getJobId(), record.getCreated_at());
-
+                            SchemeId schemeId = SchemeId.builder()
+                                    .scheme(record.getString("scheme"))
+                                    .schemeId(newSchemeId)
+                                    .sequence(null)
+                                    .checkDigit(null)
+                                    .systemId(systemId)
+                                    .status(stateMachine.statuses.get("assigned"))
+                                    .author(record.getString("author"))
+                                    .software(record.getString("software"))
+                                    .expirationDate((record.has("expirationDate"))? (LocalDateTime) record.get("expirationDate") :null)
+                                    .comment(record.getString("comment"))
+                                    .jobId(record.getInt("jobId"))
+                                    .created_at(createAt)
+                                    .build();
+                            records.add(schemeId);
+                            previousCode = newSchemeId;
                         }
-                        schemeIdRepository.saveAll(records);//
-
-
+                        data.get().setIdBase(previousCode);
+                        schemeIdBaseRepository.save(data.get());
+                        insertedCount += records.size();
+                        schemeIdRepository.saveAll(records);
                     }
-
+                    sysIdInChunk.clear();
                 }
             }//try
             catch (Exception e) {
-                System.out.println("generateSchemeIds error:" + e.getMessage());
+                return "generateSchemeIds error:" + e.getMessage();
             }
         }//for
         if (insertedCount >= quantityToCreate) {
-            return null;
+            return "success";
         }
-        return null;
+        else
+        return "failure";
     }
 
 
-    private List<BulkJobResponseDto> updateSctids(BulkJobResponseDto record) throws CisException {
-        var cont = 0;
+    private String updateSctids(JSONObject record) throws CisException {
+        //var cont = 0;
         List<Sctid> records = new ArrayList<>();
         boolean error = false;
-        for (var i = 0; i < record.getSctid().length; i++) {
-            var sctId = record.getSctid()[i];
-            Optional<Sctid> sctIdRecord = sctidRepository.findById(String.valueOf(sctId));
-            if (!sctIdRecord.isEmpty()) {
-                String newStatus = stateMachine.getNewStatus(record.getStatus(), stateMachine.actions.get("reserve"));
+        String[] sctidList = (String[]) record.get("sctids");
+            for (var i = 0; i < sctidList.length; i++) {
+            var sctId = sctidList[i];
+                Optional<Sctid> sctIdRecord;
+                try {
+                    sctIdRecord = sctidRepository.findById(String.valueOf(sctId));
+                }
+                catch(Exception e)
+                {
+                    throw new CisException(HttpStatus.BAD_REQUEST,e.getMessage());
+                }
+            if (sctIdRecord.isPresent()) {
+                String newStatus = stateMachine.getNewStatus(sctIdRecord.get().getStatus(), record.getString("action"));
                 if (newStatus != null) {
                     sctIdRecord.get().setStatus(newStatus);
-                    sctIdRecord.get().setAuthor(record.getAuthor());
-                    sctIdRecord.get().setSoftware(record.getSoftware());
-                    sctIdRecord.get().setExpirationDate(record.getExpirationDate());
-                    sctIdRecord.get().setComment(record.getComment());
-                    sctIdRecord.get().setJobId(record.getJobId());
+                    sctIdRecord.get().setAuthor(record.getString("author"));
+                    sctIdRecord.get().setSoftware(record.getString("software"));
+                    sctIdRecord.get().setExpirationDate(null);
+                    sctIdRecord.get().setComment(record.getString("comment"));
+                    sctIdRecord.get().setJobId(record.getInt("jobId"));
                     records.add(sctIdRecord.get());
-                    cont++;
-                    if (cont == record.getRecords().length) {
-                        cont = 0;
-                        for (var j = 0; j < records.size(); j++) {
-                            List<BulkJob> job = save((Map<String, Object>) records.get(j), (List<BulkJobResponseDto>) record);
-
-                            if (job == null) {
-                                error = true;
-                            }
-                            cont++;
-                            if (cont == records.size()) {
-                                return null;
-                            }
-                        }
-                    }
                 } else {
                     error = true;
-                    System.out.println("Cannot " + record.getAction() + " SCTID:" + sctIdRecord.get().getSctid() + ", current status: " + sctIdRecord.get().getStatus());
-                    return null;
+                    return ("Cannot " + record.getString("action") + " SCTID:" + sctIdRecord.get().getSctid() + ", current status: " + sctIdRecord.get().getStatus());
                 }
             }
         }
-        return null;
-    }
-
-    private List<BulkJobResponseDto> registerSctidsSmallRequest(BulkJobResponseDto record) {
-        var cont = 0;
-        List<Sctid> records = new ArrayList<>();
-        var error = false;
         try {
-            for (var i = 0; i < record.getRecords().length; i++) {
-                var sctId = record.getRecords()[i].getSctid();
-                var systemId = record.getRecords()[i].getSystemId();
-                var sctIdRecord = sctidRepository.findBySctidAndSystemId(Integer.parseInt(sctId), systemId);
-                if (sctIdRecord.getSctid() == sctId && sctIdRecord.getSystemId() != systemId) {
-                    sctIdRecord.setSystemId(systemId);
-                }
-                String newStatus;
-                if (stateMachine.actions.get("assigned").equalsIgnoreCase(sctIdRecord.getStatus())) {
-                    newStatus = stateMachine.getNewStatus(record.getStatus(), stateMachine.actions.get("assigned"));
-                    ;
-                } else {
-                    newStatus = stateMachine.getNewStatus(sctIdRecord.getStatus(), stateMachine.actions.get("register"));
-                }
-                if (newStatus != null) {
-                    sctIdRecord.setStatus(newStatus);
-                    sctIdRecord.setAuthor(record.getAuthor());
-                    sctIdRecord.setSoftware(record.getSoftware());
-                    sctIdRecord.setExpirationDate(record.getExpirationDate());
-                    sctIdRecord.setComment(record.getComment());
-                    sctIdRecord.setJobId(record.getJobId());
-                    records.add(sctIdRecord);
-                    cont++;
-                    if (cont == record.getRecords().length) {
-                        cont = 0;
-                        for (var j = 0; j < records.size(); j++) {
-                            List<BulkJob> job = save((Map<String, Object>) records.get(j), (List<BulkJobResponseDto>) record);
-
-                            if (job == null) {
-                                error = true;
-                                return null;
-                            }
-                            cont++;
-                            if (cont == records.size()) {
-                                return null;
-
-                            }
-
-
-                        }
-                    }
-                } else {
-                    error = true;
-                    System.out.println("Cannot register SCTID:" + sctIdRecord.getSctid() + ", current status: " + sctIdRecord.getStatus());
-                    return null;
-                }
-
-            }
-        } catch (Exception e) {
-
+            sctidRepository.saveAllAndFlush(records);
         }
-        return null;
+        catch(Exception e)
+        {
+            return e.getMessage();
+        }
+        return "success";
     }
 
-    private List<BulkJobResponseDto> registerSctids(BulkJobResponseDto record) {
 
-        var newStatus = stateMachine.getNewStatus(record.getStatus(), stateMachine.actions.get("register"));
+
+    private String registerSctids(JSONObject record) throws CisException {
+
+        var newStatus = stateMachine.getNewStatus(stateMachine.statuses.get("available"), stateMachine.actions.get("register"));
 
         Set<String> sctIdInChunk = new HashSet<String>();
         int insertedCount = 0;
-        int quantityToRegister = record.getRecords().length;
-        String[] uuidsMap = null;
+        int quantityToRegister = record.getJSONArray("records").length();
+        Map<String,String> uuidsMap = null;
 
         for (var i = 1; i <= quantityToRegister; i++) {
-            var sctid = record.getSctid()[i - 1];
+            JSONArray records1  = record.getJSONArray("records");
+            JSONObject sctWithSystmId = records1.getJSONObject(i-1);
+            String sctid = sctWithSystmId.getString("sctid");
+            String systemId = sctWithSystmId.getString("systemId");
             if (sctIdInChunk.contains(sctid)) {
                 quantityToRegister--;
             } else {
-                sctIdInChunk.add(String.valueOf(record.getSctid()[i - 1]));
-
-                uuidsMap[sctid] = record.getSystemId()[i - 1];
+                sctIdInChunk.add(sctid);
+                uuidsMap.put(sctid,systemId);
             }
 
             try {
@@ -1232,12 +872,10 @@ public class BackendJobService {
                     var allExisting = false;
 
                     List<Sctid> existingSctIds = findExistingSctIds(sctIdToRegister);
-                    if (existingSctIds == null && existingSctIds.size() > 0) {
-                        updateRegisterStatusAndJobId(existingSctIds, record.getJobId());
+                    if (null!=existingSctIds &&!existingSctIds.isEmpty() && existingSctIds.size() > 0) {
+                        updateRegisterStatusAndJobId(existingSctIds, record.getInt("jobId"));
                         if (existingSctIds.size() < sctIdInChunk.size()) {
                             var setExistSctId = existingSctIds.stream().collect(Collectors.toSet());
-
-                            //
                             diff = Sets.difference(sctIdInChunk, setExistSctId);
                             insertedCount += setExistSctId.size();
                         } else {
@@ -1246,57 +884,53 @@ public class BackendJobService {
                         }
                     }
                     if (!allExisting) {
-                        if (diff != null) {
-                            sctIdToRegister = diff.toArray(new String[0]);
+                        int n1 = diff.size();
+                        String differ[] = new String[n1];
+                        if (diff.size() > 0) {
+                            sctIdToRegister = diff.toArray(differ);
                         }
                         List<Sctid> records = new ArrayList<>();
-                        var createAt = new Date();
+                        var createAt = LocalDateTime.now();
 
                         for (String sid : sctIdToRegister) {
-                            List<String> rec = new ArrayList<>();
-                            int newSctid = Math.toIntExact((sctIdHelper.getSequence(sid)));
-                            rec.set(0, sid);
-                            rec.set(1, String.valueOf(sctIdHelper.getSequence(sid)));
-                            rec.set(2, String.valueOf(record.getNamespace()));
-//partitionId
-                            rec.set(3, record.getPartitionId());
-                            rec.set(4, String.valueOf(sctIdHelper.getCheckDigit(String.valueOf(newSctid))));
-                            rec.set(5, uuidsMap[newSctid]);
-                            rec.set(6, newStatus);
-                            rec.set(7, record.getAuthor());
-                            rec.set(8, record.getSoftware());
-                            rec.set(9, String.valueOf(record.getExpirationDate()));
-                            rec.set(10, record.getComment());
-                            rec.set(11, String.valueOf(record.getJobId()));
-                            rec.set(12, String.valueOf(record.getCreated_at()));
-
-                            records.add((Sctid) rec);
-                            insertedCount += records.size();
-                            sctidRepository.saveAll(records);
-                            //sctidRepository.bulkInsert(sid, newSctid, record.getNamespace(), record.getPartitionId(), sctIdHelper.getCheckDigit(String.valueOf(newSctid)), sid, newStatus, record.getAuthor(), record.getSoftware(), record.getExpirationDate(), record.getComment(), record.getJobId(), record.getCreated_at());
-
-
+                            Sctid sctidInsert = Sctid.builder()
+                                    .sctid(sid)
+                                    .sequence(sctIdHelper.getSequence(sid))
+                                    .namespace(record.getInt("namespace"))
+                                    .partitionId(sctIdHelper.getPartition(sid))
+                                    .checkDigit(sctIdHelper.getCheckDigit(sid))
+                                    .systemId(uuidsMap.get(sid))
+                                    .status(newStatus)
+                                    .author(record.getString("author"))
+                                    .software(record.getString("software"))
+                                    .expirationDate(null!=record.get("expirationDate")? (LocalDateTime) record.get("expirationDate") :null)
+                                    .comment(record.getString("comment"))
+                                    .jobId(record.getInt("jobId"))
+                                    .created_at(createAt)
+                                    .build();
+                            records.add(sctidInsert);
                         }
+                        insertedCount += records.size();
+                        sctidRepository.saveAll(records);
                     }
-                    /*sctIdInChunk = new sets.StringSet();
-                    uuidsMap={};*/
+                    sctIdInChunk.clear();
+                    uuidsMap.clear();
                 }
 
             } catch (Exception e) {
-                System.out.println("generateSctids error" + e.getMessage());
-                return null;
+                throw new CisException(HttpStatus.BAD_REQUEST,"registerSctids error: "+e.getMessage());
             }
 
         }
         if (insertedCount >= quantityToRegister) {
-            return null;
+            return "success";
         }
-        return null;
+        else
+        return "failure";
     }
 
-    private List<Sctid> updateRegisterStatusAndJobId(List<Sctid> existingSctIds, Integer jobId) {
-        List<Sctid> result = sctidRepository.updateSctid(existingSctIds, jobId);
-        return result;
+    private Integer updateRegisterStatusAndJobId(List<Sctid> existingSctIds, Integer jobId) {
+        return sctidRepository.updateSctid(existingSctIds, jobId);
     }
 
     private List<Sctid> findExistingSctIds(String[] sctIdToRegister) {
@@ -1304,41 +938,9 @@ public class BackendJobService {
         return sctid;
     }
 
-    private List<BulkJobResponseDto> generateSctidsSmallRequest(BulkJobResponseDto record) throws CisException {
-        var cont = 0;
-        Map<String, Object> obj = new HashMap<String, Object>();
-        obj.put("namespace", record.getNamespace());
-        obj.put("partitionId", record.getPartitionId());
-        Partitions partList = getPartitiion(record.getNamespace(), record.getPartitionId());
-        var thisPartition = partList;
-        boolean canContinue;
-        for (var i = 0; i < record.getQuantity(); i++) {
-            canContinue = true;
-            try {
-                record.systemId = record.getSystemId();
-                if (!record.autoSysId) {
-                    var sctIdRecord = getSyncSctidBySystemId(record.getNamespace(), record.getPartitionId());
-                    if (sctIdRecord != null) {
-                        sctIdRecord.setJobId(record.getJobId());
-                        sctidRepository.save(sctIdRecord);
-                        canContinue = false;
-                    }
-                }
-                if (canContinue) {
-                    generateSctid(record, thisPartition);
-                }
-                cont++;
-                if (record.getQuantity() == cont) {
-                    partitionsRepository.save(thisPartition);
-                }
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
-            }
-        }//for
-        return null;
-    }
 
-    private void generateSctid(BulkJobResponseDto record, Partitions thisPartition) {
+
+    private void generateSctid(JSONObject record, Partitions thisPartition) {
         try {
             var rec = setAvailableSCTIDRecord2NewStatus(record);
             if (rec == null) {
@@ -1349,25 +951,25 @@ public class BackendJobService {
         }
     }
 
-    public Sctid setNewSCTIdRecord(BulkJobResponseDto generationData, Partitions thisPartition) throws CisException {
+    public Sctid setNewSCTIdRecord(JSONObject generationData, Partitions thisPartition) throws CisException {
         int sequence = thisPartition.getSequence() + 1;
 
         var newSCTId = computeSctId(generationData, sequence);
         var action = stateMachine.actions.get("generate");
-        String systemId[] = null;
-        if (generationData.getSystemId() == null && generationData.systemId.length == 0) {
-            systemId = generationData.getSystemId();
+        String systemId = null;
+        if (generationData.get("systemId") == null && !generationData.get("systemId").toString().isEmpty()) {
+            systemId = (String) generationData.get("systemId");
         }
         Sctid sctIdRecord = getSctid(newSCTId, systemId);
 
         var newStatus = stateMachine.getNewStatus(sctIdRecord.getStatus(), action);
         if (newStatus != null) {
             sctIdRecord.setStatus(newStatus);
-            sctIdRecord.setAuthor(generationData.getAuthor());
-            sctIdRecord.setSoftware(generationData.getSoftware());
-            sctIdRecord.setExpirationDate(generationData.getExpirationDate());
-            sctIdRecord.setComment(generationData.getComment());
-            sctIdRecord.setJobId(generationData.getJobId());
+            sctIdRecord.setAuthor((String) generationData.get("author"));
+            sctIdRecord.setSoftware((String) generationData.get("software"));
+            sctIdRecord.setExpirationDate((LocalDateTime) generationData.get("expirationDate"));
+            sctIdRecord.setComment((String) generationData.get("comment"));
+            sctIdRecord.setJobId((Integer) generationData.get("jobId"));
             sctidRepository.save(sctIdRecord);
         } else {
             setNewSCTIdRecord(generationData, thisPartition);
@@ -1375,7 +977,7 @@ public class BackendJobService {
         return sctIdRecord;
     }
 
-    private Sctid getSctid(String newSCTId, String[] systemId) {
+    private Sctid getSctid(String newSCTId, String systemId) {
         if (!sctIdHelper.validSCTId(newSCTId)) {
             System.out.println("Not valid SCTID:" + newSCTId);
             return null;
@@ -1394,29 +996,29 @@ public class BackendJobService {
         return null;
     }
 
-    public Sctid setAvailableSCTIDRecord2NewStatus(BulkJobResponseDto generationData) throws CisException {
+    public Sctid setAvailableSCTIDRecord2NewStatus(JSONObject generationData) throws CisException {
         Sctid sctOutput = new Sctid();
         List<Sctid> sctList = new ArrayList<>();
         Map<String, Object> queryObject = new HashMap<>();
-        if (null != generationData.getNamespace() && !generationData.getPartitionId().isBlank()) {
-            queryObject.put("namespace", generationData.getNamespace());
-            queryObject.put("partitionId", "'" + generationData.getPartitionId() + "'");
+        if (null != generationData.get("namespace") && null!=generationData.get("partitionId") && !(generationData.get("partitionId").toString().isEmpty())) {
+            queryObject.put("namespace", generationData.get("namespace"));
+            queryObject.put("partitionId", "'" + generationData.get("partitionId") + "'");
             queryObject.put("status", "'" + stateMachine.statuses.get("available") + "'");
             sctList = sctidService.findSctWithIndexAndLimit(queryObject, "1", null);
             if (sctList.size() > 0) {
                 var newStatus = stateMachine.getNewStatus(sctList.get(0).getStatus(), stateMachine.actions.get("generate"));
                 if (!newStatus.isBlank()) {
-                    if (null != generationData.getSystemId() && generationData.getSystemId().length == 0) {
-                        sctList.get(0).setSystemId(String.valueOf(generationData.getSystemId()));
+                    if (null != generationData.get("systemId") && !generationData.get("systemId").toString().isEmpty()) {
+                        sctList.get(0).setSystemId(String.valueOf(generationData.get("systemId")));
                     }
                     sctList.get(0).setStatus(newStatus);
-                    sctList.get(0).setAuthor(generationData.getAuthor());
-                    sctList.get(0).setSoftware(generationData.getSoftware());
+                    sctList.get(0).setAuthor((String) generationData.get("author"));
+                    sctList.get(0).setSoftware((String) generationData.get("software"));
                     //Doubt - need to be clarified- there is no ExpirationDate in Request body.
-                    sctList.get(0).setExpirationDate(generationData.getExpirationDate());
-                    sctList.get(0).setComment(generationData.getComment());
+                    sctList.get(0).setExpirationDate(null!=generationData.get("expirationDate")? (LocalDateTime) generationData.get("expirationDate") :null);
+                    sctList.get(0).setComment((String) generationData.get("comment"));
                     sctList.get(0).setJobId(null);
-                    sctList.get(0).setModified_at(generationData.getModified_at());
+                    sctList.get(0).setModified_at(null!=generationData.get("modified_at")? (LocalDateTime) generationData.get("modified_at"): LocalDateTime.parse(""));
                     sctOutput = sctidRepository.save(sctList.get(0));
                 } else {
                     return null;
@@ -1450,50 +1052,44 @@ public class BackendJobService {
         }
     }
 
-    private List<BulkJobResponseDto> generateSctids(BulkJobResponseDto record) {
+    private String generateSctids(JSONObject record) throws CisException {
+        List<Sctid> insertedRecords = new ArrayList<>();
         Map<String, Object> obj = new HashMap<String, Object>();
-        obj.put("namespace", record.getNamespace());
-        obj.put("partitionId", record.getPartitionId());
+        obj.put("namespace", record.get("namespace"));
+        obj.put("partitionId", record.get("partitionId"));
         //
-        var newStatus = stateMachine.getNewStatus(record.getStatus(), stateMachine.actions.get("generate"));
+        var newStatus = stateMachine.getNewStatus(stateMachine.statuses.get("available"), record.getString("action"));
         Set<String> sysIdInChunk = new HashSet<String>();
         int insertedCount = 0;
-        int quantityToCreate = record.getQuantity();
+        int quantityToCreate = (Integer) record.get("quantity");
+        JSONArray systemIdsList = (JSONArray) record.get("systemIds");
 
         for (int i = 1; i <= quantityToCreate; i++) {
 
-            if (sysIdInChunk.contains(record.getSystemId()[i - 1])) {
+            if (sysIdInChunk.contains(systemIdsList.get(i - 1))) {
                 quantityToCreate--;
             } else {
-                sysIdInChunk.add(record.getSystemId()[i - 1]);
+                sysIdInChunk.add((String) systemIdsList.get(i - 1));
             }
 
             try {
-                if (i % chunk == 0 || i == (record.getQuantity())) {
+                if (i % chunk == 0 || i == ((Integer) record.get("quantity"))) {
                     Set<String> diff = new HashSet<String>();
                     boolean allExisting = false;
-                    /*int n = sysIdInChunk.size();
-                    String arr[] = new String[n];
-                    int a = 0;
-                    for (String x : sysIdInChunk) {
-                        arr[a++] = x;
-                    }*/
-
-                    // String[] sysIdToCreate = arr;
                     String[] sysIdToCreate = converttoArray(sysIdInChunk);
-                    if (!record.getAutoSysId()) {
+                    if (record.getBoolean("autoSysId") == false) {
 
                         Map<String, Object> obj1 = new HashMap<>();
                         obj1.put("systemIds", sysIdToCreate);
-                        obj1.put("namespace", record.getNamespace());
-                        List<Sctid> existingSystemId = findExistingSystemId(obj1);
+                        obj1.put("namespace", record.get("namespace"));
+                        List<String> existingSystemId = findExistingSystemId(obj1, sysIdToCreate);
 
                         if (existingSystemId.size() > 0) {
                             //update
-                            updateJobId(existingSystemId, record.getJobId());
+                            updateJobId(existingSystemId, (Integer) record.get("jobId"));
                             if (existingSystemId.size() < sysIdInChunk.size()) {
 
-                                Set<Sctid> setExistSysId = existingSystemId.stream().collect(Collectors.toSet());
+                                Set<String> setExistSysId = existingSystemId.stream().collect(Collectors.toSet());
                                 diff = Sets.difference(sysIdInChunk, setExistSysId);
                                 insertedCount += setExistSysId.size();
 
@@ -1507,57 +1103,65 @@ public class BackendJobService {
                     if (!allExisting) {
                         int n1 = diff.size();
                         String differ[] = new String[n1];
-                        if (diff == null) {
+                        if (diff.size() > 0) {
                             sysIdToCreate = diff.toArray(differ);
                         }
-                        int seq = 0;
+                        Integer seq = null;
                         // PL TO DO
-                        if (seq == 0) {
-                            throw new CisException(HttpStatus.BAD_REQUEST, "Partition not found for key");
+                        Optional<Partitions> part = null;
+                        try {
+                            part = partitionsRepository.findByNamespacePartition((Integer) record.get("namespace"), (String) record.get("partitionId"));
                         }
+                        catch(Exception e)
+                        {
+                            System.out.println("error:"+e.getMessage());
+                        }
+                            if (part.isPresent()) {
+                                seq = part.get().getSequence();
+                                int updatedSeq = seq + sysIdToCreate.length;
+                                part.get().setSequence(updatedSeq);
+                                Partitions partitions = Partitions.builder().namespace(part.get().getNamespace()).partitionId(part.get().getPartitionId()).sequence(updatedSeq).build();
+                                Partitions newPart = partitionsRepository.save(partitions);
+                            }
+                            if (seq == null || !(part.isPresent())) {
+                                throw new CisException(HttpStatus.BAD_REQUEST, "Partition not found for partitionId:" + (String) record.get("partitionId") + " and namespace:" + (Integer) record.get("namespace"));
+                            }
 
-                        List<Sctid> records = new ArrayList<>();
-                        var createAt = new Date();
+                            List<Sctid> records = new ArrayList<>();
+                            var createAt = LocalDateTime.now();
 
-                        for (String systemId : sysIdToCreate) {
-                            seq++;
-                            List<String> rec = new ArrayList<>();
-                            String newSctid = computeSctId(record, seq);
-                            rec.set(0, newSctid);
-                            rec.set(1, String.valueOf(seq));
-                            rec.set(2, String.valueOf(record.getNamespace()));
-//partitionId
-                            rec.set(3, record.getPartitionId());
-                            rec.set(4, String.valueOf(sctIdHelper.getCheckDigit(newSctid)));
-                            rec.set(5, systemId);
-                            rec.set(6, newStatus);
-                            rec.set(7, record.getAuthor());
-                            rec.set(8, record.getSoftware());
-                            rec.set(9, String.valueOf(record.getExpirationDate()));
-                            rec.set(10, record.getComment());
-                            rec.set(11, String.valueOf(record.getJobId()));
-                            rec.set(12, String.valueOf(record.getCreated_at()));
-
-                            records.add((Sctid) rec);
+                            for (String systemId : sysIdToCreate) {
+                                seq++;
+                                String newSctid = computeSctId(record, seq);
+                                Sctid rec = Sctid.builder().sctid(newSctid).sequence(seq).
+                                        namespace(record.getInt("namespace")).
+                                        partitionId(record.getString("partitionId")).
+                                        checkDigit(sctIdHelper.getCheckDigit(newSctid)).
+                                        systemId(systemId).
+                                        status(newStatus).
+                                        author(record.getString("author")).
+                                        software(record.getString("software")).
+                                        expirationDate(record.has("expirationDate") ? (LocalDateTime) record.get("expirationDate") : null).
+                                        comment(record.getString("comment")).
+                                        jobId(record.getInt("jobId")).
+                                        created_at(createAt).
+                                        build();
+                                records.add(rec);
+                            }
                             insertedCount += records.size();
-                            //insertRecords(records,record);
-                            sctidRepository.saveAll(records);
-                            // sctidRepository.bulkInsert(newSctid, seq, record.getNamespace(), record.getPartitionId(), sctIdHelper.getCheckDigit(newSctid), systemId, newStatus, record.getAuthor(), record.getSoftware(), record.getExpirationDate(), record.getComment(), record.getJobId(), record.getCreated_at());
-
+                            insertedRecords = sctidRepository.saveAll(records);
                         }
-
+                    sysIdInChunk.clear();
                     }
-
-                }
-            }//try
+                }//try
             catch (Exception e) {
-
+throw new CisException(HttpStatus.BAD_REQUEST,"generateSctids error:"+e.getMessage());
             }
         }//for
-        if (insertedCount >= quantityToCreate) {
-            return null;
-        }
-        return null;
+        if(insertedCount>=quantityToCreate)
+        return "success";
+        else
+            return "failure";
     }
 
     private String[] converttoArray(Set<String> sysIdInChunk) {
@@ -1572,24 +1176,14 @@ public class BackendJobService {
         return sysIdToCreate;
     }
 
-   /* private void insertRecords(List<Sctid> records, BulkJobResponseDto record) {
-        String sctid= String.valueOf(records.get(0));
-        int seq= Integer.parseInt(String.valueOf(records.get(1)));
-        int namespace=Integer.parseInt(String.valueOf(records.get(2)));
-        String partitionId= records.get(3);
-        sctidRepository.bulkInsert(newSctid, Integer.parseInt(String.valueOf(records.get(1))), records.get(2), records.get(3), records.get(4), records.get(5), records.get(6),records.get(7),records.get(8)
-                ,records.get(9)
-                ,records.get(10)
-                ,records.get(11)
-                ,records.get(12)
-                );
-
-    }*/
-
-
-    private List<Sctid> updateJobId(List<Sctid> existingSystemId, Integer jobId) {
-        List<Sctid> result = sctidRepository.update(existingSystemId, jobId);
-        return result;
+    private void updateJobId(List<String> existingSystemId, Integer jobId) {
+        try {
+             sctidRepository.updateJobIdInSctid(jobId,existingSystemId);
+        }
+        catch(Exception e)
+        {
+            System.out.println(e.getMessage());
+        }
     }
 
 
@@ -1598,22 +1192,67 @@ public class BackendJobService {
         return result;
     }
 
-    private List<Sctid> findExistingSystemId(Map<String, Object> obj1) {
-        List<Sctid> result = sctidRepository.findBySystemIdAndNamespace(String.valueOf(obj1.get("systemId")), (Integer) obj1.get("namespace"));
+    private List<String> findExistingSystemId(Map<String, Object> obj1,String[] sysIdToCreate) {
+        List<String> sysIdList = new ArrayList<>();
+        for(int i=0; i< sysIdToCreate.length; i++)
+        {
+            sysIdList.add(sysIdToCreate[i]);
+        }
+        List<String> result = sctidRepository.getSystemIdByNamespace(sysIdList, (Integer) obj1.get("namespace"));
         return result;
     }
 
-    public String computeSctId(BulkJobResponseDto record, Integer seq) {
-
-        var tmpNsp = record.namespace.toString();
-        if (tmpNsp == "0") {
+    public String computeSctId(JSONObject record, Integer seq) {
+        var tmpNsp = String.valueOf(record.getInt("namespace"));
+        if (tmpNsp.equalsIgnoreCase("0")) {
             tmpNsp = "";
         }
-        var base = seq + tmpNsp + record.getPartitionId();
+        var base = seq + tmpNsp + record.get("partitionId");
         var SCTId = base + sctIdHelper.verhoeffCompute(base);
         return SCTId;
 
     }
 
+    private String generateSchemeIdSmallRequest(JSONObject record) {
+        var cont = 0;
+        Map<String, Object> obj = new HashMap<String, Object>();
+        obj.put("scheme", record.getString("scheme"));
+        Optional<SchemeIdBase> data = schemeIdBaseRepository.findById(record.getString("scheme"));
+        var quantityToCreate = record.getInt("quantity");
+        if(data.isEmpty())
+        {
+            return "Scheme not found for key:"+record.getString("scheme");
+        }
+        var thisScheme = data;
+        boolean canContinue;
+        for (var i = 0; i < quantityToCreate; i++) {
+            canContinue = true;
+            try {
+                  List<String> systemIdList = (List<String>) record.get("systemIds");
+                  if(systemIdList.size()>0) {
+                      if (!record.getBoolean("autoSysId")) {
+                          var schemeIdRecord = schemeIdRepository.findBySchemeAndSystemId(record.getString("scheme"), systemIdList.get(i));
+                          if (schemeIdRecord != null && schemeIdRecord.size()>0) {
+                              schemeIdRecord.get(0).setJobId(record.getInt("jobId"));
+                              schemeIdRecord.get(0).setModified_at(LocalDateTime.now());
+                              schemeIdRepository.save(schemeIdRecord.get(0));
+                              //saveScheme(schemeIdRecord, record.getString("scheme"));
+                              canContinue = false;
+                          }
+                      }
+                  }
+                if (canContinue) {
+                    generateScheme(record, thisScheme);
+                }
+                cont++;
+                if (record.getInt("quantity") == cont) {
+                    schemeIdBaseRepository.save(thisScheme.get());
+                }
+            } catch (Exception e) {
+                return e.getMessage();
+            }
+        }
+        return "success";
+    }
 
 }

@@ -212,14 +212,14 @@ public class SchemeIdService {
         Map<String, Object> schemeIdRecord = new LinkedHashMap<>();
         schemeIdRecord.put("scheme", schemeName);
         schemeIdRecord.put("schemeId", schemeid);
-        schemeIdRecord.put("sequence", sctIdHelper.getSequence(schemeid));
-        schemeIdRecord.put("checkDigit", sctIdHelper.getCheckDigit(schemeid));
+        schemeIdRecord.put("sequence", null);
+        schemeIdRecord.put("checkDigit", null);
         schemeIdRecord.put("systemId", sctIdHelper.guid());
         logger.info("getNewRecord():Response - {}", schemeIdRecord);
         return schemeIdRecord;
     }
 
-    private SchemeId insertSchemeIdRecord(Map<String, Object> schemeIdRecord) throws CisException {
+    public SchemeId insertSchemeIdRecord(Map<String, Object> schemeIdRecord) throws CisException {
         logger.debug("Request Received : schemeIdRecord-{}", schemeIdRecord);
         String error;
         Optional<SchemeId> schemeIdBulk = null;

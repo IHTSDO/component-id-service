@@ -19,6 +19,9 @@ public interface SctidRepository extends JpaRepository<Sctid, String> {
 
     List<Sctid> findBySystemIdInAndNamespace(List<String> systemIds, Integer namespace);
 
+    @Query(value="SELECT systemId FROM sctId WHERE systemId in (:systemIds) and namespace=:namespace",nativeQuery = true)
+    List<String> getSystemIdByNamespace(@Param("systemIds") List<String> systemIds,@Param("namespace") Integer namespace);
+
     @Query(value = "select namespace,count(*) as count from sctid group by namespace", nativeQuery = true)
     List<QueryCountByNamespaceDto> getCountByNamespace();
 
@@ -26,13 +29,14 @@ public interface SctidRepository extends JpaRepository<Sctid, String> {
     List<QueryCountByNamespaceDto> getCountByNamespace(List<String> namespaces);
 
     Sctid findBySctidAndSystemId(int sctId, String systemId);
-
-    @Query(value = "UPDATE sctId SET JobId=(:jobId) modified_at=:now() WHERE systemId in (:systemIds)", nativeQuery = true)
-    List<Sctid> update(@Param("systemIds") List<Sctid> systemIds, Integer jobId);
-
-    @Query(value = "UPDATE sctId SET JobId=(:jobId) modified_at=:now() WHERE sctid in (:sctids)", nativeQuery = true)
-    List<Sctid> updateSctid(@Param("sctids") List<Sctid> sctids, Integer jobId);
-
+@Transactional
+@Modifying
+    @Query(value = "UPDATE sctid SET jobId= ?1,modified_at=now() WHERE systemId in (?2)", nativeQuery = true)
+    int updateJobIdInSctid(Integer jobId,List<String> systemIds);
+@Transactional
+@Modifying
+    @Query(value = "UPDATE sctid SET jobId=(:jobId),modified_at=now() WHERE sctid in (:sctids)", nativeQuery = true)
+    int updateSctid(@Param("sctids") List<Sctid> sctids, @Param("jobId")Integer jobId);
 
     List<Sctid> findByNamespaceAndPartitionId(Integer namespace, String partitionId);
 }

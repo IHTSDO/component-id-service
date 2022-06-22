@@ -338,7 +338,7 @@ public class BulkSctidService {
 
         bulkGenerate.setAuthor(token.getName());
         bulkGenerate.model = modelsConstants.SCTID;
-
+        bulkGenerate.setType(jobType.GENERATE_SCTIDS);
         if ((sctidBulkGenerationRequestDto.getSystemIds() != null || sctidBulkGenerationRequestDto.getSystemIds().size() == 0) &&
                 ("TRUE".equalsIgnoreCase((sctidBulkGenerationRequestDto.getGenerateLegacyIds())) && ("0".equalsIgnoreCase(sctidBulkGenerationRequestDto.getPartitionId().substring(1, 1))))) {
             List<String> arrayUid = new ArrayList<>();
@@ -347,7 +347,6 @@ public class BulkSctidService {
             }
             bulkGenerate.setSystemIds(arrayUid);
             bulkGenerate.setAutoSysId(true);
-
         }
         List<String> additionalJob = new ArrayList<>();
         ObjectMapper objectMapper = new ObjectMapper();
@@ -361,7 +360,6 @@ public class BulkSctidService {
 
         BulkJob bulkJob = new BulkJob();
 
-        bulkGenerate.setType(jobType.GENERATE_SCTIDS);
         bulkJob.setName(jobType.GENERATE_SCTIDS);
         bulkJob.setStatus("0");
         bulkJob.setRequest(jsonFormattedString);

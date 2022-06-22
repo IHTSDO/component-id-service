@@ -51,7 +51,7 @@ public class BulkJobService {
     public List<BulkJob> getJobs() {
         logger.debug("BulkJobService.getJobs()- Inside Service");
         List<BulkJob> result = null;
-        Map<String, Object> queryObject = new HashMap();
+        Map<String, String> queryObject = new HashMap();
         Map<String, Integer> fields = new LinkedHashMap<>();
         fields.put("id", 1);
         fields.put("name", 1);
@@ -65,13 +65,14 @@ public class BulkJobService {
         return result;
     }
 
-    public List<BulkJob> findFieldSelect(Map<String, Object> queryObject, Map<String, Integer> fields, Integer limit, Integer skip, Map<String, String> orderBy) {
+    public List<BulkJob> findFieldSelect(Map<String, String> queryObject, Map<String, Integer> fields, Integer limit, Integer skip, Map<String, String> orderBy) {
         logger.debug("BulkJobService.findFieldSelect() queryObject-{} :: fields-{}, limit :: {}, skip :: {}, orderBy :: {}", queryObject, fields, limit, skip, orderBy);
         List<BulkJob> bulkJobList;
         if (queryObject.isEmpty()) {
             queryObject = new HashMap<>();
         }
         StringBuffer swhere = new StringBuffer("");
+        StringBuffer whereString = new StringBuffer();
         if (queryObject.size() > 0) {
             for (var query :
                     queryObject.entrySet()) {
@@ -80,7 +81,7 @@ public class BulkJobService {
         }
 
         if (!(swhere.toString().equalsIgnoreCase(""))) {
-            swhere.append(" WHERE ").append(swhere.substring(5));
+            whereString.append(" WHERE ").append(swhere.substring(5));
         }
         String selectStmnt;
         StringBuffer select = new StringBuffer("");
@@ -97,7 +98,7 @@ public class BulkJobService {
         }
         String dataOrderOutput;
         StringBuffer dataOrder = new StringBuffer("");
-        if (orderBy.size() > 0) {
+        if (null!=orderBy && orderBy.size() > 0) {
             for (var field : orderBy.entrySet()) {
                 dataOrder.append(",").append(field.getKey());
                 if (field.getValue().equalsIgnoreCase("D")) {
@@ -106,17 +107,17 @@ public class BulkJobService {
             }
         }
 
-        if (dataOrder.toString() != "") {
+        if (!dataOrder.toString().isEmpty() && !dataOrder.toString().isBlank()) {
             dataOrderOutput = dataOrder.toString().substring(1);
         } else {
             dataOrderOutput = "id";
         }
         StringBuffer sql = new StringBuffer();
         if ((null != limit && limit > 0) && ((null == skip || skip == 0))) {
-            sql.append("SELECT ").append("*").append(" FROM bulkJob").append(swhere).append(" order by ")
+            sql.append("SELECT ").append("*").append(" FROM bulkJob").append(whereString).append(" order by ")
                     .append(dataOrderOutput).append(" limit ").append(limit);
         } else {
-            sql.append("SELECT ").append("*").append(" FROM bulkJob").append(swhere).append(" order by ")
+            sql.append("SELECT ").append("*").append(" FROM bulkJob").append(whereString).append(" order by ")
                     .append(dataOrderOutput);
         }
         Query genQuery = entityManager.createNativeQuery(sql.toString(), BulkJob.class);
