@@ -13,6 +13,7 @@ import org.snomed.cis.service.DM.SCTIdDM;
 import org.snomed.cis.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -151,7 +152,7 @@ public class BackendJobService {
         }
     }
 
-    //@Scheduled(fixedRate = 3000)
+    @Scheduled(fixedRate = 3000)
     public void runner() throws CisException {
         Map<String, String> objQuery1 = new HashMap<String, String>();
         Map<String, Integer> objQuery2 = new HashMap<String, Integer>();
