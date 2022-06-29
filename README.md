@@ -104,3 +104,31 @@ Retrieving the Sctid from table
 GET http://localhost:YourPort/getSctByIds?token=hdaskjdhakjdgy7,ids=123456789,456789234
 
 
+### Build
+
+The application has 3 build profiles configured
+
+Command to build jar and deb files
+
+`mvn clean package`
+
+
+Output:
+1) jar file in target folder (Eg. target/cis.jar)
+2) deb file in target folder (Eg. target/cis-0.0.1-SNAPSHOT-all.deb)
+
+
+###Deployment
+
+Deployment requires JRE11 installed on the target machine
+
+Command to deploy the jar file
+
+`java -jar target/cis.jar --spring.config.location=<<path to application.yml file>>`
+
+Input parameters:
+1) spring.config.location
+    1) The path to application.yml file  in target machine which will be used for deployment 
+
+Output:
+1) jar file deployed in target machine

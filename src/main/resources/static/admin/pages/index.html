@@ -1,0 +1,1964 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Component Identifier Service</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- MetisMenu CSS -->
+    <link href="../bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
+
+    <!-- Timeline CSS -->
+    <link href="../dist/css/timeline.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="../dist/css/sb-admin-2.css" rel="stylesheet">
+
+    <!-- Morris Charts CSS -->
+    <!--<link href="../bower_components/morrisjs/morris.css" rel="stylesheet">-->
+
+    <!-- Custom Fonts -->
+    <link href="../bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <script type="text/javascript">
+    var adminCall = null, consumerCall = null;
+    var loadItems;
+    var setupAdminPanel;
+    function loadUsers(){
+        var users = [];
+        if (adminCall != null)
+            adminCall.abort();
+        adminCall = $.get("/api/groups/component-identifier-service-admin/users?token=" + options.token).done(function(res){
+            $.merge(users, res);
+            adminCall = null;
+        }).fail(function(err){
+            adminCall = null;
+            console.log(err.message);
+        });
+
+        if (consumerCall != null)
+            consumerCall.abort();
+        consumerCall = $.get("/api/groups/component-identifier-service-user/users?token=" + options.token).done(function(res){
+            $.merge(users, res);
+            consumerCall = null;
+        }).fail(function(err){
+            consumerCall = null;
+            console.log(err.message);
+        });
+
+        $.get("/api/groups?token=" + options.token).done(function(res){
+            if (!res.groups || !res) res = {groups: []};
+            options.groups = res.groups;
+        }).fail(function(err){
+            console.log(err.message);
+        });
+
+        $.when(adminCall, consumerCall).done(function(){
+            options.users = users;
+            //console.log("users:", users);
+        });
+    }
+    function loadStats(username){
+        $.get("/api/stats?token=" + options.token + "&username=" + username).done(function(res){
+            var data= [];
+            $.each(res.namespaces, function(i, field){
+                if (i != "total")
+                    data.push({data: field, label: i});
+            });
+            if (data.length)
+                drawPieChart(data);
+            $("#namespaces-count-stats").html(res.namespaces.total);
+            $("#schemes-count-stats").html(res.schemes);
+            $("#users-count-stats").html(res.users);
+        }).fail(function(err){
+            $("#namespaces-count-stats").html("-");
+            $("#schemes-count-stats").html("-");
+            $("#users-count-stats").html("-");
+        });
+    }
+        function start() {
+            $(function() {
+                $.extend($.fn.disableTextSelect = function() {
+                    return this.each(function() {
+                        $(this).mousedown(function() {
+                            return false;
+                        });
+                    });
+                });
+//            $('.noSelect').disableTextSelect(); //No text selection on elements with a class of 'noSelect'
+            });
+            ensureAuthenticated("index.html", function(credentials){
+                setupDashboard(credentials);
+//                drawPieChart();
+            });
+        };
+        function setupDashboard(credentials){
+            Handlebars.registerHelper("toLower", function(text){
+                return(text.toLowerCase());
+            });
+            Handlebars.registerHelper("emptyCheck", function(text){
+                if (!text || typeof text == "undefined" || text == null || text.Window)
+                    return "";
+                else
+                    return text;
+            });
+            Handlebars.registerHelper("fieldOfObject", function(obj, field){
+                return obj[field];
+            });
+            Handlebars.registerHelper("time", function(dateData){
+                var string = new Date(dateData);
+                string = string.toLocaleString();
+                return string;
+            });
+            Handlebars.registerHelper("getHowLongAgo", function(time){
+                var d = new Date(time).getTime();
+                var currentTimeStamp = new Date().getTime();
+                var elapsed = currentTimeStamp - d;
+                if (elapsed < 60000) {
+                    return "just now";
+                } else if (elapsed < 3600000) {
+                    return Math.round(elapsed/60000) + " minutes ago";
+                } else if (elapsed < 86400000) {
+                    return Math.round(elapsed/3600000) + " hours ago";
+                } else {
+                    return Math.round(elapsed/86400000) + " days ago";
+                }
+            });
+            Handlebars.registerHelper('if_eq', function (a, b, opts) {
+                if (opts != "undefined") {
+                    if (a == b)
+                        return opts.fn(this);
+                    else
+                        return opts.inverse(this);
+                }
+            });
+            Handlebars.registerHelper('if_empty', function (text, opts) {
+                if (opts != "undefined") {
+                    if (!text || typeof text == "undefined" || text == null || text.Window)
+                        return opts.fn(this);
+                    else
+                        return opts.inverse(this);
+                }
+            });
+            loadUsers();
+            loadStats(credentials.username);
+            $("#username-label").html(credentials.username);
+//            var iconData = new Identicon(CryptoJS.MD5(credentials.username).toString(), 20).toString();
+            $("#user-avatar").html('<img src="https://robohash.org/' + credentials.username + '?size=20x20&bgset=bg1" alt="User Avatar" class="img-circle" />');
+            // $("#user-avatar").html('<img src="data:image/png;base64,' + iconData + '" alt="User Avatar" class="img-circle" />');
+
+            $("#viewProfileButton").unbind();
+            $("#viewProfileButton").click(function(){
+                var user = {
+                    username : options.username,
+                    email: options.email,
+                    jira: options.jiraUser
+                };
+                $("#user-profile-modal").modal("show");
+                $.get("../views/home/profile.hbs").then(function(src){
+                    var context = {
+                        user: user
+                    };
+                    var template = Handlebars.compile(src);
+                    $("#user-profile-body").html(template(context));
+                });
+//                $("#user-profile-body").html(JST["views/v2Home/userProfile.hbs"](context));
+            });
+
+            $("#logoutButton").unbind();
+            $("#logoutButton").click(function (event) {
+                logout();
+            });
+            setClicks();
+        }
+        function setClicks(){
+            var itemsCall = null;
+            loadItems = function(typeSelected, getUrl, primaryKey, firstClick){
+                function loadPermissions(id, edit, namespaceId){
+                    $("#" + typeSelected + "-permissions-configure").html('<div class="text-center"><i class="fa fa-spinner fa-spin fa-2x"></i></div>');
+                    if (itemsCall != null)
+                        itemsCall.abort();
+                    itemsCall = $.get(getUrl + "/" + id + "/permissions?token=" + options.token).done(function(result){
+                        function loadPermissionsHtml(result){
+                            $.get("../views/items/permissions.hbs").then(function(src){
+                                var managerUser = false, context = {
+                                    permissions: result,
+//                                    edit: edit,
+                                    type: typeSelected.substr(0, typeSelected.length - 1),
+                                    typeId: typeSelected
+                                };
+                                result.forEach(function(permission){
+                                    if (permission.username == options.username && permission.role == "manager")
+                                        managerUser = true;
+                                });
+                                var template = Handlebars.compile(src);
+                                $("#" + typeSelected + "-permissions-configure").html(template(context));
+                                if (options.adminUser || managerUser){
+//                                    if (typeSelected == "namespaces")
+                                    $("#edit-button-" + typeSelected).show();
+                                    $("#" + typeSelected + "-permissions-configure").find(".remove-permission").unbind();
+                                    $("#" + typeSelected + "-permissions-configure").find(".remove-permission").disableTextSelect();
+                                    $("#" + typeSelected + "-permissions-configure").find(".remove-permission").click(function(e){
+                                        var username = $(e.target).closest("li").attr("data-username"), auxArray = [];
+                                        $("#item-" + typeSelected + "-details").find(".btn").addClass("disabled");
+                                        $.ajax({
+                                            type: "DELETE",
+                                            url: getUrl + "/" + id + "/permissions/" + username + "?token=" + options.token
+                                        }).done(function(res){
+                                            $("#item-" + typeSelected + "-details").find(".btn").removeClass("disabled");
+//                                                console.log(res);
+                                            result.forEach(function(item){
+                                                if (item.username != username)
+                                                    auxArray.push(item);
+                                            });
+                                            loadPermissionsHtml(auxArray);
+                                            $.notify("Removed!", "success");
+                                        }).fail(function(err){
+                                            $.notify("Failed!", "error");
+                                            $("#item-" + typeSelected + "-details").find(".btn").removeClass("disabled");
+                                            console.log(err.message);
+                                        });
+                                    });
+
+
+                                    $("#addPermission-" + typeSelected).find(".addPermission").unbind();
+//                                    $("#addPermission-" + typeSelected).disableTextSelect();
+                                    $("#addPermission-" + typeSelected).find(".addPermission").click(function(e){
+                                        var mode = $(e.target).closest("li").attr("data-mode");
+                                        var addHtml = "";
+                                        addHtml = '<li class="list-group-item">';
+                                        addHtml+= '<div class="row">';
+                                        addHtml+= '<div class="col-md-5 form-group">';
+                                        addHtml+= '<label for="add-permission-value">' + mode + ':</label>';
+                                        addHtml+= '<select id="add-permission-value" class="form-control" style="">';
+                                        if (mode == "User"){
+                                            options.users.forEach(function(user){
+                                                addHtml+= '<option value="' +  user + '">' + user + '</option>';
+                                            });
+                                        }else{
+                                            options.groups.forEach(function(group){
+                                                addHtml+= '<option value="' +  group.name + '">' + group.name + '</option>';
+                                            });
+                                        }
+                                        addHtml+= '</select>';
+                                        addHtml+= '</div>';
+                                        addHtml+= '<div class="col-md-5 form-group">';
+                                        if (mode == "User"){
+                                            addHtml+= '<label for="add-permission-value-role">Role:</label>';
+                                            addHtml+= '<select id="add-permission-value-role" class="form-control" style="">';
+                                            addHtml+= '<option value="user">user</option>';
+                                            addHtml+= '<option value="manager">manager</option>';
+                                            addHtml+= '</select>';
+                                        }
+                                        addHtml+= '</div>';
+                                        addHtml+= '<div class="col-md-2 form-group">';
+                                        addHtml+= '<button id="add-permission-ok-' + typeSelected + '" class="btn btn-success btn-sm glyphicon glyphicon-ok pull-right" style=""></button>';
+                                        addHtml+= '<button id="add-permission-remove-' + typeSelected + '" class="btn btn-danger btn-sm glyphicon glyphicon-remove pull-right" style="margin-right: 10px;"></button>';
+                                        addHtml+= '</div>';
+                                        addHtml+= '</div>';
+                                        addHtml+= '</li>';
+                                        $("#" + typeSelected + "-permissions-configure").find("ul").first().append(addHtml);
+                                        $("#addPermission-" + typeSelected).hide();
+                                        $("#add-permission-ok-" + typeSelected).unbind();
+                                        $("#add-permission-ok-" + typeSelected).disableTextSelect();
+                                        $("#add-permission-ok-" + typeSelected).click(function(){
+                                            var selectedUsername = $("#add-permission-value").val();
+                                            var selectedRole = "group";
+                                            if (mode == "User")
+                                                selectedRole = $("#add-permission-value-role").val();
+                                            $("#item-" + typeSelected + "-details").find(".btn").addClass("disabled");
+                                            $.post(getUrl + "/" + id + "/permissions/" + selectedUsername + "?token=" + options.token + "&role=" + selectedRole).done(function(res){
+                                                $("#item-" + typeSelected + "-details").find(".btn").removeClass("disabled");
+                                                result.push({username: selectedUsername, role: selectedRole, namespace: id});
+                                                loadPermissionsHtml(result);
+                                                $.notify("Success", "success");
+                                            }).fail(function(err){
+                                                $("#item-" + typeSelected + "-details").find(".btn").removeClass("disabled");
+                                                $.notify("Failed", "error");
+                                                console.log(err);
+                                            });
+                                        });
+
+                                        $("#add-permission-remove-" + typeSelected).unbind();
+                                        $("#add-permission-remove-" + typeSelected).disableTextSelect();
+                                        $("#add-permission-remove-" + typeSelected).click(function(){
+                                            loadPermissionsHtml(result);
+                                        });
+                                    });
+                                }else{
+                                    $("#edit-button-" + typeSelected).remove();
+                                    $("#" + typeSelected + "-permissions-configure").find(".btn").hide();
+                                }
+                            });
+                        }
+                        loadPermissionsHtml(result);
+                    });
+                    if (typeSelected == "namespaces") {
+                        // Load group permissions
+//                        $.get(getUrl + "/groups/" + namespaceId + "/users?token=" + options.token).done(function(result) {
+                        $.get("/api/groups/namespace-" + namespaceId + "/users?token=" + options.token).done(function(result) {
+                            $.get("../views/items/groupPermissions.hbs").then(function (src) {
+                                var context = {
+                                    groupName: "namespace-" + namespaceId,
+                                    users: result
+                                };
+                                var template = Handlebars.compile(src);
+                                $("#namespaces-group-permissions").html(template(context));
+                            });
+                        });
+                    }
+                }
+                $("#page-wrapper").html('<br><br><br><br><div class="text-center"><i class="fa fa-spinner fa-spin fa-4x"></i></div>');
+                if (itemsCall != null)
+                    itemsCall.abort();
+                var itemsUrl = "/api/users/" + options.username + "/" + typeSelected + "/?token=" + options.token;
+                if (options.adminUser)
+                    itemsUrl = getUrl + "?token=" + options.token;
+                itemsCall = $.get(itemsUrl).done(function(result){
+                    itemsCall = null;
+                    $.get("../views/items/main.hbs").then(function(src){
+                        var template = Handlebars.compile(src);
+                        $("#page-wrapper").html(template({typeH: typeSelected.charAt(0).toUpperCase() + typeSelected.slice(1), type: typeSelected}));
+                        $.get("../views/items/list-" + typeSelected + ".hbs").then(function(src){
+                            var context = {
+                                items: result,
+                                type: typeSelected
+                            };
+                            template = Handlebars.compile(src);
+                            function loadItem(itemLoaded, edit){
+                                $.get("../views/items/details-" + typeSelected + ".hbs").then(function(src){
+                                    var context = {
+                                        item: itemLoaded,
+                                        edit: edit
+                                    };
+                                    template = Handlebars.compile(src);
+                                    $("#item-" + typeSelected + "-details").html(template(context));
+                                    $("#item-" + typeSelected + "-details").find("input").first().focus();
+                                    if (!itemLoaded.new)
+                                        loadPermissions(itemLoaded[primaryKey], edit, itemLoaded.namespace);
+//                                    if (!options.adminUser)
+                                    $("#edit-button-" + typeSelected).hide();
+                                    $("#edit-button-" + typeSelected).unbind();
+                                    $("#edit-button-" + typeSelected).disableTextSelect();
+                                    $("#edit-button-" + typeSelected).click(function(){
+                                        loadItem(itemLoaded, true);
+                                    });
+
+                                    if (!options.adminUser)
+                                        $("#delete-button-" + typeSelected).remove();
+                                    $("#delete-button-" + typeSelected).unbind();
+                                    $("#delete-button-" + typeSelected).disableTextSelect();
+                                    $("#delete-button-" + typeSelected).click(function(){
+                                        if (confirm("Are you sure that you wanna delete this namespace?")){
+                                            $("#item-" + typeSelected + "-details").find(".btn").addClass("disabled");
+                                            $.ajax({
+                                                type: "DELETE",
+                                                url: getUrl + "/" + itemLoaded[primaryKey] + "?token=" + options.token
+                                            }).done(function(res){
+                                                $.notify("Deleted!", "success");
+                                                loadItems(typeSelected, getUrl, primaryKey);
+                                            }).fail(function(err){
+                                                $.notify("Failed!", "error");
+                                                $("#item-" + typeSelected + "-details").find(".btn").removeClass("disabled");
+                                            });
+                                        }
+                                    });
+
+                                    $("#save-button-" + typeSelected).unbind();
+                                    $("#save-button-" + typeSelected).disableTextSelect();
+                                    $("#save-button-" + typeSelected).click(function(){
+                                        $("#item-" + typeSelected + "-details").find(".btn").addClass("disabled");
+                                        var objEdit = {
+                                            namespace: itemLoaded.namespace,
+                                            organizationName: $.trim($("#edit-namespace-organizationName").val()),
+                                            email: $.trim($("#edit-namespace-email").val())
+                                        };
+                                        if (itemLoaded.new){
+                                            objEdit["namespace"] = parseInt($.trim($("#edit-namespace-value").val()));
+                                            if (isNaN(objEdit.namespace) || ($.trim($("#edit-namespace-value").val()).length != 7 && $.trim($("#edit-namespace-value").val()) != "0")){
+                                                $.notify("Invalid namespace", 'error');
+                                                $("#item-" + typeSelected + "-details").find(".btn").removeClass("disabled");
+                                                return 0;
+                                            }
+                                            objEdit.partitions = [];
+                                            $.each($("#item-" + typeSelected + "-details").find("tbody").first().find("tr"), function (i, field){
+                                                var partition = $($(field).find("td")[1]).attr("data-id");
+                                                if (objEdit.namespace == 0){
+                                                    var newPart = "0" + partition[1];
+                                                    partition = newPart;
+                                                }
+                                                var value = parseInt($($(field).find("td")[1]).attr("data-value"));
+                                                objEdit.partitions.push({
+                                                    namespace: objEdit.namespace,
+                                                    partitionId: partition,
+                                                    sequence: value
+                                                });
+                                            });
+                                        }
+//                                        console.log(objEdit);
+                                        if (itemLoaded.new){
+                                            $.ajax({
+                                                type: "POST",
+                                                url: getUrl + "?token=" + options.token,
+                                                contentType: 'application/json',
+                                                data: JSON.stringify(objEdit)
+                                            }).done(function(res){
+                                                itemLoaded = objEdit;
+                                                $.notify("Created!", "success");
+                                                $("#item-" + typeSelected + "-details").find(".btn").removeClass("disabled");
+                                                loadItems(typeSelected, getUrl, primaryKey, objEdit[primaryKey]);
+                                            }).fail(function(err){
+                                                $.notify("Failed!", "error");
+                                                $("#item-" + typeSelected + "-details").find(".btn").removeClass("disabled");
+                                            });
+                                        }else{
+                                            var urlToPut = getUrl + "?token=" + options.token;
+                                            if (typeSelected == "schemes")
+                                                urlToPut = getUrl + "/" + itemLoaded[primaryKey] + "?token=" + options.token + "&schemeSeq=" + $.trim($("#edit-scheme-value").val());
+                                            $.ajax({
+                                                type: "PUT",
+                                                url: urlToPut,
+                                                contentType: 'application/json',
+                                                data: JSON.stringify(objEdit)
+                                            }).done(function(res){
+                                                $.notify("Saved!", "success");
+                                                if (typeSelected == "schemes"){
+                                                    itemLoaded.idBase = $.trim($("#edit-scheme-value").val());
+                                                    $("#close-button-" + typeSelected).click();
+                                                }else{
+                                                    itemLoaded.email = objEdit.email;
+                                                    var previousOrganizationName = itemLoaded.organizationName;
+                                                    itemLoaded.organizationName = objEdit.organizationName;
+                                                    $("#item-" + typeSelected + "-details").find(".btn").removeClass("disabled");
+                                                    if (previousOrganizationName != itemLoaded.organizationName)
+                                                        loadItems(typeSelected, getUrl, primaryKey, objEdit[primaryKey]);
+                                                    else
+                                                        $("#close-button-" + typeSelected).click();
+                                                }
+                                            }).fail(function(err){
+                                                $.notify("Failed!", "error");
+                                                $("#item-" + typeSelected + "-details").find(".btn").removeClass("disabled");
+                                            });
+                                        }
+                                    });
+
+                                    $("#cancel-button-" + typeSelected).unbind();
+                                    $("#cancel-button-" + typeSelected).disableTextSelect();
+                                    $("#cancel-button-" + typeSelected).click(function(){
+//                                        loadItem(itemLoaded, true);
+                                        $("#close-button-" + typeSelected).click();
+                                    });
+                                    $("#close-button-" + typeSelected).hide();
+                                    $("#close-button-" + typeSelected).unbind();
+                                    $("#close-button-" + typeSelected).disableTextSelect();
+                                    $("#close-button-" + typeSelected).click(function(){
+                                        if (itemLoaded.new){
+                                            if ($("#item-" + typeSelected + "-list").find(".item-link").first()[0])
+                                                $("#item-" + typeSelected + "-list").find(".item-link").first().click();
+                                            else
+                                                $("#item-" + typeSelected + "-details").html("");
+                                        }else
+                                            loadItem(itemLoaded, false);
+                                    });
+                                    function bindSequencesClick(){
+                                        $("#item-" + typeSelected + "-details").find(".inpSequence").unbind();
+                                        $("#item-" + typeSelected + "-details").find(".inpSequence").keyup(function(e){
+                                            if (e.keyCode == 13){
+                                                var partitionId = $(e.target).closest("td").attr("data-id");
+                                                var sequence = parseInt($.trim($(e.target).closest("td").find("input").first().val()));
+                                                $(e.target).closest("td").find(".inpSequence").first().attr("disabled", true);
+                                                if (isNaN(sequence)){
+                                                    $.notify("Invalid sequence", 'error');
+                                                    $(e.target).closest("td").find(".inpSequence").first().attr("disabled", false);
+                                                    return 0;
+                                                }
+                                                $("#item-" + typeSelected + "-details").find(".btn").addClass("disabled");
+                                                if (itemLoaded.new){
+                                                    $(e.target).closest("td").attr("data-value", sequence);
+                                                    var newHtml = sequence + '<button class="btn btn-link glyphicon glyphicon-pencil pull-right editSequence" style="padding: 0px; text-decoration: inherit;" type="button"></button>';
+                                                    $("#item-" + typeSelected + "-details").find(".btn").removeClass("disabled");
+                                                    $(e.target).closest("td").html(newHtml);
+                                                    bindSequencesClick();
+                                                }else{
+                                                    $.ajax({
+                                                        type: "PUT",
+                                                        url: getUrl + "/" + itemLoaded.namespace + "/partition/" + partitionId + "?token=" + options.token + "&value=" + sequence
+                                                    }).done(function(res){
+                                                        itemLoaded.partitions.forEach(function(partition){
+                                                            if (partition.partitionId == partitionId)
+                                                                partition.sequence = sequence;
+                                                        });
+                                                        $.notify("Saved", "success");
+                                                        $(e.target).closest("td").attr("data-value", sequence);
+                                                        var newHtml = sequence + '<button class="btn btn-link glyphicon glyphicon-pencil pull-right editSequence" style="padding: 0px; text-decoration: inherit;" type="button"></button>';
+                                                        $(e.target).closest("td").html(newHtml);
+                                                        $("#item-" + typeSelected + "-details").find(".btn").removeClass("disabled");
+                                                        bindSequencesClick();
+                                                    }).fail(function(err){
+                                                        $.notify("Failed", "error");
+                                                        $("#item-" + typeSelected + "-details").find(".btn").removeClass("disabled");
+                                                        $(e.target).closest("td").find(".inpSequence").first().attr("disabled", false);
+                                                        console.log(err.message);
+                                                    });
+                                                }
+                                            }
+                                        });
+
+                                        $("#item-" + typeSelected + "-details").find(".saveSequence").unbind();
+                                        $("#item-" + typeSelected + "-details").find(".saveSequence").disableTextSelect();
+                                        $("#item-" + typeSelected + "-details").find(".saveSequence").click(function(e){
+                                            var partitionId = $(e.target).closest("td").attr("data-id");
+                                            var sequence = parseInt($.trim($(e.target).closest("td").find("input").first().val()));
+                                            $(e.target).closest("td").find(".inpSequence").first().attr("disabled", true);
+                                            if (isNaN(sequence)){
+                                                $.notify("Invalid sequence", 'error');
+                                                $(e.target).closest("td").find(".inpSequence").first().attr("disabled", false);
+                                                return 0;
+                                            }
+                                            $("#item-" + typeSelected + "-details").find(".btn").addClass("disabled");
+                                            if (itemLoaded.new){
+                                                $(e.target).closest("td").attr("data-value", sequence);
+                                                var newHtml = sequence + '<button class="btn btn-link glyphicon glyphicon-pencil pull-right editSequence" style="padding: 0px; text-decoration: inherit;" type="button"></button>';
+                                                $("#item-" + typeSelected + "-details").find(".btn").removeClass("disabled");
+                                                $(e.target).closest("td").html(newHtml);
+                                                bindSequencesClick();
+                                            }else{
+                                                $.ajax({
+                                                    type: "PUT",
+                                                    url: getUrl + "/" + itemLoaded.namespace + "/partition/" + partitionId + "?token=" + options.token + "&value=" + sequence
+                                                }).done(function(res){
+                                                    itemLoaded.partitions.forEach(function(partition){
+                                                        if (partition.partitionId == partitionId)
+                                                            partition.sequence = sequence;
+                                                    });
+                                                    $.notify("Saved", "success");
+                                                    $(e.target).closest("td").attr("data-value", sequence);
+                                                    var newHtml = sequence + '<button class="btn btn-link glyphicon glyphicon-pencil pull-right editSequence" style="padding: 0px; text-decoration: inherit;" type="button"></button>';
+                                                    $(e.target).closest("td").html(newHtml);
+                                                    $("#item-" + typeSelected + "-details").find(".btn").removeClass("disabled");
+                                                    bindSequencesClick();
+                                                }).fail(function(err){
+                                                    $.notify("Failed", "error");
+                                                    $("#item-" + typeSelected + "-details").find(".btn").removeClass("disabled");
+                                                    $(e.target).closest("td").find(".inpSequence").first().attr("disabled", false);
+                                                    console.log(err.message);
+                                                });
+                                            }
+                                        });
+
+                                        $("#item-" + typeSelected + "-details").find(".cancelSequence").unbind();
+                                        $("#item-" + typeSelected + "-details").find(".cancelSequence").disableTextSelect();
+                                        $("#item-" + typeSelected + "-details").find(".cancelSequence").click(function(e){
+                                            var sequence = $(e.target).closest("td").attr("data-value");
+                                            var newHtml = sequence + '<button class="btn btn-link glyphicon glyphicon-pencil pull-right editSequence" style="padding: 0px; text-decoration: inherit;" type="button"></button>';
+                                            $(e.target).closest("td").html(newHtml);
+                                            bindSequencesClick();
+                                        });
+
+                                        $("#item-" + typeSelected + "-details").find(".editSequence").unbind();
+                                        $("#item-" + typeSelected + "-details").find(".editSequence").disableTextSelect();
+                                        $("#item-" + typeSelected + "-details").find(".editSequence").click(function(e){
+                                            var sequence = $(e.target).closest("td").attr("data-value");
+                                            var newHtml = "<input class='inpSequence' type='number' value='" + sequence + "'>";
+                                            newHtml+= '<button type="button" class="btn btn-success btn-sm pull-right glyphicon glyphicon-ok saveSequence"></button>';
+                                            newHtml+= '<button type="button" class="btn btn-danger btn-sm pull-right glyphicon glyphicon-remove cancelSequence" style="margin-right: 5px;"></button>';
+                                            $(e.target).closest("td").html(newHtml);
+                                            bindSequencesClick();
+                                            $("#item-" + typeSelected + "-details").find(".inpSequence").first().focus();
+                                        });
+                                    }
+                                    bindSequencesClick();
+                                });
+                            }
+                            $("#item-" + typeSelected + "-list").html(template(context));
+
+                            if (!options.adminUser || typeSelected != "namespaces")
+                                $("#create-new-" + typeSelected).closest("li").remove();
+                            $("#create-new-" + typeSelected).unbind();
+                            $("#create-new-" + typeSelected).disableTextSelect();
+                            $("#create-new-" + typeSelected).click(function(){
+                                $("#item-" + typeSelected + "-list").find("li").removeClass("active");
+                                $("#create-new-" + typeSelected).closest("li").addClass("active");
+                                var obj = {
+                                    namespace: "",
+                                    email: "",
+                                    partitions: [{
+                                        partitionId: "10",
+                                        sequence: 0
+                                    },{
+                                        partitionId: "11",
+                                        sequence: 0
+                                    },{
+                                        partitionId: "12",
+                                        sequence: 0
+                                    }],
+                                    organizationName: ""
+                                };
+                                if (typeSelected == "schemes"){
+                                    obj = {
+                                        name: "",
+                                        description: ""
+                                    };
+                                }
+                                obj.new = true;
+                                loadItem(obj, true);
+                            });
+
+                            $("#item-" + typeSelected + "-list").find(".item-link").unbind();
+                            $("#item-" + typeSelected + "-list").find(".item-link").disableTextSelect();
+                            $("#item-" + typeSelected + "-list").find(".item-link").click(function(e){
+                                var id = $(e.target).attr("data-id");
+                                $("#item-" + typeSelected + "-list").find("li").removeClass("active");
+                                $(e.target).closest("li").addClass("active");
+                                $("#item-" + typeSelected + "-details").html('<div class="text-center"><i class="fa fa-spinner fa-spin fa-2x"></i></div>');
+                                if (itemsCall != null)
+                                    itemsCall.abort();
+                                itemsCall = $.get(getUrl + "/" + id + "?token=" + options.token).done(function(result){
+                                    itemsCall = null;
+                                    loadItem(result, false);
+                                }).fail(function(err){
+                                    console.log(err);
+                                });
+                            });
+                            if (!firstClick)
+                                $("#item-" + typeSelected + "-list").find(".item-link").first().click();
+                            else
+                                $("#item-" + typeSelected + "-list").find(".item-link[data-id='" + firstClick + "']").first().click();
+                        });
+                    });
+                }).fail(function(err){
+                    console.log(err);
+                });
+            };
+
+            function generateIds(typeSelected, getUrl){
+                $("#page-wrapper").html('<br><br><br><br><div class="text-center"><i class="fa fa-spinner fa-spin fa-4x"></i></div>');
+                $.get("../views/generateIds/main.hbs").then(function(src){
+                    var template = Handlebars.compile(src);
+                    $("#page-wrapper").html(template({type: typeSelected}));
+
+                    function loadPartitions(namespace){
+                        $("#generateIds-send-button").addClass("disabled");
+                        $.get("/api/sct/namespaces/" + namespace + "?token=" + options.token).done(function(res){
+                            var partitionsHtml = "";
+                            res.partitions.forEach(function(partition){
+                                partitionsHtml+= '<option value="' + partition.partitionId + '">' + partition.partitionId + '</option>';
+                            });
+                            $("#generateIds-form-" + typeSelected).find("select[data-field=partitionId]").first().html(partitionsHtml);
+                            $("#generateIds-send-button").removeClass("disabled");
+                        }).fail(function(err){
+                            console.log(err);
+                        });
+                    }
+
+                    $("#generateIds-send-button").addClass("disabled");
+                    if (typeSelected == "schemeId"){
+                        var itemsUrl = "/api/users/" + options.username + "/schemes/?token=" + options.token;
+                        if (options.adminUser)
+                            itemsUrl = "/api/schemes?token=" + options.token;
+                        $.get(itemsUrl).done(function(result){
+                            var schemesHtml = "";
+                            result.forEach(function(item){
+                                schemesHtml+= '<option value="' + item.scheme + '">' + item.scheme + '</option>';
+                            });
+                            $("#generateIds-form-" + typeSelected).find("select[data-field=schemeName]").first().html(schemesHtml);
+                            $("#generateIds-send-button").removeClass("disabled");
+                        }).fail(function(err){
+                            console.log(err);
+                        });
+                    }else if (typeSelected == "SCTID"){
+                        var itemsUrl = "/api/users/" + options.username + "/namespaces/?token=" + options.token;
+                        if (options.adminUser)
+                            itemsUrl = "/api/sct/namespaces?token=" + options.token;
+                        $.get(itemsUrl).done(function(result){
+                            var namespacesHtml = "";
+                            result.forEach(function(item){
+                                namespacesHtml+= '<option value="' + item.namespace + '">' + item.namespace + '</option>';
+                            });
+                            loadPartitions(result[0].namespace);
+                            $("#generateIds-form-" + typeSelected).find("select[data-field=namespace]").first().html(namespacesHtml);
+                            $("#generateIds-send-button").removeClass("disabled");
+                        }).fail(function(err){
+                            console.log(err);
+                        });
+                    }
+
+                    $("#generateIds-form-" + typeSelected).find("select[data-field=namespace]").first().unbind();
+                    $("#generateIds-form-" + typeSelected).find("select[data-field=namespace]").first().change(function(){
+                        loadPartitions($("#generateIds-form-" + typeSelected).find("select[data-field=namespace]").first().val());
+                    });
+
+                    function changeAction(action){
+                        function showHideFields(fields, show){
+                            fields.forEach(function(field){
+                                if (show)
+                                    $("#generateIds-form-" + typeSelected).find(".form-group[data-field=" + field + "]").show();
+                                else
+                                    $("#generateIds-form-" + typeSelected).find(".form-group[data-field=" + field + "]").hide();
+                            });
+                        }
+
+                        switch (action){
+                            case "generate":
+                                $("#generationId-title-main").html("Generating");
+                                var fieldsToHide = [], fieldsToShow = [];
+                                if (typeSelected == "schemeId"){
+                                    fieldsToHide.push("schemeId")
+                                    fieldsToShow.push("schemeName");
+                                }else if (typeSelected == "SCTID"){
+                                    fieldsToHide.push("sctid");
+                                    $.merge(fieldsToShow, ["generateLegacyIds", "partitionId", "namespace"]);
+                                }
+                                fieldsToShow.push("systemId");
+                                fieldsToHide.push("expirationDate");
+                                showHideFields(fieldsToHide, false);
+                                showHideFields(fieldsToShow, true);
+                                break;
+                            case "register":
+                                $("#generationId-title-main").html("Registering");
+                                var fieldsToHide = [], fieldsToShow = [];
+                                if (typeSelected == "schemeId"){
+                                    fieldsToShow.push("schemeName");
+                                    fieldsToShow.push("schemeId");
+                                }else if (typeSelected == "SCTID"){
+                                    $.merge(fieldsToHide, ["partitionId", "generateLegacyIds"]);
+                                    $.merge(fieldsToShow, ["sctid", "namespace"]);
+                                }
+                                fieldsToHide.push("expirationDate");
+                                fieldsToShow.push("systemId");
+                                showHideFields(fieldsToHide, false);
+                                showHideFields(fieldsToShow, true);
+                                break;
+                            case "reserve":
+                                $("#generationId-title-main").html("Reserving");
+                                var fieldsToHide = [], fieldsToShow = [];
+                                if (typeSelected == "schemeId"){
+                                    fieldsToHide.push("schemeId");
+                                    fieldsToShow.push("schemeName");
+                                }else if (typeSelected == "SCTID"){
+                                    $.merge(fieldsToHide, ["generateLegacyIds", "sctid"]);
+                                    $.merge(fieldsToShow, ["namespace", "partitionId"]);
+                                }
+                                fieldsToHide.push("systemId");
+                                fieldsToShow.push("expirationDate");
+                                showHideFields(fieldsToHide, false);
+                                showHideFields(fieldsToShow, true);
+                                break;
+                        }
+                    }
+
+                    $("#action-toDo-generateId").unbind();
+                    $("#action-toDo-generateId").change(function() {
+                        var action = $("#action-toDo-generateId").val();
+                        changeAction(action);
+                    });
+                    changeAction("generate");
+
+                    $("#generateIds-send-button").unbind();
+                    $("#generateIds-send-button").disableTextSelect();
+                    $("#generateIds-send-button").click(function(){
+                        var objToPost = {};
+                        $.each($("#generateIds-form-" + typeSelected).find(".form-control:visible"), function (i, input){
+                            var field = $(input).attr("data-field");
+                            var value = $.trim($(input).val());
+                            if (typeof $(input).attr("data-field") != "undefined")
+                                objToPost[field] = value;
+                        });
+                        if (objToPost["namespace"])
+                            objToPost["namespace"] = parseInt(objToPost["namespace"]);
+                        delete objToPost["schemeName"];
+                        var urlToPost = getUrl + "/" + $("#action-toDo-generateId").val() + "?token=" + options.token;
+                        var schemeNameToPost = $("#generateIds-form-" + typeSelected).find("select[data-field=schemeName]").first().val();
+                        urlToPost = urlToPost.replace("{schemeName}", schemeNameToPost);
+                        $("#generateIds-send-button").addClass("disabled");
+                        $.ajax({
+                            type: "POST",
+                            url: urlToPost,
+                            contentType: 'application/json',
+                            data: JSON.stringify(objToPost)
+                        }).done(function(res){
+//                            console.log(res);
+                            var urlToSearch = "/api/sct/ids/" + res.sctid + "?token=" + options.token;
+                            if (typeSelected == "schemeId")
+                                urlToSearch = "/api/scheme/" + schemeNameToPost + "/ids/" + res.schemeId + "?token=" + options.token;
+                            searchIds(urlToSearch + "&includeAdditionalIds=true", typeSelected);
+                            $.notify("Created!", "success");
+                            $("#generateIds-send-button").removeClass("disabled");
+                        }).fail(function(err){
+//                            console.log(err);
+                            $.notify("Failed!", "error");
+                            $("#generateIds-send-button").removeClass("disabled");
+                        });
+
+                    });
+                });
+            }
+
+            function searchIds(getUrl, typeSelected){
+                $("#page-wrapper").html('<br><br><br><br><div class="text-center"><i class="fa fa-spinner fa-spin fa-4x"></i></div>');
+                function loadHtml(context){
+                    $.get("../views/searchIds/main.hbs").then(function(src){
+                        var template = Handlebars.compile(src);
+                        $("#page-wrapper").html(template(context));
+
+                        if (typeSelected == "schemeId" && getUrl && getUrl.indexOf("SNOMEDID") != -1)
+                            $("#searchId-schemeName-select").val("SNOMEDID");
+
+                        $("#search-button-ids").unbind();
+                        $("#search-button-ids").disableTextSelect();
+                        $("#search-button-ids").click(function(){
+                            if ($.trim($("#search-input-ids").val()) == ""){
+                                $.notify("Please put a " + typeSelected, "info");
+                            }else{
+                                var url = "/api/sct/ids/{id}?token=" + options.token;
+                                if (typeSelected == "schemeId"){
+                                    url = "/api/scheme/{schemeName}/ids/{id}?token=" + options.token;
+                                    url = url.replace("{schemeName}", $("#searchId-schemeName-select").val());
+                                }
+                                url = url.replace("{id}", $.trim($("#search-input-ids").val()));
+                                searchIds(url + "&includeAdditionalIds=true", typeSelected);
+                            }
+                        });
+
+                        $("#search-input-ids").unbind();
+                        $("#search-input-ids").keyup(function(e){
+                            if (e.keyCode == 13){
+                                $("#search-button-ids").click();
+                            }
+                        });
+
+                        if ($.isEmptyObject(context.item))
+                            $("#page-wrapper").find(".actionSearchId").first().closest("div").hide();
+
+                        $("#page-wrapper").find(".schemeLink").unbind();
+                        $("#page-wrapper").find(".schemeLink").click(function(e){
+                            var scheme = $(e.target).attr("data-scheme"), id = $(e.target).attr("data-id");
+                            var url = "/api/scheme/" + scheme + "/ids/" +  id + "?token=" + options.token;
+                            searchIds(url, "schemeId");
+                        });
+
+                        $("#page-wrapper").find(".actionSearchId").unbind();
+                        $("#page-wrapper").find(".actionSearchId").click(function(e){
+                            var action = $(e.target).attr("data-action");
+                            $("#searchId-actions-dropdown").attr("data-action", action);
+                            $("#searchId-actions-dropdown").hide();
+                            $("#searchId-send-actions").show();
+                            $("#searchId-cancel-actions").show();
+                            function loadFormToFill(contextToUse){
+                                $.get("../views/searchIds/formToFill.hbs").then(function(src){
+                                    var template = Handlebars.compile(src);
+                                    $("#searchId-actions-formToFill").html(template(contextToUse));
+                                });
+                            }
+                            var contextToUse = {
+                                title: action.charAt(0).toUpperCase() + action.slice(1),//typeh
+                                fields: {
+                                    "software": context.item["software"],
+                                    "comment": context.item["comment"]
+                                }
+                            };
+                            if (typeSelected == "SCTID"){
+                                contextToUse.fields["namespace"] = context.item["namespace"] + "";
+                                contextToUse.fields["sctid"] = context.item["sctid"];
+                            }else
+                                contextToUse.fields["schemeId"] = context.item["schemeId"];
+
+                            if (action == "register")
+                                contextToUse.fields["systemId"] = context.item["systemId"];
+                            loadFormToFill(contextToUse);
+                        });
+
+                        $("#searchId-cancel-actions").unbind();
+                        $("#searchId-cancel-actions").disableTextSelect();
+                        $("#searchId-cancel-actions").click(function(){
+                            $("#searchId-actions-dropdown").show();
+                            $("#searchId-send-actions").hide();
+                            $("#searchId-cancel-actions").hide();
+                            $("#searchId-actions-formToFill").html("");
+                        });
+
+                        $("#searchId-send-actions").unbind();
+                        $("#searchId-send-actions").disableTextSelect();
+                        $("#searchId-send-actions").click(function(){
+                            var action = $("#searchId-actions-dropdown").attr("data-action");
+                            var urlToSend = "/api/sct/" + action + "?token=" + options.token;
+                            if (typeSelected == "schemeId")
+                                urlToSend = "/api/scheme/" + $("#searchId-schemeName-select").val() + "/" + action + "?token=" + options.token;
+                            var objToSend = {};//context.item;
+                            $.each($("#searchId-actions-formToFill").find(".form-control"), function (i, item){
+                                var field = $(item).attr("data-field"), value = $(item).val();
+                                objToSend[field] = value;
+                            });
+                            if (objToSend["namespace"])
+                                objToSend["namespace"] = parseInt(objToSend["namespace"]);
+                            var type = "PUT";
+                            if (action == "register")
+                                type = "POST";
+//                            console.log(objToSend);
+                            $.ajax({
+                                type: type,
+                                url: urlToSend,
+                                contentType: 'application/json',
+                                data: JSON.stringify(objToSend)
+                            }).done(function(res){
+//                                console.log(res);
+                                var context = {
+                                    item: res,
+                                    type: typeSelected
+                                };
+                                loadHtml(context);
+                                $.notify("Success!", "success");
+                                $("#generateIds-send-button").removeClass("disabled");
+                            }).fail(function(err){
+//                                console.log(err);
+                                $("#searchId-cancel-actions").click();
+                                $.notify("Failed!", "error");
+                                $("#text-danger-idsSearch").html("Error: " + err.responseText);
+                            });
+                        });
+                    });
+                }
+                if (getUrl){
+                    $.get(getUrl).done(function(res){
+                        if (typeSelected == "SCTID" && (!res.namespace || res.namespace == null)){
+                            function getPartition(sctid){
+                                if (sctid){
+                                    var tmp=sctid.toString();
+                                    if ( tmp.length>3){
+                                        return tmp.substr(tmp.length-3,2);
+                                    }
+                                    return null
+                                }
+                                return null;
+                            }
+                            function getNamespace(sctid){
+                                var tmp=sctid.toString();
+                                var partition=getPartition(tmp);
+                                if (partition.substr(0,1)=="1" ){
+                                    if ( tmp.length<11){
+                                        return 0;
+                                    }else{
+                                        return parseInt(tmp.substr(tmp.length-10,7));
+                                    }
+                                }
+
+                                return  0;
+                            }
+                            res.namespace = getNamespace(res.sctid);
+                        }
+                        var context = {
+                            item: res,
+                            type: typeSelected
+                        };
+                        loadHtml(context);
+                    }).fail(function(err){
+//                        console.log(err);
+                        var context = {
+                            item: {},
+                            type: typeSelected,
+                            errorText: "Error: " + err.responseText
+                        };
+//                    $("#text-danger-idsSearch").html("Error: " + err.responseText);
+                        loadHtml(context);
+                    });
+                }else{
+                    var context = {
+                        item: {},
+                        type: typeSelected,
+                        errorText: ""
+                    };
+                    loadHtml(context);
+                }
+            }
+
+            function reportsOf(getUrl, typeSelected, filter){
+                function loadItems(urlToGet){
+                    $("#table-items-reports").html('<tr><td><i class="fa fa-spinner fa-spin"></i></td></tr>');
+                    $.get(urlToGet).done(function(res){
+                        $.get("../views/reports/body.hbs").then(function(src){
+                            var template = Handlebars.compile(src), fields = ["namespace", "sctid", "status", "author", "modified_at"];
+                            if (typeSelected == "schemeId")
+                                fields = ["scheme", "schemeId", "status", "author", "modified_at"];
+                            $("#table-items-reports").html(template({items: res, fields: fields}));
+
+                            $("#table-items-reports").find(".schemeLink").unbind();
+                            $("#table-items-reports").find(".schemeLink").click(function(e){
+                                var scheme = $(e.target).attr("data-scheme"), id = $(e.target).attr("data-id");
+                                var url = "/api/scheme/" + scheme + "/ids/" +  id+ "?token=" + options.token;
+                                searchIds(url, typeSelected);
+                            });
+
+                            $("#table-items-reports").find(".sctidLink").unbind();
+                            $("#table-items-reports").find(".sctidLink").click(function(e){
+                                var id = $(e.target).attr("data-id");
+                                var url = "/api/sct/ids/" + id + "?token=" + options.token;
+                                searchIds(url + "&includeAdditionalIds=true", typeSelected);
+                            });
+                        });
+                    }).fail(function(err){
+                        console.log(err);
+                    });
+                }
+                $.get("../views/reports/main.hbs").then(function(src){
+                    var template = Handlebars.compile(src);
+                    $("#page-wrapper").html(template({type: typeSelected, filter: filter}));
+                    $("#generateIds-send-button").addClass("disabled");
+                    if (typeSelected == "schemeId"){
+                        var itemsUrl = "/api/users/" + options.username + "/schemes/?token=" + options.token;
+                        if (options.adminUser)
+                            itemsUrl = "/api/schemes?token=" + options.token;
+                        $.get(itemsUrl).done(function(result){
+                            var schemesHtml = "<option value='*'>All</option>";
+                            result.forEach(function(item){
+                                schemesHtml+= '<option value="' + item.scheme + '">' + item.scheme + '</option>';
+                            });
+                            $("#filters-reports-list").html(schemesHtml);
+                        }).fail(function(err){
+                            console.log(err);
+                        });
+                    }else if (typeSelected == "SCTID"){
+                        var itemsUrl = "/api/users/" + options.username + "/namespaces/?token=" + options.token;
+                        if (options.adminUser)
+                            itemsUrl = "/api/sct/namespaces?token=" + options.token;
+                        $.get(itemsUrl).done(function(result){
+                            var namespacesHtml = "<option value='*'>All</option>";
+                            result.forEach(function(item){
+                                namespacesHtml+= '<option value="' + item.namespace + '">' + item.namespace + '</option>';
+                            });
+                            $("#filters-reports-list").html(namespacesHtml);
+                        }).fail(function(err){
+                            console.log(err);
+                        });
+                    }
+                    $("#filters-reports-list").unbind();
+                    $("#filters-reports-list").change(function(){
+                        $("#filters-reports-list").blur();
+                        var filterA = $("#filters-reports-list").val();
+                        if (filterA == "*")
+                            loadItems(getUrl + "?token=" + options.token);
+                        else
+                            loadItems(getUrl + "?token=" + options.token + "&" + filter + "=" + filterA);
+                    });
+                    loadItems(getUrl + "?token=" + options.token);
+                });
+            }
+
+            function bulkJobs(){
+                $.get("../views/bulk/main.hbs").then(function(src){
+                    var template = Handlebars.compile(src);
+                    $("#page-wrapper").html(template());
+                    //load jobs, load first one details
+                    function loadJobId(jobId){
+                        $("#jobs-bulk-details").html("<div class='text-center'><i class='fa fa-spinner fa-spin fa-2x'></i></div>");
+                        $.get("/api/bulk/jobs/" + jobId + "?token=" + options.token).done(function(res){
+                            $.get("../views/bulk/details.hbs").then(function(src){
+                                var template = Handlebars.compile(src);
+                                Handlebars.registerHelper("convertStatus", function(status) {
+                                    switch(parseInt(status)) {
+                                    case 0:
+                                        return "Queued";
+                                        break;
+                                    case 1:
+                                        return "Running";
+                                        break;
+                                    case 2:
+                                        return "Finished OK";
+                                        break;
+                                    case 3:
+                                        return "Finished in error";
+                                        break;
+                                    default:
+                                        return status;
+                                }
+                            });
+                            res.request = JSON.parse(res.request);
+                            if (res.request.systemIds) {
+                                res.request.batchSize = res.request.systemIds.length;
+                            } else if (res.request.schemeIds) {
+                                res.request.batchSize = res.request.schemeIds.length;
+                            } else if (res.request.sctids) {
+                                res.request.batchSize = res.request.sctids.length;
+                            }
+
+                                $("#jobs-bulk-details").html(template({job: res}));
+                                //records-details-bulk-job
+                                $("#records-get-button-bulk").unbind();
+                                $("#records-get-button-bulk").disableTextSelect();
+                                $("#records-get-button-bulk").click(function(){
+                                    $("#records-get-button-bulk").addClass("disabled");
+                                    var fields = ["namespace", "sctid", "status", "author", "modified_at"], headLoaded = false;
+                                    if (res.request.model == "SchemeId")
+                                        fields = ["scheme", "schemeId", "status", "author", "modified_at"];
+                                    if ($("#records-details-bulk-job").html() != "")
+                                        headLoaded = true;
+                                    $.get("/api/bulk/jobs/" + jobId + "/records?token=" + options.token).done(function(records){
+                                        $("#records-get-button-bulk").hide();
+                                        $.get("../views/bulk/records.hbs").then(function(src){
+//                                            console.log(records);
+                                            var template = Handlebars.compile(src);
+                                            if (!headLoaded)
+                                                $("#records-details-bulk-job").html(template({items: records, fields: fields, headLoaded: headLoaded}));
+                                            else
+                                                $("#records-details-bulk-job").find("tbody").first().append(template({items: records, fields: fields, headLoaded: headLoaded}));
+                                            $("#records-details-bulk-job").find(".sctidLink").unbind();
+                                            $("#records-details-bulk-job").find(".sctidLink").click(function(e){
+                                                var id = $(e.target).attr("data-id");
+                                                var url = "/api/sct/ids/" + id + "?token=" + options.token;
+                                                searchIds(url + "&includeAdditionalIds=true", "SCTID");
+                                            });
+
+                                            $("#records-details-bulk-job").find(".schemeLink").unbind();
+                                            $("#records-details-bulk-job").find(".schemeLink").click(function(e){
+                                                var scheme = $(e.target).attr("data-scheme"), id = $(e.target).attr("data-id");
+                                                var url = "/api/scheme/" + scheme + "/ids/" +  id+ "?token=" + options.token;
+                                                searchIds(url, "schemeId");
+                                            });
+                                        });
+                                    }).fail(function(err){
+                                        console.log(err);
+                                    });
+                                });
+                            });
+                        }).fail(function(err){
+                            console.log(err);
+                        });
+                    }
+                    function loadJobs(){
+                        $.get("/api/bulk/jobs?token=" + options.token).done(function(res){
+                            $.get("../views/bulk/list.hbs").then(function(src){
+                                var template = Handlebars.compile(src);
+                                res.sort(function(a, b){
+                                    var aTime = new Date(a.created_at).getTime();
+                                    var bTime = new Date(b.created_at).getTime();
+                                    if (aTime > bTime)
+                                        return -1;
+                                    if (aTime < bTime)
+                                        return 1;
+                                    return 0;
+                                });
+                                $("#jobs-bulk-list").html(template({jobs: res}));
+                                $("#jobs-bulk-list").find(".job-link").unbind();
+                                $("#jobs-bulk-list").find(".job-link").click(function(e){
+                                    $("#jobs-bulk-list").find("li").removeClass("active");
+                                    var id = $(e.target).closest("a").attr("data-id");
+                                    $(e.target).closest("li").addClass("active");
+                                    loadJobId(id);
+                                });
+                                if ($("#jobs-bulk-list").find(".job-link")[0])
+                                    $("#jobs-bulk-list").find(".job-link").first().click();
+                            });
+                        }).fail(function(err){
+                            console.log(err);
+                        });
+                    }
+                    loadJobs();
+                });
+            }
+
+            $("#button-sctid-fromHome").unbind();
+            $("#button-sctid-fromHome").disableTextSelect();
+            $("#button-sctid-fromHome").click(function(){
+                if ($.trim($("#search-sctid-fromHome").val()) == ""){
+                    $.notify("Please put a SCTID", "info");
+                }else{
+                    var url = "/api/sct/ids/{id}?token=" + options.token;
+                    url = url.replace("{id}", $.trim($("#search-sctid-fromHome").val()));
+                    searchIds(url + "&includeAdditionalIds=true", "SCTID");
+                }
+            });
+
+            $("#search-sctid-fromHome").unbind();
+            $("#search-sctid-fromHome").keyup(function(e){
+                if (e.keyCode == 13){
+                    $("#button-sctid-fromHome").click();
+                }
+            });
+
+            $("#configure-namespaces-2").unbind();
+            $("#configure-namespaces-2").disableTextSelect();
+            $("#configure-namespaces-2").click(function(){
+                loadItems("namespaces", "/api/sct/namespaces", "namespace");
+            });
+
+            $("#configure-namespaces").unbind();
+            $("#configure-namespaces").disableTextSelect();
+            $("#configure-namespaces").click(function(){
+                loadItems("namespaces", "/api/sct/namespaces", "namespace");
+            });
+
+            $("#snomed-search-ids").unbind();
+            $("#snomed-search-ids").disableTextSelect();
+            $("#snomed-search-ids").click(function(){
+                searchIds(false, "SCTID");
+            });
+
+            $("#snomed-generate-ids").unbind();
+            $("#snomed-generate-ids").disableTextSelect();
+            $("#snomed-generate-ids").click(function(){
+                generateIds("SCTID", "/api/sct");
+            });
+
+            $("#snomed-reports").unbind();
+            $("#snomed-reports").disableTextSelect();
+            $("#snomed-reports").click(function(){
+                reportsOf("/api/sct/ids", "SCTID", "namespace");
+            });
+
+            $("#configure-schemes").unbind();
+            $("#configure-schemes").disableTextSelect();
+            $("#configure-schemes").click(function(){
+                loadItems("schemes", "/api/schemes", "scheme");
+            });
+
+            $("#schemes-generate-ids").unbind();
+            $("#schemes-generate-ids").disableTextSelect();
+            $("#schemes-generate-ids").click(function(){
+                generateIds("schemeId", "/api/scheme/{schemeName}");
+            });
+
+            $("#schemes-search-ids").unbind();
+            $("#schemes-search-ids").disableTextSelect();
+            $("#schemes-search-ids").click(function(){
+                searchIds(false, "schemeId");
+            });
+
+            $("#schemes-reports").unbind();
+            $("#schemes-reports").disableTextSelect();
+            $("#schemes-reports").click(function(){
+                reportsOf("/api/scheme/ids", "schemeId", "scheme");
+            });
+
+            $("#bulk-requests").unbind();
+            $("#bulk-requests").disableTextSelect();
+            $("#bulk-requests").click(function(){
+                bulkJobs();
+            });
+
+            $("#admin-users").unbind();
+            $("#admin-users").disableTextSelect();
+            $("#admin-users").click(function(){
+               setupAdminPanel();
+            });
+            setupAdminPanel = function(){
+                $("#page-wrapper").html('<br><br><br><br><div class="text-center"><i class="fa fa-spinner fa-spin fa-4x"></i></div>');
+                $.get("../views/admin/main.hbs").then(function(src){
+                    var template = Handlebars.compile(src);
+                    $("#page-wrapper").html(template());
+                    function loadUsersList(usersList, type, completeGroupName){
+                        $.get("../views/admin/detailsList.hbs").then(function(src){
+                            var template = Handlebars.compile(src);
+                            var context = {
+                                users: usersList,
+                                type: type
+                            };
+                            $("#selected-list-details").html(template(context));
+
+                            $("#selected-list-details").find(".remove-group").unbind();
+                            $("#selected-list-details").find(".remove-group").disableTextSelect();
+                            $("#selected-list-details").find(".remove-group").click(function(e){
+                                $("#selected-list-details").find(".btn").addClass("disabled");
+                                var userSelected = $(e.target).closest("li").attr("data-username");
+                                $.ajax({
+                                    type: "DELETE",
+                                    url: "/api/users/" + userSelected + "/groups/" + completeGroupName + "?token=" + options.token
+                                }).done(function(res){
+                                    $("#selected-list-details").find(".btn").removeClass("disabled");
+                                    $(e.target).closest("li").remove();
+                                    $.notify("Removed", "success");
+                                    loadUsers();
+                                }).fail(function(err){
+                                    $.notify("Failed", "error");
+                                    $("#selected-list-details").find(".btn").addClass("disabled");
+                                    console.log(err.message);
+                                });
+                            });
+
+                            $("#addGroup-" + type).unbind();
+                            $("#addGroup-" + type).disableTextSelect();
+                            $("#addGroup-" + type).click(function(){
+                                $("#select-user-modal").modal("show");
+                                $("#select-user-modal-body").html('<div class="text-center"><i class="fa fa-spinner fa-spin fa-2x"></i></div>');
+                                function loadSelectUsersModal(){
+                                    $.get("../views/admin/modalBody.hbs").then(function(src){
+                                        var template = Handlebars.compile(src);
+                                        var context = {
+                                            users: options.allUsers
+                                        };
+                                        $("#select-user-modal-body").html(template(context));
+
+                                        $("#select-user-modal-select-button").addClass("disabled");
+                                        $("#select-user-modal-select-button").unbind();
+                                        $("#select-user-modal-select-button").disableTextSelect();
+                                        $("#select-user-modal-select-button").click(function(){
+                                            var userSelected = $("#selectedUser-span").html();
+                                            $("#select-user-modal").find(".btn").addClass("disabled");
+                                            $.ajax({
+                                                type: "POST",
+                                                url: "/api/users/" + userSelected + "/groups/" + completeGroupName + "?token=" + options.token
+                                            }).done(function(res){
+                                                $("#select-user-modal").find(".btn").removeClass("disabled");
+                                                $("#select-user-modal").modal("hide");
+                                                $.notify("Added", "success");
+                                                if (type == "Users")
+                                                    $("#users-select-list").click();
+                                                else
+                                                    $("#admins-select-list").click();
+                                                loadUsers();
+                                            }).fail(function(err){
+                                                $("#select-user-modal").find(".btn").removeClass("disabled");
+                                                $.notify("Failed", "error");
+                                                console.log(err.message);
+                                            });
+                                        });
+
+                                        $("#select-user-modal-body").find(".selectUser").unbind();
+                                        $("#select-user-modal-body").find(".selectUser").disableTextSelect();
+                                        $("#select-user-modal-body").find(".selectUser").click(function(e){
+                                            $("#selectedUser-span").html($(e.target).closest("li").attr("data-value"));
+                                            $("#selectedUser-span").addClass("label-success");
+                                            $("#selectedUser-span").removeClass("label-danger");
+                                            $("#select-user-modal-select-button").removeClass("disabled");
+                                        });
+                                        function searchUser(){
+                                            var query = $.trim($("#users-querySearchBox").val().toLowerCase());
+                                            if (query == "") {
+                                                $("#select-user-modal-body").find(".selectUserRow").show();
+                                            }else{
+                                                $("#select-user-modal-body").find(".selectUserRow").hide();
+                                                $("#select-user-modal-body").find(".selectUserRow[data-id*=" + query + "]").show();
+                                                $("#select-user-modal-body").find(".selectUserRow[data-id=" + query + "]").show();
+                                            }
+                                        }
+                                        //
+                                        $("#users-query-clearButton").unbind();
+                                        $("#users-query-clearButton").disableTextSelect();
+                                        $("#users-query-clearButton").click(function(){
+                                            $("#users-querySearchBox").val("");
+                                            searchUser();
+                                        });
+                                        $('#users-querySearchBox').keyup(function () {
+                                            searchUser();
+                                        });
+                                    });
+                                }
+                                if (!options.allUsers){
+                                    $.get("/api/users?token=" + options.token).done(function(res){
+                                        options.allUsers = res;
+                                        loadSelectUsersModal();
+                                    }).fail(function(err){
+                                        $("#select-user-modal-body").html("");
+                                        $.notify("Failed", "error");
+                                        console.log(err.message);
+                                    });
+                                }else{
+                                    loadSelectUsersModal();
+                                }
+                            });
+                        });
+                    }
+                    $("#users-select-list").unbind();
+                    $("#users-select-list").disableTextSelect();
+                    $("#users-select-list").click(function(){
+                        $("#admins-select-list").closest("li").removeClass("active");
+                        $("#users-select-list").closest("li").addClass("active");
+                        $("#selected-list-details").html('<div class="text-center"><i class="fa fa-spinner fa-spin fa-2x"></i></div>');
+                        $.get("/api/groups/component-identifier-service-user/users?token=" + options.token).done(function(res){
+                            loadUsersList(res, "Users", "component-identifier-service-user");
+                        }).fail(function(err){
+                            $.notify("Failed", "error");
+                            console.log(err.message);
+                        });
+                    });
+
+                    $("#admins-select-list").unbind();
+                    $("#admins-select-list").disableTextSelect();
+                    $("#admins-select-list").click(function(){
+                        $("#admins-select-list").closest("li").addClass("active");
+                        $("#users-select-list").closest("li").removeClass("active");
+                        $("#selected-list-details").html('<div class="text-center"><i class="fa fa-spinner fa-spin fa-2x"></i></div>');
+                        $.get("/api/groups/component-identifier-service-admin/users?token=" + options.token).done(function(res){
+                            loadUsersList(res, "Administrators", "component-identifier-service-admin");
+                        }).fail(function(err){
+                            $.notify("Failed", "error");
+                            console.log(err.message);
+                        });
+                    });
+                    $("#users-select-list").click();
+                });
+            };
+        }
+
+        function drawPieChart(data) {
+            var plotObj = $.plot($("#flot-pie-chart"), data, {
+                series: {
+                    pie: {
+                        show: true
+                    }
+                },
+                grid: {
+                    hoverable: true
+                },
+                tooltip: true,
+                tooltipOpts: {
+                    content: "%p.0%, %s", // show percentages, rounding to 2 decimal places
+                    shifts: {
+                        x: 20,
+                        y: 0
+                    },
+                    defaultTheme: false
+                }
+            });
+
+        };
+    </script>
+</head>
+
+<body onLoad="start();">
+
+    <div id="wrapper">
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="index.html">Component Identifier Service</a>
+            </div>
+            <!-- /.navbar-header -->
+
+            <ul class="nav navbar-top-links navbar-right">
+                <!--<li class="dropdown">-->
+                    <!--<a class="dropdown-toggle" data-toggle="dropdown" href="#">-->
+                        <!--<i class="fa fa-envelope fa-fw"></i>  <i class="fa fa-caret-down"></i>-->
+                    <!--</a>-->
+                    <!--<ul class="dropdown-menu dropdown-messages">-->
+                        <!--<li>-->
+                            <!--<a href="#">-->
+                                <!--<div>-->
+                                    <!--<strong>John Smith</strong>-->
+                                    <!--<span class="pull-right text-muted">-->
+                                        <!--<em>Yesterday</em>-->
+                                    <!--</span>-->
+                                <!--</div>-->
+                                <!--<div>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque eleifend...</div>-->
+                            <!--</a>-->
+                        <!--</li>-->
+                        <!--<li class="divider"></li>-->
+                        <!--<li>-->
+                            <!--<a href="#">-->
+                                <!--<div>-->
+                                    <!--<strong>John Smith</strong>-->
+                                    <!--<span class="pull-right text-muted">-->
+                                        <!--<em>Yesterday</em>-->
+                                    <!--</span>-->
+                                <!--</div>-->
+                                <!--<div>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque eleifend...</div>-->
+                            <!--</a>-->
+                        <!--</li>-->
+                        <!--<li class="divider"></li>-->
+                        <!--<li>-->
+                            <!--<a href="#">-->
+                                <!--<div>-->
+                                    <!--<strong>John Smith</strong>-->
+                                    <!--<span class="pull-right text-muted">-->
+                                        <!--<em>Yesterday</em>-->
+                                    <!--</span>-->
+                                <!--</div>-->
+                                <!--<div>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque eleifend...</div>-->
+                            <!--</a>-->
+                        <!--</li>-->
+                        <!--<li class="divider"></li>-->
+                        <!--<li>-->
+                            <!--<a class="text-center" href="#">-->
+                                <!--<strong>Read All Messages</strong>-->
+                                <!--<i class="fa fa-angle-right"></i>-->
+                            <!--</a>-->
+                        <!--</li>-->
+                    <!--</ul>-->
+                    <!--&lt;!&ndash; /.dropdown-messages &ndash;&gt;-->
+                <!--</li>-->
+                <!--&lt;!&ndash; /.dropdown &ndash;&gt;-->
+                <!--<li class="dropdown">-->
+                    <!--<a class="dropdown-toggle" data-toggle="dropdown" href="#">-->
+                        <!--<i class="fa fa-tasks fa-fw"></i>  <i class="fa fa-caret-down"></i>-->
+                    <!--</a>-->
+                    <!--<ul class="dropdown-menu dropdown-tasks">-->
+                        <!--<li>-->
+                            <!--<a href="#">-->
+                                <!--<div>-->
+                                    <!--<p>-->
+                                        <!--<strong>Task 1</strong>-->
+                                        <!--<span class="pull-right text-muted">40% Complete</span>-->
+                                    <!--</p>-->
+                                    <!--<div class="progress progress-striped active">-->
+                                        <!--<div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: 40%">-->
+                                            <!--<span class="sr-only">40% Complete (success)</span>-->
+                                        <!--</div>-->
+                                    <!--</div>-->
+                                <!--</div>-->
+                            <!--</a>-->
+                        <!--</li>-->
+                        <!--<li class="divider"></li>-->
+                        <!--<li>-->
+                            <!--<a href="#">-->
+                                <!--<div>-->
+                                    <!--<p>-->
+                                        <!--<strong>Task 2</strong>-->
+                                        <!--<span class="pull-right text-muted">20% Complete</span>-->
+                                    <!--</p>-->
+                                    <!--<div class="progress progress-striped active">-->
+                                        <!--<div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" style="width: 20%">-->
+                                            <!--<span class="sr-only">20% Complete</span>-->
+                                        <!--</div>-->
+                                    <!--</div>-->
+                                <!--</div>-->
+                            <!--</a>-->
+                        <!--</li>-->
+                        <!--<li class="divider"></li>-->
+                        <!--<li>-->
+                            <!--<a href="#">-->
+                                <!--<div>-->
+                                    <!--<p>-->
+                                        <!--<strong>Task 3</strong>-->
+                                        <!--<span class="pull-right text-muted">60% Complete</span>-->
+                                    <!--</p>-->
+                                    <!--<div class="progress progress-striped active">-->
+                                        <!--<div class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 60%">-->
+                                            <!--<span class="sr-only">60% Complete (warning)</span>-->
+                                        <!--</div>-->
+                                    <!--</div>-->
+                                <!--</div>-->
+                            <!--</a>-->
+                        <!--</li>-->
+                        <!--<li class="divider"></li>-->
+                        <!--<li>-->
+                            <!--<a href="#">-->
+                                <!--<div>-->
+                                    <!--<p>-->
+                                        <!--<strong>Task 4</strong>-->
+                                        <!--<span class="pull-right text-muted">80% Complete</span>-->
+                                    <!--</p>-->
+                                    <!--<div class="progress progress-striped active">-->
+                                        <!--<div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100" style="width: 80%">-->
+                                            <!--<span class="sr-only">80% Complete (danger)</span>-->
+                                        <!--</div>-->
+                                    <!--</div>-->
+                                <!--</div>-->
+                            <!--</a>-->
+                        <!--</li>-->
+                        <!--<li class="divider"></li>-->
+                        <!--<li>-->
+                            <!--<a class="text-center" href="#">-->
+                                <!--<strong>See All Tasks</strong>-->
+                                <!--<i class="fa fa-angle-right"></i>-->
+                            <!--</a>-->
+                        <!--</li>-->
+                    <!--</ul>-->
+                    <!--&lt;!&ndash; /.dropdown-tasks &ndash;&gt;-->
+                <!--</li>-->
+                <!--&lt;!&ndash; /.dropdown &ndash;&gt;-->
+                <!--<li class="dropdown">-->
+                    <!--<a class="dropdown-toggle" data-toggle="dropdown" href="#">-->
+                        <!--<i class="fa fa-bell fa-fw"></i>  <i class="fa fa-caret-down"></i>-->
+                    <!--</a>-->
+                    <!--<ul class="dropdown-menu dropdown-alerts">-->
+                        <!--<li>-->
+                            <!--<a href="#">-->
+                                <!--<div>-->
+                                    <!--<i class="fa fa-comment fa-fw"></i> New Comment-->
+                                    <!--<span class="pull-right text-muted small">4 minutes ago</span>-->
+                                <!--</div>-->
+                            <!--</a>-->
+                        <!--</li>-->
+                        <!--<li class="divider"></li>-->
+                        <!--<li>-->
+                            <!--<a href="#">-->
+                                <!--<div>-->
+                                    <!--<i class="fa fa-twitter fa-fw"></i> 3 New Followers-->
+                                    <!--<span class="pull-right text-muted small">12 minutes ago</span>-->
+                                <!--</div>-->
+                            <!--</a>-->
+                        <!--</li>-->
+                        <!--<li class="divider"></li>-->
+                        <!--<li>-->
+                            <!--<a href="#">-->
+                                <!--<div>-->
+                                    <!--<i class="fa fa-envelope fa-fw"></i> Message Sent-->
+                                    <!--<span class="pull-right text-muted small">4 minutes ago</span>-->
+                                <!--</div>-->
+                            <!--</a>-->
+                        <!--</li>-->
+                        <!--<li class="divider"></li>-->
+                        <!--<li>-->
+                            <!--<a href="#">-->
+                                <!--<div>-->
+                                    <!--<i class="fa fa-tasks fa-fw"></i> New Task-->
+                                    <!--<span class="pull-right text-muted small">4 minutes ago</span>-->
+                                <!--</div>-->
+                            <!--</a>-->
+                        <!--</li>-->
+                        <!--<li class="divider"></li>-->
+                        <!--<li>-->
+                            <!--<a href="#">-->
+                                <!--<div>-->
+                                    <!--<i class="fa fa-upload fa-fw"></i> Server Rebooted-->
+                                    <!--<span class="pull-right text-muted small">4 minutes ago</span>-->
+                                <!--</div>-->
+                            <!--</a>-->
+                        <!--</li>-->
+                        <!--<li class="divider"></li>-->
+                        <!--<li>-->
+                            <!--<a class="text-center" href="#">-->
+                                <!--<strong>See All Alerts</strong>-->
+                                <!--<i class="fa fa-angle-right"></i>-->
+                            <!--</a>-->
+                        <!--</li>-->
+                    <!--</ul>-->
+                    <!--&lt;!&ndash; /.dropdown-alerts &ndash;&gt;-->
+                <!--</li>-->
+                <!--&lt;!&ndash; /.dropdown &ndash;&gt;-->
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                        <span id="user-avatar"><i class="fa fa-user fa-fw"></i></span>
+                        <style></style><span id="username-label"></span> <i class="fa fa-caret-down"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-user">
+                        <li>
+                            <a href="javascript:void(0);" id="viewProfileButton"><i class="fa fa-fw fa-user"></i> View profile</a>
+                        </li>
+                        <li>
+                            <a href="javascript:void(0);" id="logoutButton"><i class="fa fa-fw fa-power-off"></i> Log Out</a>
+                        </li>
+                    </ul>
+                    <!-- /.dropdown-user -->
+                </li>
+                <!--<li class="dropdown">-->
+                    <!--<a class="dropdown-toggle" data-toggle="dropdown" href="#">-->
+                        <!--<i class="fa fa-user fa-fw"></i>  <i class="fa fa-caret-down"></i>-->
+                    <!--</a>-->
+                    <!--<ul class="dropdown-menu dropdown-user">-->
+                        <!--<li><a href="#"><i class="fa fa-user fa-fw"></i> User Profile</a>-->
+                        <!--</li>-->
+                        <!--<li><a href="#"><i class="fa fa-gear fa-fw"></i> Settings</a>-->
+                        <!--</li>-->
+                        <!--<li class="divider"></li>-->
+                        <!--<li><a href="login.html"><i class="fa fa-sign-out fa-fw"></i> Logout</a>-->
+                        <!--</li>-->
+                    <!--</ul>-->
+                    <!--&lt;!&ndash; /.dropdown-user &ndash;&gt;-->
+                <!--</li>-->
+                <!-- /.dropdown -->
+            </ul>
+            <!-- /.navbar-top-links -->
+
+            <div class="navbar-default sidebar" role="navigation">
+                <div class="sidebar-nav navbar-collapse">
+                    <ul class="nav" id="side-menu">
+                        <li class="sidebar-search">
+                            <div class="input-group custom-search-form">
+                                <input id="search-sctid-fromHome" type="text" class="form-control" placeholder="Search...">
+                                <span class="input-group-btn">
+                                <button id="button-sctid-fromHome" class="btn btn-default" type="button">
+                                    <i class="fa fa-search"></i>
+                                </button>
+                            </span>
+                            </div>
+                            <!-- /input-group -->
+                        </li>
+                        <li>
+                            <a href="index.html"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
+                        </li>
+                        <li>
+                            <a id="configure-namespaces-2" href="javascript:void(0);"><i class="fa fa-globe fa-fw"></i> Namespaces</a>
+                        </li>
+                        <li>
+                            <a href="#"><i class="fa fa-bookmark fa-fw"></i> SNOMED CT Identifiers<span class="fa arrow"></span></a>
+                            <ul class="nav nav-second-level">
+                                <li>
+                                    <a id="configure-namespaces" href="javascript:void(0);">Configure Namespaces</a>
+                                </li>
+                                <li>
+                                    <a id="snomed-generate-ids" href="javascript:void(0);">Generate Ids</a>
+                                </li>
+                                <li>
+                                    <a id="snomed-search-ids" href="javascript:void(0);">Search Ids</a>
+                                </li>
+                                <li>
+                                    <a id="snomed-reports" href="javascript:void(0);">Reports</a>
+                                </li>
+                            </ul>
+                            <!-- /.nav-second-level -->
+                        </li>
+                        <li>
+                            <a href="#"><i class="fa fa-bookmark-o fa-fw"></i> Identifier Schemes<span class="fa arrow"></span></a>
+                            <ul class="nav nav-second-level">
+                                <li>
+                                    <a id="configure-schemes" href="javascript:void(0);">Configure Schemes</a>
+                                </li>
+                                <li>
+                                    <a id="schemes-generate-ids" href="javascript:void(0);">Generate Ids</a>
+                                </li>
+                                <li>
+                                    <a id="schemes-search-ids" href="javascript:void(0);">Search Ids</a>
+                                </li>
+                                <li>
+                                    <a id="schemes-reports" href="javascript:void(0);">Reports</a>
+                                </li>
+                            </ul>
+                            <!-- /.nav-second-level -->
+                        </li>
+                        <li>
+                            <a id="bulk-requests" href="#" ><i class="fa fa-truck fa-fw"></i> Bulk requests</a>
+                        </li>
+                        <li>
+                            <a href="/api/swagger-ui/index.html" target="_blank"><i class="fa fa-code fa-fw"></i> API Documentation</a>
+                        </li>
+                       <!-- <li>
+                            <a href="https://confluence.ihtsdotools.org/x/DICQ" target="_blank"><i class="fa fa-book fa-fw"></i> Confluence Site</a>
+                        </li>
+                        <li>
+                            <a href="https://jira.ihtsdotools.org/projects/ICIS" target="_blank"><i class="fa fa-tags fa-fw"></i> Jira Site</a>
+                        </li>
+                        <li>
+                            <a href="https://github.com/termMed/component-identifier-service" target="_blank"><i class="fa fa-github fa-fw"></i> GitHub</a>
+                        </li>
+                        <li>
+                            <a href="javascript:void(0);" id="admin-users"><i class="fa fa-tasks fa-fw"></i> Admin</a>
+                        </li> -->
+                         <!-- /.nav-second-level -->
+                    </ul>
+                </div>
+                <!-- /.sidebar-collapse -->
+            </div>
+            <!-- /.navbar-static-side -->
+        </nav>
+
+        <div id="page-wrapper">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1 class="page-header">Dashboard</h1>
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+            <!-- /.row -->
+            <div class="row">
+                <div class="col-lg-3 col-md-6">
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    <i class="fa fa-inbox fa-5x"></i>
+                                </div>
+                                <div class="col-xs-9 text-right">
+                                    <div id="namespaces-count-stats" class="huge"><i class="fa fa-spinner fa-spin"></i></div>
+                                    <div>Namespaces</div>
+                                </div>
+                            </div>
+                        </div>
+                        <a href='javascript:loadItems("namespaces", "/api/sct/namespaces", "namespace");'>
+                            <div class="panel-footer">
+                                <span class="pull-left">View Details</span>
+                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                                <div class="clearfix"></div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="panel panel-green">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    <i class="fa fa-tag fa-5x"></i>
+                                </div>
+                                <div class="col-xs-9 text-right">
+                                    <div id="schemes-count-stats" class="huge"><i class="fa fa-spinner fa-spin"></i></div>
+                                    <div>Identifier Schemes</div>
+                                </div>
+                            </div>
+                        </div>
+                        <a href='javascript:loadItems("schemes", "/api/schemes", "scheme");'>
+                            <div class="panel-footer">
+                                <span class="pull-left">View Details</span>
+                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                                <div class="clearfix"></div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="panel panel-yellow">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    <i class="fa fa-rocket fa-5x"></i>
+                                </div>
+                                <div class="col-xs-9 text-right">
+                                    <div class="huge">+50</div>
+                                    <div>REST Api calls</div>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="/docs" target="_blank">
+                            <div class="panel-footer">
+                                <span class="pull-left">View Details</span>
+                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                                <div class="clearfix"></div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="panel panel-red">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    <i class="fa fa-users fa-5x"></i>
+                                </div>
+                                <div class="col-xs-9 text-right">
+                                    <div id="users-count-stats" class="huge"><i class="fa fa-spinner fa-spin"></i></div>
+                                    <div>Users</div>
+                                </div>
+                            </div>
+                        </div>
+                        <a href='javascript:setupAdminPanel();'>
+                            <div class="panel-footer">
+                                <span class="pull-left">View Details</span>
+                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                                <div class="clearfix"></div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <!-- /.row -->
+            <div class="row">
+                <div class="col-lg-8">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        Namespaces distribution
+                    </div>
+                    <!-- /.panel-heading -->
+                    <div class="panel-body">
+                        <div class="flot-chart">
+                            <div class="flot-chart-content" id="flot-pie-chart"></div>
+                        </div>
+                    </div>
+                    <!-- /.panel-body -->
+                </div>
+                </div>
+                <!-- /.panel -->
+                <!-- /.col-lg-8 -->
+                <!--<div class="col-lg-4">-->
+                   <!-- <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <i class="fa fa-bell fa-fw"></i> News
+                        </div>-->
+                        <!-- /.panel-heading -->
+                      <!--  <div class="panel-body">
+                            <div class="list-group">
+                                <a href="#" class="list-group-item">
+                                    <i class="fa fa-comment fa-fw"></i> New version available
+                                    <span class="pull-right text-muted small"><em>July 27th</em>
+                                    </span>
+                                    <br><br>
+                                    <p>The draft version is available in this URL. Individual requests implemented.</p>
+                                </a>
+                                <a href="#" class="list-group-item">
+                                    <i class="fa fa-comment fa-fw"></i> New legacy ids generation option
+                                    <span class="pull-right text-muted small"><em>July 26th</em>
+                                    </span>
+                                    <br><br>
+                                    <p>Passing the "generateLegacyIds" parameter as true will generate SNOMEDIDs and CTV3IDs along the SCTIDs in a single call.</p>
+                                </a>
+                                <a href="#" class="list-group-item">
+                                    <i class="fa fa-comment fa-fw"></i> Admin site refresh
+                                    <span class="pull-right text-muted small"><em>July 25th</em>
+                                    </span>
+                                    <br><br>
+                                    <p>Schemes and Nameces admin implemented. Ids view draft. The admin site dashboard is a placeholder.</p>
+                                </a>
+                            </div>-->
+                            <!-- /.list-group -->
+                       <!-- </div> -->
+                        <!-- /.panel-body -->
+                   <!-- </div> -->
+                    <!-- /.panel -->
+                <!--</div>-->
+                <!-- /.col-lg-4 -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /#page-wrapper -->
+
+    </div>
+    <!-- /#wrapper -->
+
+    <!--User Profile Modal-->
+    <div class="modal fade" id="user-profile-modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                    <h4 class="modal-title">Profile</h4>
+                </div>
+                <div class="modal-body" id="user-profile-body">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+    <!-- jQuery -->
+    <script src="../bower_components/jquery/dist/jquery.min.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+
+    <!-- Metis Menu Plugin JavaScript -->
+    <script src="../bower_components/metisMenu/dist/metisMenu.min.js"></script>
+
+    <!-- Morris Charts JavaScript -->
+    <script src="../bower_components/raphael/raphael-min.js"></script>
+    <!--<script src="../bower_components/morrisjs/morris.min.js"></script>-->
+    <!--<script src="../js/morris-data.js"></script>-->
+
+    <!-- Flot Charts JavaScript -->
+    <script src="../bower_components/flot/excanvas.min.js"></script>
+    <script src="../bower_components/flot/jquery.flot.js"></script>
+    <script src="../bower_components/flot/jquery.flot.pie.js"></script>
+    <script src="../bower_components/flot/jquery.flot.resize.js"></script>
+    <script src="../bower_components/flot/jquery.flot.time.js"></script>
+    <script src="../bower_components/flot.tooltip/js/jquery.flot.tooltip.min.js"></script>
+    <!--<script src="../js/flot-data.js"></script>-->
+
+    <!-- Custom Theme JavaScript -->
+    <script src="../dist/js/sb-admin-2.js"></script>
+    <script src="../js/authentication.js"></script>
+    <script src="../js/notify.js"></script>
+    <script src="../js/variables.js"></script>
+    <script src="../js/handlebars-v1.3.0.js"></script>
+</body>
+
+</html>
