@@ -15,13 +15,4 @@ public class ValidationUtil {
             throw new CisException(HttpStatus.BAD_REQUEST, "password cannot be empty");
     }
 
-    public static void validateSctBulkGenerate(SCTIDBulkGenerationRequestDto sctidBulkGenerationRequestDto) throws CisException {
-        if(sctidBulkGenerationRequestDto.getQuantity() <= 0)
-            throw new CisException(HttpStatus.BAD_REQUEST, "quantity value must be positive number");
-        if(sctidBulkGenerationRequestDto.getSystemIds() == null)
-            throw new CisException(HttpStatus.BAD_REQUEST, "systemIds missing");
-        if(sctidBulkGenerationRequestDto.getQuantity() != sctidBulkGenerationRequestDto.getSystemIds().size())
-            throw new CisException(HttpStatus.BAD_REQUEST, "quantity does not match number of systemIds");
-    }
-
 }

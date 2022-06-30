@@ -27,8 +27,6 @@ import java.util.stream.Collectors;
 @Service
 public class BackendJobService {
 
-    //  private final Logger logger = LoggerFactory.getLogger(BackendJobService.class);
-
     @Autowired
     SchemeIdService schemeIdService;
 
@@ -160,7 +158,6 @@ public class BackendJobService {
         Map<String, String> objQuery5 = new HashMap<String, String>();
 
         Optional<BulkJob> bulkJobsRecord = bulkJobRepository.findTopByStatusOrderByCreated_at("0");
-        //List<BulkJob> bulkJobsRecord = bulkJobService.findFieldSelect(objQuery3, objQuery4, 1, null, objQuery5);
         if (bulkJobsRecord.isPresent()) {
             Map<String, Object> lightJob = new HashMap<String, Object>();
             lightJob.put("id", bulkJobsRecord.get().getId());
@@ -206,11 +203,10 @@ public class BackendJobService {
                             ||
                             ((jobType.RESERVE_SCTIDS).equalsIgnoreCase(requestJson.getString("type")))
             ) {
-                // logger.info("inside Generate or Reserve Sctid");
                 JSONArray list = null;
-                if (requestJson.has("systemIds"))
+                if (requestJson.has("systemIds") && !("null".equalsIgnoreCase(requestJson.get("systemIds").toString()))
+                && requestJson.getJSONArray("systemIds").length()>0)
                     list = (JSONArray) requestJson.get("systemIds");
-                // ArrayList list= (ArrayList) requestJson.get("systemIds");
                 Integer quantity = (Integer) requestJson.get("quantity");
                 requestJson.put("autoSysId", false);
                 if (null == list) {
@@ -244,7 +240,6 @@ public class BackendJobService {
                     //lightJob.put("log","Sctid Not Processed."+e.getMessage());
                 }
                 try {
-                    // logger.info("In updateBulkJobStatus");
                     if (jobType.GENERATE_SCTIDS.equalsIgnoreCase(requestJson.getString("type"))) {
                         requestJson.remove("autoSysId");
                         if (requestJson.has("scheme"))
@@ -350,7 +345,8 @@ public class BackendJobService {
                 bulkJobRepository.updateBulkJobStatus(updatedStatus, log, requestJson.getInt("jobId"));
             } else if ((jobType.RESERVE_SCHEMEIDS).equalsIgnoreCase(requestJson.getString("type"))) {
                 JSONArray list = null;
-                if (requestJson.has("systemIds"))
+                if (requestJson.has("systemIds") && !("null".equalsIgnoreCase(requestJson.get("systemIds").toString()))
+                        && requestJson.getJSONArray("systemIds").length()>0)
                     list = requestJson.getJSONArray("systemIds");
                 Integer quantity = (Integer) requestJson.get("quantity");
                 requestJson.put("autoSysId", false);
@@ -573,21 +569,18 @@ public class BackendJobService {
     }
 
     public SchemeId getFreeRecords(String schemeName, String schemeid, String systemId) throws CisException {
-        // logger.debug("Request Received : schemeName-{} :: schemeid - {} ", schemeName, schemeid);
         Map<String, Object> schemeIdRecord = getNewRecord(schemeName, schemeid, systemId);
         schemeIdRecord.put("status", stateMachine.statuses.get("available"));
         return schemeIdService.insertSchemeIdRecord(schemeIdRecord);
     }
 
     private Map<String, Object> getNewRecord(String schemeName, String schemeid, String systemId) {
-        // logger.debug("Request Received : schemeName-{} :: schemeid - {} ", schemeName, schemeid);
         Map<String, Object> schemeIdRecord = new LinkedHashMap<>();
         schemeIdRecord.put("scheme", schemeName);
         schemeIdRecord.put("schemeId", schemeid);
         schemeIdRecord.put("sequence", null);
         schemeIdRecord.put("checkDigit", null);
         schemeIdRecord.put("systemId", (!(systemId.isBlank())) ? systemId : sctIdHelper.guid());
-        //  logger.info("getNewRecord():Response - {}", schemeIdRecord);
         return schemeIdRecord;
     }
 
@@ -608,10 +601,6 @@ public class BackendJobService {
                         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                         expirationDateTime = LocalDate.parse(str, formatter).atStartOfDay();
                     }
-           /* JSONArray systemIdList =  generationData.getJSONArray("systemIds");
-            if (null != systemIdList && systemIdList.length() > 0) {
-                schemeList.get(0).setSystemId(systemIdList.getString(0));
-            }*/
                     schemeList.get(0).setSystemId(generationData.getString("systemId"));
                     schemeList.get(0).setStatus(newStatus);
                     schemeList.get(0).setAuthor(generationData.getString("author"));
@@ -654,11 +643,8 @@ public class BackendJobService {
         }
         String sql;
         if ((limitR > 0) && (skipTo == 0)) {
-            //sql = "SELECT * FROM sctId" + swhere + " order by sctid limit " + limit;
-
             sql = "Select * FROM schemeid " + swhere + " order by schemeid limit " + limit;
         } else {
-            //sql = "SELECT * FROM sctId" + swhere + " order by sctid";
             sql = "Select * FROM sctid " + swhere + " order by schemeid";
         }
         Query genQuery = entityManager.createNativeQuery(sql, SchemeId.class);
@@ -790,11 +776,9 @@ public class BackendJobService {
 
 
     private String updateSctids(JSONObject record) throws CisException {
-        //var cont = 0;
         List<Sctid> records = new ArrayList<>();
         boolean error = false;
         JSONArray sctidList = record.getJSONArray("sctids");
-        //String[] sctidList = (String[]) record.get("sctids");
         for (var i = 0; i < sctidList.length(); i++) {
             var sctId = sctidList.get(i);
             Optional<Sctid> sctIdRecord;
@@ -1041,12 +1025,10 @@ public class BackendJobService {
     }
 
     private String generateSctids(JSONObject record) throws CisException {
-        // logger.info("In Generate Sct core method");
         List<Sctid> insertedRecords = new ArrayList<>();
         Map<String, Object> obj = new HashMap<String, Object>();
         obj.put("namespace", record.get("namespace"));
         obj.put("partitionId", record.get("partitionId"));
-        //
         var newStatus = stateMachine.getNewStatus(stateMachine.statuses.get("available"), record.getString("action"));
         Set<String> sysIdInChunk = new HashSet<String>();
         int insertedCount = 0;
@@ -1143,7 +1125,6 @@ public class BackendJobService {
                         }
                         insertedCount += records.size();
                         insertedRecords = sctidRepository.saveAll(records);
-                        // logger.info("In Generate Sct core method ENd:"+insertedRecords.size());
                     }
                     sysIdInChunk.clear();
                 }

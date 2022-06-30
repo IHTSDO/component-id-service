@@ -80,7 +80,6 @@ public class BulkSctidController {
 
     @PostMapping("/sct/bulk/generate")
     public ResponseEntity<BulkJobResponseDto> generateSctids(@RequestParam String token, @RequestBody @Valid SCTIDBulkGenerationRequestDto sctidBulkGenerationRequestDto, @ApiIgnore Authentication authentication) throws CisException {
-        ValidationUtil.validateSctBulkGenerate(sctidBulkGenerationRequestDto);
         Token authToken = (Token) authentication;
         logger.info("Request received for - SCTIDBulkGenerationRequestDto :: {} - AuthenticateResponseDTo :: {}", sctidBulkGenerationRequestDto, authToken.getAuthenticateResponseDto());
         return ResponseEntity.ok(service.generateSctids(authToken.getAuthenticateResponseDto(), sctidBulkGenerationRequestDto));

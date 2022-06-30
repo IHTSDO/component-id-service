@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -309,6 +310,7 @@ public class BulkSctidService {
 
     }
 
+
     public BulkJobResponseDto generateSctids(AuthenticateResponseDto token, SCTIDBulkGenerationRequestDto sctidBulkGenerationRequestDto) throws CisException {
         logger.debug("BulkSctidService.generateSctids() token-{} :: sctidBulkGenerationRequestDto-{} :", token, sctidBulkGenerationRequestDto);
         SctidBulkGenerate bulkGenerate = new SctidBulkGenerate();
@@ -325,13 +327,14 @@ public class BulkSctidService {
             logger.error("error generateSctids():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
-
+        if(null!=sctidBulkGenerationRequestDto.getQuantity() && sctidBulkGenerationRequestDto.getQuantity() <= 0)
+            throw new CisException(HttpStatus.BAD_REQUEST, "quantity value must be positive number");
         if (((sctidBulkGenerationRequestDto.getNamespace() == 0) && (!"0".equalsIgnoreCase(sctidBulkGenerationRequestDto.getPartitionId().substring(0, 1))))
                 || (0 != (sctidBulkGenerationRequestDto.getNamespace()) && (!"1".equalsIgnoreCase(sctidBulkGenerationRequestDto.getPartitionId().substring(0, 1))))) {
             logger.error("error generateSctids():: Namespace and partitionId parameters are not consistent.");
             throw new CisException(HttpStatus.BAD_REQUEST, "Namespace and partitionId parameters are not consistent.");
         }
-        if ((sctidBulkGenerationRequestDto.getSystemIds().size() != 0 && (sctidBulkGenerationRequestDto.getSystemIds().size() != sctidBulkGenerationRequestDto.getQuantity()))) {
+        if ((null!=bulkGenerate.getSystemIds() && sctidBulkGenerationRequestDto.getSystemIds().size()> 0 && (sctidBulkGenerationRequestDto.getSystemIds().size() != sctidBulkGenerationRequestDto.getQuantity()))) {
             logger.error("error generateSctids():: SystemIds quantity is not equal to quantity requirement");
             throw new CisException(HttpStatus.BAD_REQUEST, "SystemIds quantity is not equal to quantity requirement");
         }
@@ -343,8 +346,12 @@ public class BulkSctidService {
         bulkGenerate.type = jobType.GENERATE_SCTIDS;
         logger.info("near GENERATE_SCTIDS from jobType set value:"+bulkGenerate.type);
         logger.info("near GENERATE_SCTIDS from jobType set value get waty:"+bulkGenerate.getType());
-        if ((sctidBulkGenerationRequestDto.getSystemIds() != null || sctidBulkGenerationRequestDto.getSystemIds().size() == 0) &&
-                ("TRUE".equalsIgnoreCase((sctidBulkGenerationRequestDto.getGenerateLegacyIds())) && ("0".equalsIgnoreCase(sctidBulkGenerationRequestDto.getPartitionId().substring(1, 1))))) {
+
+        if (
+                ((null==bulkGenerate.getSystemIds()) || (null!=bulkGenerate.getSystemIds() && sctidBulkGenerationRequestDto.getSystemIds().size() == 0))
+                &&
+                (null!=bulkGenerate.getGenerateLegacyIds() && "TRUE".equalsIgnoreCase((sctidBulkGenerationRequestDto.getGenerateLegacyIds()))
+                        && ("0".equalsIgnoreCase(sctidBulkGenerationRequestDto.getPartitionId().substring(1))))) {
             List<String> arrayUid = new ArrayList<>();
             for (int i = 0; i < sctidBulkGenerationRequestDto.getQuantity(); i++) {
                 arrayUid.add(SctIdHelper.guid());
@@ -371,7 +378,7 @@ public class BulkSctidService {
         bulkJob.setRequest(jsonFormattedString);
         bulkJob = bulkJobRepository.save(bulkJob);
 
-        if (/*bulkGenerate.isAutoSysId() != null*/  ("true".equalsIgnoreCase(bulkGenerate.getGenerateLegacyIds()) && ("0".equalsIgnoreCase(bulkGenerate.getPartitionId().substring(1, 1))))) {
+        if (/*bulkGenerate.isAutoSysId() != null*/  ("true".equalsIgnoreCase(bulkGenerate.getGenerateLegacyIds()) && ("0".equalsIgnoreCase(bulkGenerate.getPartitionId().substring(1))))) {
             // SCTIDBulkGenerationRequestDto generationMetaData = sctidBulkGenerationRequestDto.copy();
             SctidBulkGenerate bulkGenerate1 = bulkGenerate.copy();
             bulkGenerate.model = modelsConstants.SCHEME_ID;
