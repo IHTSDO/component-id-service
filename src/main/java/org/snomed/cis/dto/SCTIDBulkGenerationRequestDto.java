@@ -100,4 +100,16 @@ public class SCTIDBulkGenerationRequestDto {
         return copyObj;
     }
 
+    @Override
+    public String toString() {
+        return "{" +
+                "namespace=" + namespace +
+                ", partitionId='" + partitionId + '\'' +
+                ", quantity=" + quantity +
+                ", systemIds=" + systemIds +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                ", generateLegacyIds='" + generateLegacyIds + '\'' +
+                '}';
+    }
 }

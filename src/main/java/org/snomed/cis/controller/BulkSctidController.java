@@ -12,7 +12,6 @@ import org.snomed.cis.exception.CisException;
 import org.snomed.cis.repository.SctidRepository;
 import org.snomed.cis.security.Token;
 import org.snomed.cis.service.BulkSctidService;
-import org.snomed.cis.util.ValidationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -81,7 +80,7 @@ public class BulkSctidController {
     @PostMapping("/sct/bulk/generate")
     public ResponseEntity<BulkJobResponseDto> generateSctids(@RequestParam String token, @RequestBody @Valid SCTIDBulkGenerationRequestDto sctidBulkGenerationRequestDto, @ApiIgnore Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        logger.info("Request received for - SCTIDBulkGenerationRequestDto :: {} - AuthenticateResponseDTo :: {}", sctidBulkGenerationRequestDto, authToken.getAuthenticateResponseDto());
+        logger.info("Request received from user {} - request :: {}",((Token) authentication).getUserName(), sctidBulkGenerationRequestDto);
         return ResponseEntity.ok(service.generateSctids(authToken.getAuthenticateResponseDto(), sctidBulkGenerationRequestDto));
     }
 
