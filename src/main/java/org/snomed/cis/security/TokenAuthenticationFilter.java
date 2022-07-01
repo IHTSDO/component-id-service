@@ -5,8 +5,10 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 
@@ -99,6 +101,16 @@ public class TokenAuthenticationFilter extends AbstractAuthenticationProcessingF
 
         SecurityContextHolder.getContext().setAuthentication(authResult);
         chain.doFilter(request, response);
+    }
+
+    @Override
+    protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException {
+        SecurityContextHolder.clearContext();
+        JSONObject errorResponse = new JSONObject();
+        errorResponse.put("message",exception.getMessage());
+        response.setStatus(HttpStatus.FORBIDDEN.value());
+        response.setContentType("application/json");
+        response.getOutputStream().println(errorResponse.toString());
     }
 
     private boolean isPublicEndpointRequest(HttpServletRequest request) {
