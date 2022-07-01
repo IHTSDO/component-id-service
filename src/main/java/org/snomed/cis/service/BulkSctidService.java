@@ -22,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -312,7 +311,6 @@ public class BulkSctidService {
 
 
     public BulkJobResponseDto generateSctids(AuthenticateResponseDto token, SCTIDBulkGenerationRequestDto sctidBulkGenerationRequestDto) throws CisException {
-        logger.debug("BulkSctidService.generateSctids() token-{} :: sctidBulkGenerationRequestDto-{} :", token, sctidBulkGenerationRequestDto);
         SctidBulkGenerate bulkGenerate = new SctidBulkGenerate();
         bulkGenerate.setNamespace(sctidBulkGenerationRequestDto.getNamespace());
         bulkGenerate.setPartitionId(sctidBulkGenerationRequestDto.getPartitionId());
@@ -342,10 +340,7 @@ public class BulkSctidService {
         bulkGenerate.setAuthor(token.getName());
         bulkGenerate.model = modelsConstants.SCTID;
         //bulkGenerate.setType(jobType.GENERATE_SCTIDS);
-        logger.info("near GENERATE_SCTIDS from jobType Static avlue:"+jobType.GENERATE_SCTIDS);
         bulkGenerate.type = jobType.GENERATE_SCTIDS;
-        logger.info("near GENERATE_SCTIDS from jobType set value:"+bulkGenerate.type);
-        logger.info("near GENERATE_SCTIDS from jobType set value get waty:"+bulkGenerate.getType());
 
         if (
                 ((null==bulkGenerate.getSystemIds()) || (null!=bulkGenerate.getSystemIds() && sctidBulkGenerationRequestDto.getSystemIds().size() == 0))
@@ -363,8 +358,6 @@ public class BulkSctidService {
         ObjectMapper objectMapper = new ObjectMapper();
         String reqAsString = "";
         try {
-            logger.info("near GENERATE_SCTIDS from jobType set value in try:"+bulkGenerate.type);
-            logger.info("near GENERATE_SCTIDS from jobType set value get waty in try:"+bulkGenerate.getType());
             reqAsString = objectMapper.writeValueAsString(bulkGenerate);
         } catch (JsonProcessingException e) {
             throw new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "error while parsing json");
@@ -437,7 +430,6 @@ public class BulkSctidService {
 
                         } else {
                             BulkJobResponseDto bulkJobResponseDto = new BulkJobResponseDto(bulkJob);
-                            logger.info("BulkSchemeIdService.generateSctids() - Response :: {}", bulkJobResponseDto);
                             return bulkJobResponseDto;
                         }
                     }
@@ -446,7 +438,6 @@ public class BulkSctidService {
             }
         } else {
             BulkJobResponseDto bulkJobResponseDto = new BulkJobResponseDto(bulkJob);
-            logger.info("BulkSctidService.generateSctids() - Response :: {}", bulkJobResponseDto);
             return bulkJobResponseDto;
         }
 

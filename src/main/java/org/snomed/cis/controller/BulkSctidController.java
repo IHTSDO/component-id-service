@@ -21,6 +21,8 @@ import springfox.documentation.annotations.ApiIgnore;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Api(tags = "SCTIDS - Bulk Operations", value = "SCTIDS - Bulk Operations")
@@ -79,9 +81,13 @@ public class BulkSctidController {
 
     @PostMapping("/sct/bulk/generate")
     public ResponseEntity<BulkJobResponseDto> generateSctids(@RequestParam String token, @RequestBody @Valid SCTIDBulkGenerationRequestDto sctidBulkGenerationRequestDto, @ApiIgnore Authentication authentication) throws CisException {
+        Instant start = Instant.now();
         Token authToken = (Token) authentication;
         logger.info("Request received from user {} - request :: {}",((Token) authentication).getUserName(), sctidBulkGenerationRequestDto);
-        return ResponseEntity.ok(service.generateSctids(authToken.getAuthenticateResponseDto(), sctidBulkGenerationRequestDto));
+        BulkJobResponseDto bulkJobResponseDto = service.generateSctids(authToken.getAuthenticateResponseDto(), sctidBulkGenerationRequestDto);
+        Instant end = Instant.now();
+        logger.info("Job {} for user '{}' completed successfully in {} seconds", bulkJobResponseDto.getJobId(), authToken.getUserName(), ChronoUnit.SECONDS.between(start,end));
+        return ResponseEntity.ok(bulkJobResponseDto);
     }
 
     @PutMapping("/sct/bulk/deprecate")
