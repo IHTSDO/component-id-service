@@ -1,10 +1,12 @@
 package org.snomed.cis.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.snomed.cis.domain.BulkJob;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class BulkJobResponseDto {
 
     private Integer id;
@@ -16,11 +18,10 @@ public class BulkJobResponseDto {
     private String request;
     private LocalDateTime created_at;
     private LocalDateTime requested_at;
-    //private String log;
-    private List<String> additionalJobs;
+    private List<BulkJob> additionalJobs;
     public String type;
     public String systemId[];
-    public int quantity;
+    public Integer quantity;
     public Boolean autoSysId;
     private String partitionId;
     public Integer jobId;
@@ -83,11 +84,11 @@ public class BulkJobResponseDto {
         this.sctid = sctid;
     }
 
-    public int getQuantity() {
+    public Integer getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(int quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 
@@ -156,25 +157,14 @@ public class BulkJobResponseDto {
         this.type = type;
     }
 
-    public BulkJobResponseDto(Integer id, String name, String status, String request, LocalDateTime created_at, LocalDateTime requested_at, String log, List<String> additionalJobs) {
-        this.id = id;
-        this.name = name;
-        this.status = status;
-        this.request = request;
-        this.created_at = created_at;
-        this.requested_at = requested_at;
-        //this.log = log;
-        this.additionalJobs = additionalJobs;
-    }
-
-    public BulkJobResponseDto(BulkJob bulkJob) {
+    public BulkJobResponseDto(BulkJob bulkJob, List<BulkJob> additionalJobs) {
         this.id = bulkJob.getId();
         this.name = bulkJob.getName();
         this.status = bulkJob.getStatus();
         this.request = bulkJob.getRequest();
         this.created_at = bulkJob.getCreated_at();
         this.requested_at = bulkJob.getModified_at();
-        //this.log = bulkJob.getLog();
+        this.additionalJobs = additionalJobs;
     }
 
     public Integer getId() {
@@ -225,19 +215,11 @@ public class BulkJobResponseDto {
         this.requested_at = requested_at;
     }
 
-   /* public String getLog() {
-        return log;
-    }
-
-    public void setLog(String log) {
-        this.log = log;
-    }*/
-
-    public List<String> getAdditionalJobs() {
+    public List<BulkJob> getAdditionalJobs() {
         return additionalJobs;
     }
 
-    public void setAdditionalJobs(List<String> additionalJobs) {
+    public void setAdditionalJobs(List<BulkJob> additionalJobs) {
         this.additionalJobs = additionalJobs;
     }
 

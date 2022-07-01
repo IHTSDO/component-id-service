@@ -354,7 +354,7 @@ public class BulkSctidService {
             bulkGenerate.setSystemIds(arrayUid);
             bulkGenerate.setAutoSysId(true);
         }
-        List<String> additionalJob = new ArrayList<>();
+        List<BulkJob> additionalJob = new ArrayList<>();
         ObjectMapper objectMapper = new ObjectMapper();
         String reqAsString = "";
         try {
@@ -386,7 +386,7 @@ public class BulkSctidService {
                     String genAsStringFormat = reqAsString.replaceAll("\\\\", "");
                     bulkJobScheme.setRequest(genAsStringFormat);
                     bulkJobScheme = bulkJobRepository.save(bulkJobScheme);
-                    additionalJob.add(bulkJob.toString());
+                    additionalJob.add(bulkJobScheme);
                     if (isSchemeAbleUser("CTV3ID", token)) {
                         if (able) {
                             //   SCTIDBulkGenerationRequestDto generationCTV3IDMetadata = generationMetaData.copy();
@@ -398,15 +398,13 @@ public class BulkSctidService {
                             String genMetaAsStrFormat = reqAsString.replaceAll("\\\\", "");
                             bulkJobSchemeCTV.setRequest(genMetaAsStrFormat);
                             bulkJobSchemeCTV = bulkJobRepository.save(bulkJobSchemeCTV);
-                            additionalJob.add(bulkJobSchemeCTV.toString());
-                            BulkJobResponseDto bulkJobResponseDto = new BulkJobResponseDto(bulkJob);
-                            bulkJobResponseDto.setAdditionalJobs(additionalJob);
+                            additionalJob.add(bulkJobSchemeCTV);
+                            BulkJobResponseDto bulkJobResponseDto = new BulkJobResponseDto(bulkJob,additionalJob);
                             return bulkJobResponseDto;
 
                         }//if(able)
                         else {
-                            BulkJobResponseDto bulkJobResponseDto = new BulkJobResponseDto(bulkJob);
-                            bulkJobResponseDto.setAdditionalJobs(additionalJob);
+                            BulkJobResponseDto bulkJobResponseDto = new BulkJobResponseDto(bulkJob,additionalJob);
                             return bulkJobResponseDto;
                         }
 
@@ -423,13 +421,12 @@ public class BulkSctidService {
                             String genCTVAsStrFormat = reqAsString.replaceAll("\\\\", "");
                             bulkJobCtvMetaData.setRequest(genCTVAsStrFormat);
                             bulkJobCtvMetaData = bulkJobRepository.save(bulkJobCtvMetaData);
-                            additionalJob.add(bulkJobCtvMetaData.toString());
-                            BulkJobResponseDto bulkJobResponseDto = new BulkJobResponseDto(bulkJob);
-                            bulkJobResponseDto.setAdditionalJobs(additionalJob);
+                            additionalJob.add(bulkJobCtvMetaData);
+                            BulkJobResponseDto bulkJobResponseDto = new BulkJobResponseDto(bulkJob,additionalJob);
                             return bulkJobResponseDto;
 
                         } else {
-                            BulkJobResponseDto bulkJobResponseDto = new BulkJobResponseDto(bulkJob);
+                            BulkJobResponseDto bulkJobResponseDto = new BulkJobResponseDto(bulkJob,additionalJob);
                             return bulkJobResponseDto;
                         }
                     }
@@ -437,7 +434,7 @@ public class BulkSctidService {
                 }
             }
         } else {
-            BulkJobResponseDto bulkJobResponseDto = new BulkJobResponseDto(bulkJob);
+            BulkJobResponseDto bulkJobResponseDto = new BulkJobResponseDto(bulkJob,additionalJob);
             return bulkJobResponseDto;
         }
 
