@@ -68,16 +68,18 @@ public class TokenAuthenticationFilter extends AbstractAuthenticationProcessingF
         } else if (uri.endsWith("/sct/namespaces")) {
             tokenOptional = Optional.empty();
             String cookieHeaderValue = request.getHeader("cookie");
-            Optional<String> tsAuthorCookieStringOpt = Arrays.stream(cookieHeaderValue.split(";")).filter(c -> c.contains("ts-author")).findAny();
-            if (tsAuthorCookieStringOpt.isPresent()) {
-                String cookieValue = tsAuthorCookieStringOpt.get().substring(tsAuthorCookieStringOpt.get().indexOf("=") + 1);
-                try {
-                    JSONObject cookieValueJsonObj = new JSONObject(cookieValue);
-                    if (cookieValueJsonObj.has("token")) {
-                        tokenOptional = Optional.ofNullable(cookieValueJsonObj.getString("token"));
+            if (cookieHeaderValue != null) {
+                Optional<String> tsAuthorCookieStringOpt = Arrays.stream(cookieHeaderValue.split(";")).filter(c -> c.contains("ts-author")).findAny();
+                if (tsAuthorCookieStringOpt.isPresent()) {
+                    String cookieValue = tsAuthorCookieStringOpt.get().substring(tsAuthorCookieStringOpt.get().indexOf("=") + 1);
+                    try {
+                        JSONObject cookieValueJsonObj = new JSONObject(cookieValue);
+                        if (cookieValueJsonObj.has("token")) {
+                            tokenOptional = Optional.ofNullable(cookieValueJsonObj.getString("token"));
+                        }
+                    } catch (Exception e) {
+                        tokenOptional = Optional.empty();
                     }
-                } catch (Exception e) {
-                    tokenOptional = Optional.empty();
                 }
             }
         } else {
