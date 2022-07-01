@@ -153,7 +153,6 @@ public class BulkJobService {
             logger.error("error getJob():: There is no result from Database for jobId {}", jobId);
             throw new CisException(HttpStatus.NOT_FOUND, "There is no result from Database for jobId" + jobId);
         }
-        logger.info("BulkJobService.getJob() - Response :: {}", result);
         return result;
     }
 
