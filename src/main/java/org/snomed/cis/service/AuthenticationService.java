@@ -42,7 +42,7 @@ public class AuthenticationService {
         } catch (CisException e) {
             if (e.getStatus().is4xxClientError()) {
                 logger.error("call to IMS returned 4xx");
-                throw new CisException(HttpStatus.UNAUTHORIZED, "username/password incorrect");
+                throw new CisException(HttpStatus.UNAUTHORIZED, "username/password incorrect for input user '"+loginRequestDto.getPassword()+"'");
             } else if (e.getStatus().is5xxServerError()) {
                 logger.error("call to IMS returned 5xx");
                 throw new CisException(e.getStatus(), "unknown error");
@@ -51,6 +51,7 @@ public class AuthenticationService {
                 throw new CisException(e.getStatus(), "unknown error");
             }
         }
+        logger.info("user '"+loginRequestDto.getUsername()+"'successfully logged in");
 
         //token response value
         String token = cookieUtil.fetchTokenCookieValue(imsResponse);
