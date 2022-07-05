@@ -458,19 +458,20 @@ public class SchemeIdService {
 
     private SchemeId reserveSchemeIdList(SchemeName schemeName, SchemeIdReserveRequestDto request, AuthenticateResponseDto authToken) throws CisException {
         logger.debug("Request Received : schemeName-{} :: SchemeIdReserveRequestDto - {} :: AuthenticateResponseDto - {}", schemeName, request, authToken);
+        SchemeId schemeId = null;
         if (this.isAbleUser(schemeName.toString(), authToken)) {
             SchemeIdReserveRequest reserveRequest = new SchemeIdReserveRequest();
             reserveRequest.setSoftware(request.getSoftware());
             reserveRequest.setExpirationDate(request.getExpirationDate());
             reserveRequest.setComment(request.getComment());
             reserveRequest.setAuthor(authToken.getName());
-            setNewSchemeIdRecord(schemeName, reserveRequest, stateMachine.actions.get("reserve"));
+            schemeId = setNewSchemeIdRecord(schemeName, reserveRequest, stateMachine.actions.get("reserve"));
         } else {
             logger.error("error reserveSchemeIdList():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
-        return null;
+        return schemeId;
     }
 
     //List
@@ -487,7 +488,7 @@ public class SchemeIdService {
                     return schemeIdRec;
                 } else {
                     logger.error("error setNewSchemeIdRecord():: Error");
-                    throw new CisException(HttpStatus.NOT_FOUND, "Error");
+                    throw new CisException(HttpStatus.NOT_FOUND, "Error Generating SchemeId Record.");
                 }
 
             }
@@ -524,8 +525,7 @@ public class SchemeIdService {
                 schemeIdRecords.get(0).setExpirationDate(null);
                 schemeIdRecords.get(0).setComment(request.getComment());
                 schemeIdRecords.get(0).setJobId(null);
-                // outputSchemeRec = bulkSchemeIdRepository.save(schemeIdRecords.get(0));
-                updatedrecord = updateSchemeIdRecord(schemeIdRecords.get(0), schemeName.toString());
+                updatedrecord = bulkSchemeIdRepository.save(schemeIdRecords.get(0));
                 return updatedrecord;
             } else {
                 counterMode(schemeName, request, reserve);
@@ -558,8 +558,7 @@ public class SchemeIdService {
                     schemeIdRecord.setExpirationDate(null);
                     schemeIdRecord.setComment(request.getComment());
                     schemeIdRecord.setJobId(null);
-                    // outputSchemeRec = bulkSchemeIdRepository.save(schemeIdRecords.get(0));
-                    updatedrecord = updateSchemeIdRecord(schemeIdRecord, schemeName.toString());
+                    updatedrecord = bulkSchemeIdRepository.save(schemeIdRecord);
                 } else {
                     updatedrecord = counterMode(schemeName, request, reserve);
                 }
@@ -571,7 +570,7 @@ public class SchemeIdService {
     private String getNextSchemeId(SchemeName schemeName, SchemeIdReserveRequest request) {
         logger.debug("Request Received : schemeName-{} :: SchemeIdReserveRequest - {} ", schemeName, request);
         Optional<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeName.toString());
-        SchemeIdBase schemeIdBase = null;
+       // SchemeIdBase schemeIdBase = null;
         String nextId = null;
 
         if (schemeIdBaseList.isPresent()) {
@@ -582,44 +581,10 @@ public class SchemeIdService {
                 if (schemeIdBaseList.isPresent())
                     nextId = CTV3ID.getNextId(schemeIdBaseList.get().getIdBase());
             }
-            schemeIdBase.setIdBase(nextId);
+            schemeIdBaseList.get().setIdBase(nextId);
+            schemeIdBaseRepository.save(schemeIdBaseList.get());
         }
-        schemeIdBaseRepository.save(schemeIdBase);
         return nextId;
-    }
-
-    public SchemeId updateSchemeIdRecord(SchemeId schemeId, String schemeName) {
-        logger.debug("Request Received : schemeId-{} :: authToken - {} ", schemeId.getSchemeId(), schemeName);
-        Map<String, String> objQuery = new HashMap<String, String>();
-
-        if (null != schemeId) {
-            objQuery.put("schemeId", "'" + schemeId.getSchemeId() + "'");
-            objQuery.put("scheme", "'" + schemeName.toString() + "'");
-        }
-        //String supdate = "";
-        StringBuffer supdate = new StringBuffer("");
-        String updateResult = "";
-        for (var query :
-                objQuery.entrySet()) {
-            if (!"schemeId".equalsIgnoreCase(query.toString()) && !"schemeName".equalsIgnoreCase(query.toString())) {
-                // supdate += " ," + query.getKey() + "=" + (query.getValue());
-                supdate.append(" ,").append(query.getKey()).append("=").append((query.getValue()));
-            }
-
-        }
-        if (!supdate.toString().equalsIgnoreCase("")) {
-            updateResult = supdate.toString().substring(2);
-        }
-        /*String sql = "UPDATE schemeId SET " + supdate + " ,modified_at=now() WHERE scheme=" + schemeName +
-                " And schemeId=" + schemeId;*/
-        StringBuffer sql = new StringBuffer();
-        sql.append("UPDATE schemeId SET ").append(updateResult).append(" ,modified_at=now() WHERE scheme=")
-                .append("'").append(schemeName).append("'").append(" And schemeId=").append("'").append(schemeId.getSchemeId()).append("'");
-        Query genQuery = entityManager.createQuery(sql.toString(), SchemeId.class);
-        SchemeId resultList = (SchemeId) genQuery.getResultList();
-        logger.info("updateSchemeIdRecord() - Response::{}", resultList);
-        return resultList;
-
     }
 
     public List<SchemeId> findschemeRecord(Map<String, String> objQuery, String limit, String skip) {
@@ -815,7 +780,6 @@ public class SchemeIdService {
                     schemeIdRecord.setComment(request.getComment());
                     schemeIdRecord.setJobId(null);
                     updatedrecord = bulkSchemeIdRepository.save(schemeIdRecord);
-                    //updatedrecord = updateSchemeIdRecord(schemeIdRecord, schemeName.toString());
                 } else {
                     counterModeGen(schemeName, request, reserve);
                 }
@@ -917,7 +881,6 @@ public class SchemeIdService {
                 schemeIdrecord.setComment(request.getComment());
                 schemeIdrecord.setJobId(null);
                 schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
-                //schemeId = updateSchemeIdRecord(schemeIdrecord, schemeName.toString());
             } else {
                 logger.error("error registerNewSchemeId():: Cannot register SchemeId:{}, current status:{}", request.getSchemeId(), schemeIdrecord.getStatus());
                 throw new CisException(HttpStatus.BAD_REQUEST, "Cannot register SchemeId:" + request.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());

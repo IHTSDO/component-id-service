@@ -288,7 +288,7 @@ public class BulkSctidService {
             for (PermissionsNamespace perm : permissionsNamespaceList) {
                 if (("group").equalsIgnoreCase(perm.getRole())) {
                     possibleGroups.add(perm.getUsername());
-                } else if ((authenticateResponseDto.getFirstName()).equalsIgnoreCase(perm.getUsername())) {
+                } else if ((authenticateResponseDto.getName()).equalsIgnoreCase(perm.getUsername())) {
                     able = true;
                 }
             }

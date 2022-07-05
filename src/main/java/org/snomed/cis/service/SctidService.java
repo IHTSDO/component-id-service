@@ -723,8 +723,7 @@ public class SctidService {
                     schemeIdRecord.setExpirationDate(null);
                     schemeIdRecord.setComment(request.getComment());
                     schemeIdRecord.setJobId(null);
-
-                    updatedrecord = schemeIdService.updateSchemeIdRecord(schemeIdRecord, schemeName.toString());
+                    updatedrecord = bulkSchemeIdRepository.save(schemeIdRecord);
 
                 } else {
                     updatedrecord = counterMode(schemeName, request, reserve);
