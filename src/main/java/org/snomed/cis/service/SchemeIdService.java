@@ -833,11 +833,12 @@ public class SchemeIdService {
             if (request.getSystemId().isBlank() || request.getSystemId().isEmpty() || request.getSystemId() == null) {
                 registerRequest.setSystemId(sctIdHelper.guid());
                 registerRequest.setAutoSysId(true);
+            }
                 registerRequest.setAuthor(registerRequest.getAuthor());
                 if (!registerRequest.isAutoSysId()) {
                     schemeIdRec = getSchemeIdBySystemId(schemeName.toString(), registerRequest.getSystemId());
                     if (schemeIdRec != null) {
-                        if (schemeIdRec.getSchemeId() != request.getSchemeId()) {
+                        if (!(schemeIdRec.getSchemeId().equalsIgnoreCase(request.getSchemeId()))) {
                             logger.error("error registerSchemeIds():: Bad Request: SystemId : {} already exists with SchemeId:{}", request.getSystemId(), schemeIdRec.getSchemeId());
                             throw new CisException(HttpStatus.BAD_REQUEST, "SystemId" + request.getSystemId() + " already exists with SchemeId:" + schemeIdRec.getSchemeId());
                         }
@@ -850,7 +851,7 @@ public class SchemeIdService {
                 } else {
                     schemeIdRec = registerNewSchemeId(schemeName, registerRequest);
                 }
-            }
+           // }
         } else {
             logger.error("error registerSchemeIds():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
