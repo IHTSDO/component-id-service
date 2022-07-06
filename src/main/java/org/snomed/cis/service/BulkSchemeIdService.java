@@ -163,7 +163,7 @@ public class BulkSchemeIdService {
             //schemeIdBulk = schemeDB.isPresent() ? schemeDB.get() : null;
             return schemeIdBulk;
         } catch (Exception e) {
-            logger.error("error insertSchemeIdRecord():: {}", e.getMessage());
+            logger.error("error insertSchemeIdRecord():: ", e);
             error = e.getMessage();
         }
         if (error != null) {
@@ -245,7 +245,7 @@ public class BulkSchemeIdService {
             bulk.setRequest(regString);
 
         } catch (JsonProcessingException e) {
-            logger.error("error generateSchemeIds():: {}", e.getMessage());
+            logger.error("error generateSchemeIds() :: ", e);
             throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
 
@@ -290,7 +290,7 @@ public class BulkSchemeIdService {
                 bulk.setRequest(regString);
 
             } catch (JsonProcessingException e) {
-                logger.error("error registerBulkSchemeIds():: {}", e.getMessage());
+                logger.error("error registerBulkSchemeIds():: ", e);
                 throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
             }
 
@@ -344,7 +344,7 @@ public class BulkSchemeIdService {
                 bulk.setRequest(regString);
 
             } catch (JsonProcessingException e) {
-                logger.error("error reserveBulkSchemeIds():: {}", e.getMessage());
+                logger.error("error reserveBulkSchemeIds():: ", e);
                 throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
             }
 
@@ -412,7 +412,7 @@ public class BulkSchemeIdService {
             bulk.setRequest(regString);
 
         } catch (JsonProcessingException e) {
-            logger.error("error createJob():: {}", e.getMessage());
+            logger.error("error createJob():: ", e);
             throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
 

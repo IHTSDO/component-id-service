@@ -287,7 +287,7 @@ public class BulkJobService {
                                 }*/
                 }
             } catch (Exception e) {
-                logger.error("error cleanUpExpiredIds():: [Error] in clean up service - SctId expiration date: {}", e.getMessage());
+                logger.error("error cleanUpExpiredIds():: [Error] in clean up service - SctId expiration date", e);
                 throw new CisException(HttpStatus.UNAUTHORIZED, " [Error] in clean up service - SctId expiration date: " + e.getMessage());
             }
             try {
@@ -320,7 +320,7 @@ public class BulkJobService {
                                 }*/
                 }
             } catch (Exception e) {
-                logger.error("error cleanUpExpiredIds():: [Error] in clean up service - SctId expiration date: {}", e.getMessage());
+                logger.error("error cleanUpExpiredIds():: [Error] in clean up service - SctId expiration date : ", e);
                 throw new CisException(HttpStatus.UNAUTHORIZED, " [Error] in clean up service - SctId expiration date: " + e.getMessage());
             }
         } else {

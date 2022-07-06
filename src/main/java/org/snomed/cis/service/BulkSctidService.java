@@ -253,7 +253,7 @@ public class BulkSctidService {
                         bulk.setCreated_at(LocalDateTime.now());
                         bulk.setModified_at(LocalDateTime.now());
                     } catch (JsonProcessingException e) {
-                        logger.error("error registerScts():: {}", e.getMessage());
+                        logger.error("error registerScts():: ", e);
                         throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
                     }
 

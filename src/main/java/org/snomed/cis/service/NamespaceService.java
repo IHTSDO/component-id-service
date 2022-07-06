@@ -259,7 +259,7 @@ public class NamespaceService {
             namespace = namespaceRepository.save(namespaceGet);
             response.put("message", "Success");
         } catch (Exception e) {
-            logger.error("error editNamespace():: ", e.getMessage());
+            logger.error("error editNamespace():: ", e);
             throw new CisException(HttpStatus.BAD_REQUEST, String.valueOf(response.put("message", e.getMessage())));
         }
         logger.debug("editNamespace() Response-{} ", response.toString());
@@ -448,7 +448,7 @@ public class NamespaceService {
                 return Collections.EMPTY_LIST;
             }
         } catch (Exception e) {
-            logger.error("error getSchemeIds():: BAd Request: {}", e.getMessage());
+            logger.error("error getSchemeIds():: BAd Request: ", e);
             throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }

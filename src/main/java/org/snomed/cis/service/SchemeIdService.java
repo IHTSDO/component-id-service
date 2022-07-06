@@ -85,7 +85,7 @@ public class SchemeIdService {
                 try {
                     roleAsGroups = authToken.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
                 } catch (Exception e) {
-                    logger.error("error hasSchemePermission():: Error accessing groups");
+                    logger.error("error hasSchemePermission():: Error accessing groups", e);
                     throw new CisException(HttpStatus.BAD_REQUEST, "Error accessing groups");
                 }
                 for (String group : roleAsGroups) {
@@ -493,7 +493,7 @@ public class SchemeIdService {
 
             }
         } catch (Exception e) {
-            logger.error("error setNewSchemeIdRecord():: error getting available schemeId for:{}, Exception msg: {}", schemeName, e.getMessage());
+            logger.error("error setNewSchemeIdRecord():: error getting available schemeId for:{} ", schemeName, e);
             throw new CisException(HttpStatus.NOT_FOUND, "error getting available schemeId for:" + schemeName + e.getMessage());
         }
 
@@ -711,7 +711,7 @@ public class SchemeIdService {
 
             }
         } catch (Exception e) {
-            logger.error("error setNewSchemeIdRecordGen():: error getting available schemeId for:{}, Exception msg: {}", schemeName, e.getMessage());
+            logger.error("error setNewSchemeIdRecordGen():: error getting available schemeId for:{}", schemeName, e);
             throw new CisException(HttpStatus.NOT_FOUND, "error getting available schemeId for:" + schemeName + e.getMessage());
         }
 

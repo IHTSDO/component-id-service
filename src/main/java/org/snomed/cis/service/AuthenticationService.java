@@ -41,13 +41,13 @@ public class AuthenticationService {
             imsResponse = requestManager.postRequest(url, null, payload.toString());
         } catch (CisException e) {
             if (e.getStatus().is4xxClientError()) {
-                logger.error("call to IMS returned 4xx");
+                logger.error("call to IMS returned 4xx", e);
                 throw new CisException(HttpStatus.UNAUTHORIZED, "username/password incorrect for input user '"+loginRequestDto.getPassword()+"'");
             } else if (e.getStatus().is5xxServerError()) {
-                logger.error("call to IMS returned 5xx");
+                logger.error("call to IMS returned 5xx",e);
                 throw new CisException(e.getStatus(), "unknown error");
             } else {
-                logger.error("call to IMS returned unknown error");
+                logger.error("call to IMS returned unknown error", e);
                 throw new CisException(e.getStatus(), "unknown error");
             }
         }
@@ -83,13 +83,13 @@ public class AuthenticationService {
             imsResponse = requestManager.getRequest(url, getHttpHeaders(token));
         } catch (CisException e) {
             if (e.getStatus().is4xxClientError()) {
-                logger.error("call to IMS returned 4xx error");
+                logger.error("call to IMS returned 4xx error", e);
                 throw new CisException(HttpStatus.UNAUTHORIZED, "invalid token");
             } else if (e.getStatus().is5xxServerError()) {
-                logger.error("call to IMS returned 5xx error");
+                logger.error("call to IMS returned 5xx error", e);
                 throw new CisException(e.getStatus(), "unknown error");
             } else {
-                logger.error("call to IMS returned unknown error");
+                logger.error("call to IMS returned unknown error", e);
                 throw new CisException(e.getStatus(), "unknown error");
             }
         }
