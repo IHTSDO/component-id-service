@@ -136,10 +136,10 @@ public class SctidService {
             else
                 sctList = findSctWithIndexAndLimit(queryObject, null, null);
             if (sctList.size() > 0) {
-                logger.info("getSct - Response :: {}", sctList);
+                logger.debug("getSct - Response size :: {}", (null==sctList?"0":sctList.size()));
                 return sctList;
             } else {
-                logger.info("getSct - Response :: {}", Collections.EMPTY_LIST);
+                logger.debug("getSct - Response size :: {}", "0");
                 return Collections.EMPTY_LIST;
             }
         } else {
@@ -166,7 +166,7 @@ public class SctidService {
         } else {
             sctWithSchemeResponseDTO = this.getSctCommon(output, sctid, includeAdditionalIds);
         }
-        logger.info("getSctWithId() - Response :: {}", sctWithSchemeResponseDTO);
+        logger.debug("getSctWithId() - Response :: {}", sctWithSchemeResponseDTO);
         return sctWithSchemeResponseDTO;
     }
 
@@ -223,7 +223,7 @@ public class SctidService {
             }
             sctList = newRows;
         }
-        logger.info("findSctWithIndexAndLimit() - Response :: {}", sctList);
+        logger.debug("findSctWithIndexAndLimit() - Response Size :: {}", (null==sctList?"0":sctList.size()));
         return sctList;
     }
 
@@ -260,7 +260,7 @@ public class SctidService {
                 output.setAdditionalIds(schemeResult);
                 return output;
             } else {
-                logger.info("getSctCommon() - Response :: {}", output);
+                logger.debug("getSctCommon() - Response :: {}", output);
                 return output;
             }
         } else {
@@ -271,7 +271,7 @@ public class SctidService {
 
     public CheckSctidResponseDTO checkSctid(String sctid) throws CisException {
         CheckSctidResponseDTO checkSctid = SctIdHelper.checkSctid(sctid);
-        logger.info("checkSctid() - Response :: {}", checkSctid);
+        logger.debug("checkSctid() - Response :: {}", checkSctid);
         return checkSctid;
     }
 
@@ -285,7 +285,7 @@ public class SctidService {
             logger.error("error getSctWithSystemId():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
-        logger.info("getSctWithSystemId() - Response :: {}", sct);
+        logger.debug("getSctWithSystemId() - Response :: {}", sct);
         return sct;
     }
 
@@ -329,7 +329,7 @@ public class SctidService {
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
         }
-        logger.info("deprecateSct() - Response :: {}", output);
+        logger.debug("deprecateSct() - Response :: {}", output);
         return output;
     }
 
@@ -375,7 +375,7 @@ public class SctidService {
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
         }
-        logger.info("releaseSct() - Response :: {}", output);
+        logger.debug("releaseSct() - Response :: {}", output);
         return output;
     }
 
@@ -422,7 +422,7 @@ public class SctidService {
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
         }
-        logger.info("publishSct() - Response :: {}", output);
+        logger.debug("publishSct() - Response :: {}", output);
         return output;
     }
 
@@ -485,7 +485,7 @@ public class SctidService {
             logger.error("error generateSctid():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
-        logger.info("generateSctid() - Response :: {}", sctResponse);
+        logger.debug("generateSctid() - Response :: {}", sctResponse);
         return sctResponse;
     }
 
@@ -502,7 +502,7 @@ public class SctidService {
         } else {
             sctOut = this.setNewSCTIdRecord(generationData, stateMachine.actions.get("generate"));
         }
-        logger.info("generateSctidSubFun() - Response :: {}", sctOut);
+        logger.debug("generateSctidSubFun() - Response :: {}", sctOut);
         return sctOut;
     }
 
@@ -510,7 +510,7 @@ public class SctidService {
         logger.debug("Request Received : SctidGenerate-{} :: action - {} ", generationData, action);
         Sctid sctOutput = new Sctid();
         sctOutput = this.setAvailableSCTIDRecord2NewStatus(generationData, action);
-        logger.info("setNewSCTIdRecord() - Response :: {}", sctOutput);
+        logger.debug("setNewSCTIdRecord() - Response :: {}", sctOutput);
         return sctOutput;
     }
 
@@ -550,7 +550,7 @@ public class SctidService {
             logger.error("error setAvailableSCTIDRecord2NewStatus():: Request Cannot be Empty");
             throw new CisException(HttpStatus.BAD_REQUEST, "Request Cannot be Empty");
         }
-        logger.info("setAvailableSCTIDRecord2NewStatus() - Response :: {}", sctOutput);
+        logger.debug("setAvailableSCTIDRecord2NewStatus() - Response :: {}", sctOutput);
         return sctOutput;
     }
 
@@ -579,7 +579,7 @@ public class SctidService {
                 result = sctIdDM.counterMode(sctidReservationRequest, action);
             }
         }
-        logger.info("setAvailableSCTIDRecord2NewStatus() - Response :: {}", result);
+        logger.debug("setAvailableSCTIDRecord2NewStatus() - Response :: {}", result);
         return result;
     }
 
@@ -597,7 +597,7 @@ public class SctidService {
         } else {
             schemeId = setNewSchemeIdRecord(scheme, generationData, stateMachine.actions.get("generate"));
         }
-        logger.info("generateSchemeId() - Response :: {}", schemeId);
+        logger.debug("generateSchemeId() - Response :: {}", schemeId);
         return schemeId;
     }
 
@@ -606,11 +606,11 @@ public class SctidService {
         SchemeId schemeId;
         schemeId = this.setAvailableSchemeIdRecord2NewStatus(scheme, generationData, action);
         if (null != schemeId) {
-            logger.info("setNewSchemeIdRecord() - Response :: {}", schemeId);
+            logger.debug("setNewSchemeIdRecord() - Response :: {}", schemeId);
             return schemeId;
         } else {
             SchemeId schemeId1 = counterMode(scheme, generationData, action);
-            logger.info("setNewSchemeIdRecord() - Response :: {}", schemeId1);
+            logger.debug("setNewSchemeIdRecord() - Response :: {}", schemeId1);
             return schemeId1;
         }
     }
@@ -647,7 +647,7 @@ public class SctidService {
             logger.error("error setAvailableSchemeIdRecord2NewStatus():: error getting available schemeId for:{}", scheme);
             throw new CisException(HttpStatus.ACCEPTED, "error getting available schemeId for:" + scheme + ", err: ");
         }
-        logger.info("setAvailableSchemeIdRecord2NewStatus() - Response :: {}", outputSchemeRec);
+        logger.debug("setAvailableSchemeIdRecord2NewStatus() - Response :: {}", outputSchemeRec);
         return outputSchemeRec;
     }
 
@@ -666,21 +666,17 @@ public class SctidService {
         if (queryObject.size() > 0) {
             for (var query :
                     queryObject.entrySet()) {
-                // swhere += " And " + query.getKey() + "=" + (query.getValue());
                 swhere = swhere.append(" And ").append(query.getKey()).append("=").append((query.getValue()));
             }
         }
         if (!(swhere.toString().equalsIgnoreCase(""))) {
-            // swhere = " WHERE " + swhere.substring(5);
             resultWhere.append(" WHERE ").append(swhere.substring(5));
         }
         StringBuffer sql = new StringBuffer();
         if ((limitR > 0) && (skipTo == 0)) {
-            // sql = "SELECT * FROM schemeId" + resultWhere + " order by schemeId limit " + limit;
             sql.append("SELECT * FROM schemeId").append(resultWhere).append(" order by schemeId limit ").append(limit);
         } else {
             sql.append("SELECT * FROM schemeId").append(resultWhere).append(" order by schemeId");
-            //sql = "SELECT * FROM schemeId" + resultWhere + " order by schemeId";
         }
         Query genQuery = entityManager.createQuery(sql.toString());
         List<SchemeId> resultList = genQuery.getResultList();
@@ -700,7 +696,7 @@ public class SctidService {
             }
             schemeList = newRows;
         }
-        logger.info("findSchemeWithIndexAndLimit() - Response :: {}", schemeList);
+        logger.debug("findSchemeWithIndexAndLimit() - Response size :: {}", (null==schemeList?"0":schemeList.size()));
         return schemeList;
     }
 
@@ -750,7 +746,7 @@ public class SctidService {
             schemeIdBase.setIdBase(nextId);
         }
         schemeIdBaseRepository.save(schemeIdBase);
-        logger.info("getNextSchemeId() Response: {}", nextId);
+        logger.debug("getNextSchemeId() Response: {}", nextId);
         return nextId;
     }
 
@@ -783,7 +779,7 @@ public class SctidService {
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
         }
-        logger.info("registerSctid() - Response :: {}", result);
+        logger.debug("registerSctid() - Response :: {}", result);
         return result;
     }
 
@@ -811,7 +807,7 @@ public class SctidService {
             logger.error("error reserveSctid():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
-        logger.info("reserveSctid() - Response :: {}", result);
+        logger.debug("reserveSctid() - Response :: {}", result);
         return result;
     }
 
@@ -819,119 +815,9 @@ public class SctidService {
         logger.debug("Request Received : sctidReservationRequest-{}", sctidReservationRequest);
         Sctid result = null;
         result = this.setAvailableSCTIDRecord2NewStatus(sctidReservationRequest, stateMachine.actions.get("reserve"));
-        logger.info("reserveSctid()  with single Request param - Response :: {}", result);
+        logger.debug("reserveSctid()  with single Request param - Response :: {}", result);
         return result;
     }
-
-    /*public ResultDto getStats(String token, String username) throws CisException {
-        logger.debug("Request Received : token-{} :: username - {} ", token, username);
-        ResultDto result = new ResultDto();
-        List<String> users = new ArrayList<>();
-        List<String> securityAdmins = new ArrayList<>();
-        List<String> securityUsers = new ArrayList<>();
-        securityAdmins.add("keerthika");
-        securityAdmins.add("lakshmana");
-        boolean adminU = false;
-
-        for (String admin : securityAdmins) {
-            if (admin.equalsIgnoreCase(username))
-                adminU = true;
-            if (!added(admin))
-                users.add(admin);
-        }
-        for (String user : securityUsers) {
-            if (!added(user))
-                users.add(user);
-        }
-        result.setUsers((long) users.size());
-        HashMap<String, Long> hash = new HashMap<>();
-        if (adminU) {
-            long schemeCount = schemeIdBaseRepository.count();
-            result.setSchemes(schemeCount);
-            long namespaceCount = namespaceRepository.count();
-            List<Namespace> namespaceList = namespaceRepository.findAll();
-
-            var total = namespaceList.size();
-            var done = 0;
-            if (total > 0) {
-                for (int i = 0; i < namespaceList.size(); i++) {
-                    Namespace namespace = namespaceList.get(i);
-                    Map<String, Integer> queryObject = new HashMap();
-                    if (null != namespace) {
-                        queryObject.put("namespace", namespace.getNamespace());
-                    }
-                    long sctCount = sctidCount(queryObject);
-                    if (sctCount > 0) {
-                        hash.put(namespace.getNamespace().toString(), sctCount);
-
-                    }
-                    done++;
-                    if (total == done) {
-                        hash.put("total", namespaceCount);
-                        result.setNamespaces(hash);
-                        break;
-                    }
-                }
-            }
-        } else {
-            var otherGroups = new ArrayList<String>();
-            List<String> namespacesFromGroup = new ArrayList();
-            List<String> groups = securityController.getUserGroup(username, token);
-            if (groups.size() > 0) {
-                for (String group :
-                        groups) {
-                    if (group.substring(0, group.indexOf("-")) == "namespace")
-                        namespacesFromGroup.add(group.substring(group.indexOf("-") + 1));
-                    else otherGroups.add(group);
-                }
-            }
-            Map<String, ArrayList<String>> schemeQuery = new HashMap();
-            if (otherGroups.size() > 0) {
-                schemeQuery.put("username", otherGroups);
-            }
-            Long schemeCount = this.permissionsSchemeCount(schemeQuery);
-            result.setSchemes(schemeCount);
-            List<Namespace> namespaceList = this.findPermissionsNamespace(schemeQuery);
-            if (namespacesFromGroup.size() > 0) {
-                for (String namespLoop :
-                        namespacesFromGroup) {
-                    var foundNamespace = false;
-                    for (Namespace namesp :
-                            namespaceList) {
-                        if ((namesp.getNamespace().toString()).equalsIgnoreCase(namespLoop))
-                            foundNamespace = true;
-                    }
-                    if (!foundNamespace)
-                        namespaceList.add(new Namespace(Integer.valueOf(namespLoop)));
-                }
-            }
-
-            var total = namespaceList.size();
-            var done = 0;
-            if (total > 0) {
-                Map<String, Integer> queryObject = new HashMap();
-                for (Namespace namespaceR :
-                        namespaceList) {
-                    if (null != namespaceR) {
-                        queryObject.put("namespace", namespaceR.getNamespace());
-                    }
-                    long sctCount = sctidCount(queryObject);
-                    if (sctCount > 0) {
-                        done++;
-
-                        hash.put(namespaceR.getNamespace().toString(), sctCount);
-                        if (total == done) {
-                            hash.put("total", (long) total);
-                            result.setNamespaces(hash);
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        logger.info("getStats() - Response :: {}", result);
-        return result;
-    }*/
 
     public boolean added(String userToAdd) {
         List<String> users = new ArrayList<>();
@@ -943,90 +829,5 @@ public class SctidService {
         }
         return found;
     }
-
-    /*public Long sctidCount(Map<String, Integer> queryObject) {
-        logger.debug("Request Received : queryObject-{} ", queryObject);
-        var swhere = "";
-        if (queryObject.size() > 0) {
-            for (var query :
-                    queryObject.entrySet()) {
-                swhere += " And " + query.getKey() + "=" + (query.getValue());
-            }
-        }
-
-        if (swhere != "") {
-            swhere = " WHERE " + swhere.substring(5);
-        }
-        String sql;
-        sql = "SELECT count(*) as count FROM sctId" + swhere;
-        Query query = entityManager.createNativeQuery(sql);
-        List<BigInteger> result = query.getResultList();
-        logger.info("sctidCount() : response - {}", result.get(0).longValue());
-        return result.get(0).longValue();
-    }*/
-
-    /*public Long permissionsSchemeCount(Map<String, ArrayList<String>> queryObject) {
-        logger.debug("Request Received : queryObject-{} :: authToken - {} ", queryObject);
-       // var swhere = "";
-        StringBuffer swhere = new StringBuffer("");
-        if (queryObject.size() > 0) {
-            String groupList = "";
-            for (var query :
-                    queryObject.entrySet()) {
-                for (String group :
-                        query.getValue()) {
-                    groupList += "," + "'" + group + "'";
-                }
-
-                groupList = groupList.substring(1);
-                //swhere += " And " + query.getKey() + " in" + "(" + groupList + ")";
-                swhere =  swhere.append(" And ").append(query.getKey()).append(" in").append("(").append(groupList).append(")");
-            }
-        }
-
-        if (swhere.toString() != "") {
-            String subValue =  swhere.substring(5);
-           // swhere = " WHERE " + swhere.substring(5);
-            swhere = swhere.append(" WHERE ").append(subValue);
-        }
-        String sql;
-        sql = "SELECT count(*) as count FROM permissionsscheme" + swhere;
-        Query query = entityManager.createNativeQuery(sql);
-        List<BigInteger> result = query.getResultList();
-        logger.info("permissionsSchemeCount() : response - {}", result.get(0).longValue());
-        return result.get(0).longValue();
-    }*/
-
-   /* public List<Namespace> findPermissionsNamespace(Map<String, ArrayList<String>> queryObject) {
-        logger.debug("Request Received : queryObject-{} ", queryObject);
-       // var swhere = "";
-        StringBuffer swhere = new StringBuffer("");
-        if (queryObject.size() > 0) {
-            String groupList = "";
-            for (var query :
-                    queryObject.entrySet()) {
-                for (String group :
-                        query.getValue()) {
-                    groupList += "," + "'" + group + "'";
-                }
-
-                groupList = groupList.substring(1);
-                //swhere += " And " + query.getKey() + " in" + "(" + groupList + ")";
-                swhere = swhere.append(" And ").append(query.getKey()).append(" in").append("(").append(groupList).append(")");
-            }
-        }
-
-        if (swhere.toString() != "") {
-            String subValue = swhere.substring(5);
-           // swhere = " WHERE " + swhere.substring(5);
-            swhere = swhere.append(" WHERE ").append(subValue);
-        }
-        String sql;
-        sql = "SELECT * FROM permissionsnamespace" + swhere;
-        Query query = entityManager.createNativeQuery(sql);
-        List<Namespace> result = query.getResultList();
-        logger.info("findPermissionsNamespace() : response - {}", result);
-        return result;
-    }*/
 
 }

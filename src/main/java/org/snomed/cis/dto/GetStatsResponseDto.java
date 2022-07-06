@@ -22,4 +22,12 @@ public class GetStatsResponseDto {
         this.users = 0L;
     }
 
+    @Override
+    public String toString() {
+        return "{" +
+                "namespaces size=" + (null==namespaces?"0":namespaces.size()) +
+                ", schemes=" + schemes +
+                ", users=" + users +
+                '}';
+    }
 }

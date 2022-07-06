@@ -93,7 +93,7 @@ public class NamespaceService {
             //Collections.sort(namespaceDtoList);
             Collections.sort(namespaceDtoList, Comparator.comparingInt(NamespaceDto::getNamespace));
         }
-        logger.info("getNamespaceslist() : Response :: {} ", namespaceDtoList);
+        logger.debug("getNamespaceslist() : Response size :: {} ", (null==namespaceDtoList?"0":namespaceDtoList.size()));
         return namespaceDtoList;
 
     }
@@ -181,7 +181,7 @@ public class NamespaceService {
         Namespace createdNamespace = namespaceRepository.save(toBeCreated);
         if (part.size() > 0 && (createdNamespace.getNamespace().equals(namespace.getNamespace())))
             response.put("message", "Success");
-        logger.info("createNamespaceList() Response-{} ", response.toString());
+        logger.debug("createNamespaceList() Response-{} ", response.toString());
         return response.toString();
     }
 
@@ -192,7 +192,7 @@ public class NamespaceService {
         if (groups.contains("component-identifier-service-admin") || hasNamespacePermission(namespace, authenticateResponseDto.getName())) {
             isAble = true;
         }
-        logger.info("isAbleToEdit() Response-{} ", isAble);
+        logger.debug("isAbleToEdit() Response-{} ", isAble);
         return isAble;
     }
 
@@ -208,14 +208,14 @@ public class NamespaceService {
                 }
             }
         }
-        logger.info("hasNamespacePermission() Response-{} ", hasNamespacePermission);
+        logger.debug("hasNamespacePermission() Response-{} ", hasNamespacePermission);
         return hasNamespacePermission;
     }
 
     public String updateNamespace(AuthenticateResponseDto authenticateResponseDto, NamespaceDto namespace) throws CisException {
         logger.debug("NamespaceService.updateNamespace() authenticateResponseDto-{} :: namespace-{} ", authenticateResponseDto, namespace);
         String result = this.updateNamespaces(authenticateResponseDto, namespace);
-        logger.info("updateNamespace() Response-{} ", result);
+        logger.debug("updateNamespace() Response-{} ", result);
         return result;
     }
 
@@ -223,7 +223,7 @@ public class NamespaceService {
         logger.debug("NamespaceService.updateNamespaces() AuthenticateResponseDto-{} :: NamespaceDto-{} ", authenticateResponseDto, namespace);
         if (this.isAbleToEdit(namespace.getNamespace(), authenticateResponseDto)) {
             String result = (editNamespace(namespace.getNamespace(), namespace));
-            logger.info("updateNamespaces() Response-{} ", result);
+            logger.debug("updateNamespaces() Response-{} ", result);
             return result;
 
         } else {
@@ -262,7 +262,7 @@ public class NamespaceService {
             logger.error("error editNamespace():: ", e.getMessage());
             throw new CisException(HttpStatus.BAD_REQUEST, String.valueOf(response.put("message", e.getMessage())));
         }
-        logger.info("editNamespace() Response-{} ", response.toString());
+        logger.debug("editNamespace() Response-{} ", response.toString());
         return response.toString();
     }
 
@@ -310,7 +310,7 @@ public class NamespaceService {
         if (namespaceList != null) {
             Collections.sort(namespaceList, Comparator.comparingInt(Namespace::getNamespace));
         }
-        logger.info("getNamespacesListForUser() Response-{} ", namespaceList);
+        logger.debug("getNamespacesListForUser() Response size-{} ", (null==namespaceList?"0":namespaceList.size()));
         return namespaceList;
     }
 
@@ -329,7 +329,7 @@ public class NamespaceService {
             namespaceDto = this.getNamespaceId("0");
         else
             namespaceDto = this.getNamespaceId(namespaceId);
-        logger.info("getNamespace() Response-{} ", namespaceDto);
+        logger.debug("getNamespace() Response-{} ", namespaceDto);
         return namespaceDto;
     }
 
@@ -367,7 +367,7 @@ public class NamespaceService {
         } else {
             namespacesObj = null;
         }
-        logger.info(" getNamespaceId() Response :: {}", namespacesObj);
+        logger.debug(" getNamespaceId() Response :: {}", namespacesObj);
         return namespacesObj;
 
     }
@@ -376,7 +376,7 @@ public class NamespaceService {
     public String deleteNamespace(AuthenticateResponseDto authenticateResponseDto, String namespaceId) throws CisException {
         logger.debug("NamespaceService.deleteNamespace() AuthenticateResponseDto-{} :: namespaceId-{} ", authenticateResponseDto, namespaceId);
         String value = this.deleteNamespaces(authenticateResponseDto, namespaceId);
-        logger.info(" deleteNamespace() Response :: {}", value);
+        logger.debug(" deleteNamespace() Response :: {}", value);
         return value;
     }
 
@@ -402,7 +402,7 @@ public class NamespaceService {
 
             }
         }
-        logger.info("deleteNamespaces() Response :: {}", response.toString());
+        logger.debug("deleteNamespaces() Response :: {}", response.toString());
         return response.toString();
     }
 
@@ -410,7 +410,7 @@ public class NamespaceService {
     public String updatePartitionSequence(AuthenticateResponseDto authenticateResponseDto, String namespaceId, String partitionId, String value) throws CisException {
         logger.debug("NamespaceService.updatePartitionSequence() authenticateResponseDto-{} :: namespaceId-{} :: partitionId - {} :: value - {} ", authenticateResponseDto, namespaceId, partitionId, value);
         String updatedValue = this.updatePartitionSequences(authenticateResponseDto, namespaceId, partitionId, value);
-        logger.info("updatePartitionSequence() Response :: {}", updatedValue);
+        logger.debug("updatePartitionSequence() Response :: {}", updatedValue);
         return updatedValue;
     }
 
@@ -432,7 +432,7 @@ public class NamespaceService {
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
-        logger.info("updatePartitionSequences() Response :: {}", response.toString());
+        logger.debug("updatePartitionSequences() Response :: {}", response.toString());
         return response.toString();
     }
 
@@ -441,10 +441,10 @@ public class NamespaceService {
         try {
             List<PermissionsNamespace> permissionsNamespaceList = permissionsNamespaceRepository.findByNamespace(Integer.valueOf(namespaceId));
             if ((permissionsNamespaceList).size() > 0) {
-                logger.info("getNamespacePermissions() Response :: {}", permissionsNamespaceList);
+                logger.debug("getNamespacePermissions() Response size :: {}", (permissionsNamespaceList.size()));
                 return permissionsNamespaceList;
             } else {
-                logger.info("getNamespacePermissions() Response :: {}", "null");
+                logger.debug("getNamespacePermissions() Response size :: {}", "0");
                 return Collections.EMPTY_LIST;
             }
         } catch (Exception e) {
@@ -459,7 +459,7 @@ public class NamespaceService {
             JSONObject response = new JSONObject();
             permissionsNamespaceRepository.deleteByNamespaceAndUsername(Integer.valueOf(namespaceId), username);
             response.put("message", "Success");
-            logger.info("deleteNamespacePermissionsOfUser() Response :: {}", response.toString());
+            logger.debug("deleteNamespacePermissionsOfUser() Response :: {}", response.toString());
             return response.toString();
         } else {
             logger.error("error deleteNamespacePermissionsOfUser():: No permission for the selected operation");
@@ -477,7 +477,7 @@ public class NamespaceService {
             permissionsNamespaceRepository.save(permissionsNamespace);
             JSONObject response = new JSONObject();
             response.put("message", "Success");
-            logger.info("createNamespacePermissionsOfUser() Response :: {}", response.toString());
+            logger.debug("createNamespacePermissionsOfUser() Response :: {}", response.toString());
             return response.toString();
         } else {
             logger.error("error createNamespacePermissionsOfUser():: No permission for the selected operation");

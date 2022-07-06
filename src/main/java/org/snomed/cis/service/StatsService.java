@@ -109,7 +109,7 @@ public class StatsService {
             namespacesMap.put("total", totalCount);
             getStatsResponseDto.setNamespaces(namespacesMap);
         }
-        logger.info("getStats()- Response: {}", getStatsResponseDto);
+        logger.debug("getStats()- Response: {}", getStatsResponseDto);
         return getStatsResponseDto;
     }
 }

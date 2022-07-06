@@ -63,7 +63,7 @@ public class SchemeIdService {
         if (groups.contains("component-identifier-service-admin") || hasSchemePermission(schemeName, authToken)) {
             isAble = true;
         }
-        logger.info("isAbleUser() - Response: {}", isAble);
+        logger.debug("isAbleUser() - Response: {}", isAble);
         return isAble;
     }
 
@@ -94,7 +94,7 @@ public class SchemeIdService {
                 }
             }
         }
-        logger.info("hasSchemePermission() - Response: {}", able);
+        logger.debug("hasSchemePermission() - Response: {}", able);
         return able;
     }
 
@@ -162,7 +162,7 @@ public class SchemeIdService {
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
-        logger.info("getSchemeIdsList-Response:{}", schemeidList);
+        logger.debug("getSchemeIdsList-Response size:{}", (null==schemeidList?"0":schemeidList.size()));
         return schemeidList;
     }
 
@@ -196,7 +196,7 @@ public class SchemeIdService {
         } else {
             record = schemeIdObj.get();
         }
-        logger.info("getSchemeIdsByschemeIdList(): Response - {}", record);
+        logger.debug("getSchemeIdsByschemeIdList(): Response - {}", record);
         return record;
     }
 
@@ -215,7 +215,7 @@ public class SchemeIdService {
         schemeIdRecord.put("sequence", null);
         schemeIdRecord.put("checkDigit", null);
         schemeIdRecord.put("systemId", sctIdHelper.guid());
-        logger.info("getNewRecord():Response - {}", schemeIdRecord);
+        logger.debug("getNewRecord():Response size- {}", schemeIdRecord.size());
         return schemeIdRecord;
     }
 
@@ -285,7 +285,7 @@ public class SchemeIdService {
             SchemeId schemeIdObj = SchemeId.builder().scheme(scheme).schemeId(schemeId).sequence(sequence).checkDigit(checkDigit).systemId(systemId).status(status).author(author).software(software).expirationDate(expirationDate).jobId(jobId)
                     .created_at(created_at).modified_at(modified_at).build();
             SchemeId schemeId1 = bulkSchemeIdRepository.save(schemeIdObj);
-            logger.info("insertSchemeIdRecord():Response - {}", schemeId1);
+            logger.debug("insertSchemeIdRecord():Response - {}", schemeId1);
             return schemeId1;
         } catch (Exception e) {
             throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
@@ -305,7 +305,7 @@ public class SchemeIdService {
             List<SchemeId> schemeIdList = bulkSchemeIdRepository.findBySchemeAndSystemId(scheme, systemid);
 
             if (!schemeIdList.isEmpty() && schemeIdList.size() > 0) {
-                logger.info("getSchemeIdsBysystemList()-Response: {}", schemeIdList.get(0));
+                logger.debug("getSchemeIdsBysystemList()-Response: {}", schemeIdList.get(0));
                 return schemeIdList.get(0);
             } else {
                 logger.error("error getSchemeIdsBysystemList()::SchemeId list is empty");
@@ -355,7 +355,7 @@ public class SchemeIdService {
             logger.error("error deprecateSchemeIdList():: No permission for the selected operation");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
-        logger.info("deprecateSchemeIdList()-Response: {}", schemeId);
+        logger.debug("deprecateSchemeIdList()-Response: {}", schemeId);
         return schemeId;
 
     }
@@ -400,7 +400,7 @@ public class SchemeIdService {
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
-        logger.info("releaseSchemeIdList()-Response: {}", schemeId);
+        logger.debug("releaseSchemeIdList()-Response: {}", schemeId);
         return schemeId;
     }
 
@@ -445,14 +445,14 @@ public class SchemeIdService {
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
-        logger.info("publishSchemeIdList() - Response: {}", schemeId);
+        logger.debug("publishSchemeIdList() - Response: {}", schemeId);
         return schemeId;
     }
 
     public SchemeId reserveSchemeId(AuthenticateResponseDto authToken, SchemeName schemeName, SchemeIdReserveRequestDto request) throws CisException {
         logger.debug("Request Received :AuthenticateResponseDto - {} :: schemeName-{} :: SchemeIdReserveRequestDto - {} ", authToken, schemeName, request);
         SchemeId schemeId = this.reserveSchemeIdList(schemeName, request, authToken);
-        logger.info("reserveSchemeId() - Response: {}", schemeId);
+        logger.debug("reserveSchemeId() - Response: {}", schemeId);
         return schemeId;
     }
 
@@ -484,7 +484,7 @@ public class SchemeIdService {
             } else {
                 SchemeId schemeIdRec = counterMode(schemeName, request, reserve);
                 if (schemeIdRec != null) {
-                    logger.info("setNewSchemeIdRecord(): Response- {}", schemeIdRec);
+                    logger.debug("setNewSchemeIdRecord(): Response- {}", schemeIdRec);
                     return schemeIdRec;
                 } else {
                     logger.error("error setNewSchemeIdRecord():: Error");
@@ -533,7 +533,7 @@ public class SchemeIdService {
         } else {
             return null;
         }
-        logger.info("setAvailableSchemeIdRecord2NewStatus: Response - {}", updatedrecord);
+        logger.debug("setAvailableSchemeIdRecord2NewStatus: Response - {}", updatedrecord);
         return updatedrecord;
 
     }
@@ -619,6 +619,7 @@ public class SchemeIdService {
 
         List<SchemeId> resultList = genQuery.getResultList();
         if ((skipTo == 0)) {
+            logger.debug("findschemeRecord() - Response size::{}", (null==resultList?"0":resultList.size()));
             return resultList;
         } else {
             var cont = 1;
@@ -632,7 +633,7 @@ public class SchemeIdService {
                     cont++;
                 }
             }
-            logger.info("findschemeRecord() - Response::{}", newRows);
+            logger.debug("findschemeRecord() - Response size::{}", (null==newRows?"0":newRows.size()));
             return newRows;
         }
     }
@@ -641,7 +642,7 @@ public class SchemeIdService {
     public SchemeId generateSchemeId(AuthenticateResponseDto authToken, SchemeName schemeName, SchemeIdGenerateRequestDto request) throws CisException {
         logger.debug("Request Received : authToken - {} :: schemeName-{} :: SchemeIdGenerateRequestDto - {}", authToken, schemeName, request);
         SchemeId schemeId = this.generateSchemeIds(schemeName.toString(), request, authToken);
-        logger.info("generateSchemeId() - Response::{}", schemeId);
+        logger.debug("generateSchemeId() - Response::{}", schemeId);
         return schemeId;
     }
 
@@ -675,7 +676,7 @@ public class SchemeIdService {
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
-        logger.info("generateSchemeIds() - Response::{}", schemeIdRec);
+        logger.debug("generateSchemeIds() - Response::{}", schemeIdRec);
         return schemeIdRec;
     }
 
@@ -683,10 +684,10 @@ public class SchemeIdService {
         logger.debug("Request Received : schemeName-{} :: systemId - {} ", schemeName, systemId);
         List<SchemeId> schemeId = bulkSchemeIdRepository.findBySchemeAndSystemId(schemeName, systemId);
         if (schemeId.size() > 0) {
-            logger.info("getSchemeIdBySystemId() - Response::{}", schemeId.get(0));
+            logger.debug("getSchemeIdBySystemId() - Response::{}", schemeId.get(0));
             return schemeId.get(0);
         } else {
-            logger.info("getSchemeIdBySystemId() - Response::{}", "null");
+            logger.debug("getSchemeIdBySystemId() - Response::{}", "null");
             return null;
         }
 
@@ -701,7 +702,7 @@ public class SchemeIdService {
             } else {
                 SchemeId schemeIdRec = counterModeGen(schemeName, request, reserve);
                 if (schemeIdRec != null) {
-                    logger.info("setNewSchemeIdRecordGen() - Response::{}", schemeIdRec);
+                    logger.debug("setNewSchemeIdRecordGen() - Response::{}", schemeIdRec);
                     return schemeIdRec;
                 } else {
                     logger.error("error setNewSchemeIdRecordGen():: Not found Error");
@@ -754,7 +755,7 @@ public class SchemeIdService {
             logger.error("error setAvailableSchemeIdRecord2NewStatusGen():: error getting available schemeId for:{}", schemeName);
             throw new CisException(HttpStatus.ACCEPTED, "error getting available schemeId for:" + schemeName + ", err: ");
         }
-        logger.info("setAvailableSchemeIdRecord2NewStatusGen() - Response::{}", updatedrecord);
+        logger.debug("setAvailableSchemeIdRecord2NewStatusGen() - Response::{}", updatedrecord);
         return updatedrecord;
 
     }
@@ -785,7 +786,7 @@ public class SchemeIdService {
                 }
             }
         }
-        logger.info("counterModeGen() - Response::{}", updatedrecord);
+        logger.debug("counterModeGen() - Response::{}", updatedrecord);
         return updatedrecord;
     }
 
@@ -804,10 +805,10 @@ public class SchemeIdService {
         SchemeIdBase schemeIdBase = new SchemeIdBase(schemeName.toUpperCase(), nextId);
         SchemeIdBase schemeId = schemeIdBaseRepository.save(schemeIdBase);
         if (null != schemeId) {
-            logger.info("getNextSchemeIdGen() - Response::{}", nextId);
+            logger.debug("getNextSchemeIdGen() - Response::{}", nextId);
             return nextId;
         } else {
-            logger.info("getNextSchemeIdGen() - Response::{}", "null");
+            logger.debug("getNextSchemeIdGen() - Response::{}", "null");
             return null;
         }
     }
@@ -816,7 +817,7 @@ public class SchemeIdService {
     public SchemeId registerSchemeId(AuthenticateResponseDto authToken, SchemeName schemeName, SchemeIdRegisterRequestDto request) throws CisException {
         logger.debug("Request Received : schemeName-{} :: authToken - {} :: SchemeIdRegisterRequestDto - {} ", schemeName, authToken, request);
         SchemeId schemeId = this.registerSchemeIds(schemeName, request, authToken);
-        logger.info("registerSchemeIds() - Response::{}", schemeId);
+        logger.debug("registerSchemeIds() - Response::{}", schemeId);
         return schemeId;
     }
 
@@ -857,7 +858,7 @@ public class SchemeIdService {
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
-        logger.info("registerSchemeIds() - Response::{}", schemeIdRec);
+        logger.debug("registerSchemeIds() - Response::{}", schemeIdRec);
         return schemeIdRec;
     }
 
@@ -887,7 +888,7 @@ public class SchemeIdService {
                 throw new CisException(HttpStatus.BAD_REQUEST, "Cannot register SchemeId:" + request.getSchemeId() + ", current status:" + schemeIdrecord.getStatus());
             }
         }
-        logger.info("registerNewSchemeId() - Response::{}", schemeId);
+        logger.debug("registerNewSchemeId() - Response::{}", schemeId);
         return schemeId;
     }
 

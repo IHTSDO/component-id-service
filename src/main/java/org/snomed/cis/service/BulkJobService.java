@@ -61,7 +61,7 @@ public class BulkJobService {
         Map<String, String> orderBy = new HashMap();
         orderBy.put("created_at", "D");
         result = this.findFieldSelect(queryObject, fields, 100, null, orderBy);
-        logger.debug("BulkJobService.getJobs() - Response :: {}", result);
+        logger.debug("BulkJobService.getJobs() - Response size- :: {}", (null==result?"0":result.size()));
         return result;
     }
 
@@ -138,7 +138,7 @@ public class BulkJobService {
             }
             bulkJobList = newRows;
         }
-        logger.info("BulkJobService.findFieldSelect() - Response-bulkJobList :: {}", bulkJobList);
+        logger.debug("BulkJobService.findFieldSelect() - Response-bulkJobList size :: {}", (null==bulkJobList?"0":bulkJobList.size()));
         return bulkJobList;
     }
 
@@ -186,7 +186,7 @@ public class BulkJobService {
         } else {
             list = null;
         }
-        logger.info("BulkJobService.getJobRecords() - Response List<Object> :: {}", list);
+        logger.debug("BulkJobService.getJobRecords() - Response List<Object> size :: {}", (null==list?"0":list.size()));
         return list;
     }
 
@@ -215,7 +215,7 @@ public class BulkJobService {
                 ids.add(resultList.get(i).getSystemId());
             }
         }
-        logger.info("BulkJobService.findSchemeByJobId() - Response :: {}", cleanRows);
+        logger.debug("BulkJobService.findSchemeByJobId() - Response size- :: {}", (null==cleanRows?"0":cleanRows.size()));
         return cleanRows;
     }
 
@@ -242,7 +242,7 @@ public class BulkJobService {
                 ids.add(resultList.get(i).getSystemId());
             }
         }
-        logger.info("BulkJobService.findSctidByJobId() - Response :: {}", cleanRows);
+        logger.debug("BulkJobService.findSctidByJobId() - Response size-:: {}", (null==cleanRows?"0":cleanRows.size()));
         return cleanRows;
     }
 
@@ -327,7 +327,7 @@ public class BulkJobService {
             logger.error("error cleanUpExpiredIds():: No permission for the selected operation.");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
-        logger.info("BulkJobService.cleanUpExpiredIds() - Response :: {}", result);
+        logger.debug("BulkJobService.cleanUpExpiredIds() - Response size:: {}", (null==result?"0":result.size()));
         return result;
     }
 
@@ -338,7 +338,7 @@ public class BulkJobService {
         if (groups.contains("component-identifier-service-admin")) {
             isAble = true;
         }
-        logger.info("BulkJobService.isAbleUser() - Response :: {}", isAble);
+        logger.debug("BulkJobService.isAbleUser() - Response :: {}", isAble);
         return isAble;
     }
 }

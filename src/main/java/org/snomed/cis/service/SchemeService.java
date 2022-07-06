@@ -45,7 +45,7 @@ public class SchemeService {
         if (groups.contains("component-identifier-service-admin") || hasSchemePermission(schemeName, authenticateResponseDto.getName())) {
             isAble = true;
         }
-        logger.info("isAbleToEdit() Response: {}", isAble);
+        logger.debug("isAbleToEdit() Response: {}", isAble);
         return isAble;
     }
 
@@ -61,7 +61,7 @@ public class SchemeService {
                 }
             }
         }
-        logger.info("hasSchemePermission() Response: {}", hasSchemePermission);
+        logger.debug("hasSchemePermission() Response: {}", hasSchemePermission);
         return hasSchemePermission;
     }
 
@@ -82,9 +82,8 @@ public class SchemeService {
         for (PermissionsScheme perm : permissionsSchemes) {
             schemeObj = new Scheme(perm.getScheme(), perm.getRole());
             scheme.add(schemeObj);
-            scheme.size();
         }
-        logger.info("getSchemesForUsers() Response: {}", scheme);
+        logger.debug("getSchemesForUsers() Response size: {}",  (null==scheme?"0":scheme.size()));
         return scheme;
     }
 
@@ -105,11 +104,12 @@ public class SchemeService {
                 Scheme schemeObj = new Scheme(schemeIdBase1.getScheme(), schemeIdBase1.getIdBase());
                 schemeList.add(schemeObj);
             }*/
+            logger.debug("Get All Schemes - response Size", (null==finalList?"0":finalList.size()));
             finalList = schemeIdBase;
         } else {
+            logger.debug("Get All Schemes - response Size", "0");
             finalList = Collections.EMPTY_LIST;
         }
-        logger.info("Get All Schemes - response", finalList);
         return finalList;
     }
 
@@ -122,12 +122,12 @@ public class SchemeService {
         logger.debug("Request Received : schemeName-{} :: authToken - {} ", scheme);
         SchemeIdBase result;
         Optional<SchemeIdBase> schemeIdBase = schemeIdBaseRepository.findByScheme(scheme);
-        logger.info("Get All Scheme - ", schemeIdBase);
+        logger.debug("Get All Scheme - ", schemeIdBase);
         if (null != (schemeIdBase.isPresent() ? schemeIdBase.get() : null))
             result = schemeIdBase.get();
         else
             result = new SchemeIdBase();
-        logger.info("Get All Scheme - response", result);
+        logger.debug("Get All Scheme - response", result);
         return result;
     }
 
@@ -154,7 +154,7 @@ public class SchemeService {
                 schemeIdBase1.setIdBase(schemeSeq);
                 schemeIdBaseRepository.save(schemeIdBase1);
                 response.put("message", "Success");
-                logger.info("Update Scheme - ", response.toString());
+                logger.debug("Update Scheme - ", response.toString());
                 return response.toString();
 
             }
@@ -170,7 +170,7 @@ public class SchemeService {
     public List<PermissionsScheme> getPermissionsForScheme(String schemeName) {
         logger.debug("Request Received : schemeName-{}", schemeName);
         List<PermissionsScheme> permissionsSchemeList = permissionsSchemeRepository.findByScheme(schemeName);
-        logger.info("getPermissionsForScheme(): Response-{}", permissionsSchemeList);
+        logger.debug("getPermissionsForScheme(): Response Size-{}", (null==permissionsSchemeList?"0":permissionsSchemeList.size()));
         return permissionsSchemeList;
     }
 
@@ -180,7 +180,7 @@ public class SchemeService {
             permissionsSchemeRepository.deleteBySchemeAndUsername(schemeName, username);
             JSONObject response = new JSONObject();
             response.put("message", "Success");
-            logger.info("deleteSchemePermissions() Response:{}", response.toString());
+            logger.debug("deleteSchemePermissions() Response:{}", response.toString());
             return response.toString();
         } else {
             logger.error("error deleteSchemePermissions():: No permission for the selected operation");
@@ -200,7 +200,7 @@ public class SchemeService {
                 throw new CisException(HttpStatus.BAD_REQUEST, "ER_DUP_ENTRY: Duplicate entry " + "'" + schemeName + "-" + userName + "'" + " for key 'PRIMARY'");
             permissionsSchemeRepository.save(permissionsScheme);
             response.put("message", "Success");
-            logger.info("createSchemePermissions() Response:{}", response.toString());
+            logger.debug("createSchemePermissions() Response:{}", response.toString());
             return response.toString();
         } else {
             logger.error("error createSchemePermissions():: No permission for the selected operation");
