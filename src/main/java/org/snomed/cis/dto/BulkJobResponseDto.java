@@ -251,21 +251,21 @@ public class BulkJobResponseDto {
                 ", request='" + request + '\'' +
                 ", created_at=" + created_at +
                 ", requested_at=" + requested_at +
-                ", additionalJobs size=" + additionalJobs.size() +
+                ", additionalJobs size=" + (additionalJobs==null?"0":additionalJobs.size()) +
                 ", type='" + type + '\'' +
-                ", systemId size=" + systemId.length +
+                ", systemId size=" + (systemId==null?"0":systemId.length) +
                 ", quantity=" + quantity +
                 ", autoSysId=" + autoSysId +
                 ", partitionId='" + partitionId + '\'' +
                 ", jobId=" + jobId +
                 ", namespace=" + namespace +
                 ", software='" + software + '\'' +
-                ", sctid size=" + sctid.length +
+                ", sctid size=" + (sctid==null?"0":sctid.length) +
                 ", action='" + action + '\'' +
                 ", schemeId='" + schemeId + '\'' +
                 ", modified_at=" + modified_at +
                 ", scheme='" + scheme + '\'' +
-                ", records size=" + records.length +
+                ", records size=" + (records==null?"0":records.length) +
                 '}';
     }
 }
