@@ -86,7 +86,7 @@ public class BulkSctidController {
         logger.info("Request received from user {} - request :: {}",((Token) authentication).getUserName(), sctidBulkGenerationRequestDto);
         BulkJobResponseDto bulkJobResponseDto = service.generateSctids(authToken.getAuthenticateResponseDto(), sctidBulkGenerationRequestDto);
         Instant end = Instant.now();
-        logger.info("Job {} for user '{}' completed successfully in {} Milliseconds", bulkJobResponseDto.getId(), authToken.getUserName(), ChronoUnit.MILLIS.between(start,end));
+        logger.info("Job {} for user '{}' completed successfully in {} seconds", bulkJobResponseDto.getId(), authToken.getUserName(), (ChronoUnit.MILLIS.between(start,end)/1000.0));
         return ResponseEntity.ok(bulkJobResponseDto);
     }
 
