@@ -71,7 +71,7 @@ public class Sctid {
 
     @Override
     public String toString() {
-        return "Sctid{" +
+        return "{" +
                 "sctid='" + sctid + '\'' +
                 ", sequence=" + sequence +
                 ", namespace=" + namespace +

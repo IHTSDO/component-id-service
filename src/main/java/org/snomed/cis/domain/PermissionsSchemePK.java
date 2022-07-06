@@ -17,4 +17,11 @@ public class PermissionsSchemePK implements Serializable {
 
     protected String username;
 
+    @Override
+    public String toString() {
+        return "{" +
+                "scheme='" + scheme + '\'' +
+                ", username='" + username + '\'' +
+                '}';
+    }
 }

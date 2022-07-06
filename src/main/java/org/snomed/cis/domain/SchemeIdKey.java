@@ -13,6 +13,13 @@ public class SchemeIdKey implements Serializable {
     public SchemeIdKey(String scheme, String schemeId) {
         this.scheme = scheme;
         this.schemeId = schemeId;
+    }
 
+    @Override
+    public String toString() {
+        return "{" +
+                "scheme='" + scheme + '\'' +
+                ", schemeId='" + schemeId + '\'' +
+                '}';
     }
 }

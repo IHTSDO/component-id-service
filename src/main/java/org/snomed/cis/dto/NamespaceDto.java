@@ -93,4 +93,18 @@ public class NamespaceDto {
     public void setPartitions(List<Partitions> partitions) {
         this.partitions = partitions;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "namespace=" + namespace +
+                ", organizationName='" + organizationName + '\'' +
+                ", organizationAndContactDetails='" + organizationAndContactDetails + '\'' +
+                ", dateIssued='" + dateIssued + '\'' +
+                ", email='" + email + '\'' +
+                ", notes='" + notes + '\'' +
+                ", idPregenerate='" + idPregenerate + '\'' +
+                ", partitions size=" + (null==partitions?"0": partitions.size()) +
+                '}';
+    }
 }

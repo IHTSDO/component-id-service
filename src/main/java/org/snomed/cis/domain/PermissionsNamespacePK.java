@@ -17,4 +17,11 @@ public class PermissionsNamespacePK implements Serializable {
 
     public String username;
 
+    @Override
+    public String toString() {
+        return "{" +
+                "namespace=" + namespace +
+                ", username='" + username + '\'' +
+                '}';
+    }
 }

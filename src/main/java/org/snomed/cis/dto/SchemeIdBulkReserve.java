@@ -88,4 +88,18 @@ public class SchemeIdBulkReserve {
 
     public SchemeIdBulkReserve() {
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "quantity=" + quantity +
+                ", software='" + software + '\'' +
+                ", expirationDate='" + expirationDate + '\'' +
+                ", comment='" + comment + '\'' +
+                ", author='" + author + '\'' +
+                ", model='" + model + '\'' +
+                ", scheme='" + scheme + '\'' +
+                ", type='" + type + '\'' +
+                '}';
+    }
 }

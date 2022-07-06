@@ -1,6 +1,7 @@
 package org.snomed.cis.dto;
 
 import javax.validation.constraints.NotNull;
+import java.util.Arrays;
 
 public class SchemeIdBulkGenerationRequestDto {
 
@@ -71,6 +72,16 @@ public class SchemeIdBulkGenerationRequestDto {
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "quantity=" + quantity +
+                ", systemIds size=" + (null==systemIds?"0":Arrays.toString(systemIds).length()) +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                '}';
     }
 }
 

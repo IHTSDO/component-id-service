@@ -1,5 +1,7 @@
 package org.snomed.cis.dto;
 
+import java.util.Arrays;
+
 public class SctidBulkRegister {
 
     private RegistrationRecordsDTO[] records;
@@ -79,5 +81,18 @@ public class SctidBulkRegister {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "records size=" + (records==null?"0":Arrays.toString(records).length()) +
+                ", namespace=" + namespace +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                ", model='" + model + '\'' +
+                ", author='" + author + '\'' +
+                ", type='" + type + '\'' +
+                '}';
     }
 }

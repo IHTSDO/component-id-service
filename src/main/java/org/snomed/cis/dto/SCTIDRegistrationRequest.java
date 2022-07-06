@@ -64,4 +64,14 @@ public class SCTIDRegistrationRequest {
         this.comment = comment;
     }
 
-   }
+    @Override
+    public String toString() {
+        return "{" +
+                "sctid='" + sctid + '\'' +
+                ", namespace=" + namespace +
+                ", systemId='" + systemId + '\'' +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                '}';
+    }
+}

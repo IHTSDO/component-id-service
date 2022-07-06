@@ -60,4 +60,14 @@ public class SchemeIdGenerateRequestDto {
         this.autoSysId = autoSysId;
     }
 
+    @Override
+    public String toString() {
+        return "{" +
+                "software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                ", author='" + author + '\'' +
+                ", systemId='" + systemId + '\'' +
+                ", autoSysId=" + autoSysId +
+                '}';
+    }
 }

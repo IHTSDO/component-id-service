@@ -60,7 +60,7 @@ public class BulkSctRequestDTO {
     @Override
     public String toString() {
         return "{" +
-                "sctids=" + sctids.length +
+                "sctids=" + (null==sctids?"0": sctids.length) +
                 ", namespace=" + namespace +
                 ", software='" + software + '\'' +
                 ", comment='" + comment + '\'' +

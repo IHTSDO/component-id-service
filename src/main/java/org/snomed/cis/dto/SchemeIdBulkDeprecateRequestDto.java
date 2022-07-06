@@ -53,4 +53,13 @@ public class SchemeIdBulkDeprecateRequestDto {
     public void setComment(String comment) {
         this.comment = comment;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "schemeIds size=" + (null==schemeIds?"0":schemeIds.size()) +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                '}';
+    }
 }

@@ -29,4 +29,12 @@ public class PermissionsScheme implements Serializable {
 
     private String role;
 
+    @Override
+    public String toString() {
+        return "{" +
+                "scheme='" + scheme + '\'' +
+                ", username='" + username + '\'' +
+                ", role='" + role + '\'' +
+                '}';
+    }
 }

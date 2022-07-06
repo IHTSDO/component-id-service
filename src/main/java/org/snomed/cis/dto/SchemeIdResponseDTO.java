@@ -109,4 +109,20 @@ public class SchemeIdResponseDTO {
     public void setComment(String comment) {
         this.comment = comment;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "scheme='" + scheme + '\'' +
+                ", schemeId='" + schemeId + '\'' +
+                ", sequence=" + sequence +
+                ", checkDigit=" + checkDigit +
+                ", systemId='" + systemId + '\'' +
+                ", status='" + status + '\'' +
+                ", author='" + author + '\'' +
+                ", software='" + software + '\'' +
+                ", expirationDate=" + expirationDate +
+                ", comment='" + comment + '\'' +
+                '}';
+    }
 }

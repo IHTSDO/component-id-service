@@ -29,7 +29,7 @@ public class ImsGetAccountResponseDto {
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
                 ", langKey='" + langKey + '\'' +
-                ", roles size=" + roles.size() +
+                ", roles size=" + (null==roles?"0": roles.size()) +
                 '}';
     }
 }

@@ -80,4 +80,17 @@ public class SchemeIdRegisterRequestDto {
     public void setExpirationDate(Date expirationDate) {
         this.expirationDate = expirationDate;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "schemeId='" + schemeId + '\'' +
+                ", systemId='" + systemId + '\'' +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                ", author='" + author + '\'' +
+                ", expirationDate=" + expirationDate +
+                ", autoSysId=" + autoSysId +
+                '}';
+    }
 }

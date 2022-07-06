@@ -57,4 +57,13 @@ public class SchemeIdBulkRegisterRequestDto {
     public void setComment(String comment) {
         this.comment = comment;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "records size=" + (null==records?"0":records.size()) +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                '}';
+    }
 }

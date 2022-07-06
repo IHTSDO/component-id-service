@@ -30,4 +30,13 @@ public class ResultDto {
     public void setUsers(Long users) {
         this.users = users;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "namespaces size=" + (namespaces==null?"0":namespaces.size()) +
+                ", schemes=" + schemes +
+                ", users=" + users +
+                '}';
+    }
 }

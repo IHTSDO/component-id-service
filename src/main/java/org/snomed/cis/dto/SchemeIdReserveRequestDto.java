@@ -59,4 +59,15 @@ public class SchemeIdReserveRequestDto {
     public void setAuthor(String author) {
         this.author = author;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "software='" + software + '\'' +
+                ", expirationDate='" + expirationDate + '\'' +
+                ", comment='" + comment + '\'' +
+                ", author='" + author + '\'' +
+                ", systemId='" + systemId + '\'' +
+                '}';
+    }
 }

@@ -107,13 +107,13 @@ public class UserDTO {
 
 	@Override
 	public String toString() {
-		return "UserDTO{" +
+		return "{" +
 				"login='" + login + '\'' +
 				", firstName='" + firstName + '\'' +
 				", lastName='" + lastName + '\'' +
 				", email='" + email + '\'' +
 				", langKey='" + langKey + '\'' +
-				", roles=" + roles +
+				", roles size=" + (null==roles?"0":roles.size()) +
 				'}';
 	}
 }

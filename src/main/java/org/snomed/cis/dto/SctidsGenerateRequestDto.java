@@ -55,4 +55,16 @@ public class SctidsGenerateRequestDto {
     public void setGenerateLegacyIds(boolean generateLegacyIds) {
         this.generateLegacyIds = generateLegacyIds;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "namespace=" + namespace +
+                ", partitionId='" + partitionId + '\'' +
+                ", systemId='" + systemId + '\'' +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                ", generateLegacyIds=" + generateLegacyIds +
+                '}';
+    }
 }

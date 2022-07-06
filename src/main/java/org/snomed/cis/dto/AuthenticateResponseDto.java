@@ -41,7 +41,7 @@ public class AuthenticateResponseDto {
                 ", displayName='" + displayName + '\'' +
                 ", email='" + email + '\'' +
                 ", langKey='" + langKey + '\'' +
-                ", roles=" + roles.size() +
+                ", roles=" + (null==roles?"0":roles.size()) +
                 '}';
     }
 }

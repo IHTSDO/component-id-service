@@ -81,4 +81,17 @@ public class SchemeIdBulkRegister {
     public void setType(String type) {
         this.type = type;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "records size=" + (null==records?"0":records.size()) +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                ", author='" + author + '\'' +
+                ", model='" + model + '\'' +
+                ", scheme='" + scheme + '\'' +
+                ", type='" + type + '\'' +
+                '}';
+    }
 }

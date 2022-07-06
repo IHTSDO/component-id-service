@@ -70,7 +70,7 @@ public class RegistrationDataDTO {
     @Override
     public String toString() {
         return "{" +
-                "records size=" + records.length +
+                "records size=" + (null==records?"0": records.length) +
                 ", namespace=" + namespace +
                 ", software='" + software + '\'' +
                 ", comment='" + comment + '\'' +

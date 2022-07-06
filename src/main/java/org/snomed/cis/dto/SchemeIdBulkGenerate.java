@@ -2,6 +2,8 @@ package org.snomed.cis.dto;
 
 import org.snomed.cis.domain.SchemeName;
 
+import java.util.Arrays;
+
 //requestbody change
 public class SchemeIdBulkGenerate {
 
@@ -101,5 +103,20 @@ public class SchemeIdBulkGenerate {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "quantity=" + quantity +
+                ", systemIds size=" + (systemIds==null?"0":Arrays.toString(systemIds).length()) +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                ", autoSysId=" + autoSysId +
+                ", author='" + author + '\'' +
+                ", model='" + model + '\'' +
+                ", scheme=" + scheme +
+                ", type='" + type + '\'' +
+                '}';
     }
 }

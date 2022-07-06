@@ -93,7 +93,7 @@ public class BulkSctRequest {
     @Override
     public String toString() {
         return "{" +
-                "sctids size=" + sctids.length +
+                "sctids size=" + (sctids==null?"0": sctids.length) +
                 ", namespace=" + namespace +
                 ", software='" + software + '\'' +
                 ", comment='" + comment + '\'' +

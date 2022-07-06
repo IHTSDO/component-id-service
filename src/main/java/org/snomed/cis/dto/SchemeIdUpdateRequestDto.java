@@ -48,4 +48,14 @@ public class SchemeIdUpdateRequestDto {
     public void setComment(String comment) {
         this.comment = comment;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "schemeId='" + schemeId + '\'' +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                ", author='" + author + '\'' +
+                '}';
+    }
 }

@@ -62,4 +62,15 @@ public class SCTIDReservationRequest {
     public void setComment(String comment) {
         this.comment = comment;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "namespace=" + namespace +
+                ", partitionId='" + partitionId + '\'' +
+                ", expirationDate='" + expirationDate + '\'' +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                '}';
+    }
 }

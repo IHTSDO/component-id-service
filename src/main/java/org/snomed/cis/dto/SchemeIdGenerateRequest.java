@@ -67,4 +67,15 @@ public class SchemeIdGenerateRequest {
     public void setAutoSysId(boolean autoSysId) {
         this.autoSysId = autoSysId;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                ", systemId='" + systemId + '\'' +
+                ", author='" + author + '\'' +
+                ", autoSysId=" + autoSysId +
+                '}';
+    }
 }

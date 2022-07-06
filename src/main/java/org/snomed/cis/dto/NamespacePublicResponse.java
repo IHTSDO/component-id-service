@@ -69,4 +69,16 @@ public class NamespacePublicResponse {
     public void setNotes(String notes) {
         this.notes = notes;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "namespace=" + namespace +
+                ", organizationName='" + organizationName + '\'' +
+                ", organizationAndContactDetails='" + organizationAndContactDetails + '\'' +
+                ", dateIssued=" + dateIssued +
+                ", email='" + email + '\'' +
+                ", notes='" + notes + '\'' +
+                '}';
+    }
 }

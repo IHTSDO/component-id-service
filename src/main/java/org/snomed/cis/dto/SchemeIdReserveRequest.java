@@ -60,4 +60,15 @@ public class SchemeIdReserveRequest {
     public void setSystemId(String systemId) {
         this.systemId = systemId;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "software='" + software + '\'' +
+                ", expirationDate='" + expirationDate + '\'' +
+                ", comment='" + comment + '\'' +
+                ", author='" + author + '\'' +
+                ", systemId='" + systemId + '\'' +
+                '}';
+    }
 }

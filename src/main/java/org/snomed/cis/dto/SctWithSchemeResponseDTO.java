@@ -170,4 +170,25 @@ public class SctWithSchemeResponseDTO {
     public void setAdditionalIds(List<SchemeId> additionalIds) {
         this.additionalIds = additionalIds;
     }
+
+    @Override
+    public String toString() {
+        return "SctWithSchemeResponseDTO{" +
+                "sctid='" + sctid + '\'' +
+                ", sequence=" + sequence +
+                ", namespace=" + namespace +
+                ", partitionId='" + partitionId + '\'' +
+                ", checkDigit=" + checkDigit +
+                ", systemId='" + systemId + '\'' +
+                ", status='" + status + '\'' +
+                ", author='" + author + '\'' +
+                ", software='" + software + '\'' +
+                ", expirationDate=" + expirationDate +
+                ", comment='" + comment + '\'' +
+                ", jobId=" + jobId +
+                ", created_at=" + created_at +
+                ", modified_at=" + modified_at +
+                ", additionalIds size=" + (additionalIds==null?"0":additionalIds.size()) +
+                '}';
+    }
 }

@@ -87,7 +87,7 @@ public class SCTIDBulkReservationRequestDto {
 
     @Override
     public String toString() {
-        return "SCTIDBulkReservationRequestDto{" +
+        return "{" +
                 "namespace=" + namespace +
                 ", partitionId='" + partitionId + '\'' +
                 ", expirationDate='" + expirationDate + '\'' +

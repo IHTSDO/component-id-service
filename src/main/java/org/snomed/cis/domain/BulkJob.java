@@ -33,5 +33,17 @@ public class BulkJob {
 
     private String log;
 
+    @Override
+    public String toString() {
+        return "{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", status='" + status + '\'' +
+                ", request='" + request + '\'' +
+                ", created_at=" + created_at +
+                ", modified_at=" + modified_at +
+                ", log='" + log + '\'' +
+                '}';
+    }
 }
 

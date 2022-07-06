@@ -22,4 +22,11 @@ public class SchemeIdBase {
 
     private String idBase;
 
+    @Override
+    public String toString() {
+        return "{" +
+                "scheme='" + scheme + '\'' +
+                ", idBase='" + idBase + '\'' +
+                '}';
+    }
 }

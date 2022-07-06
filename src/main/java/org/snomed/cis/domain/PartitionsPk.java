@@ -17,4 +17,11 @@ public class PartitionsPk implements Serializable {
 
     public String partitionId;
 
+    @Override
+    public String toString() {
+        return "{" +
+                "namespace=" + namespace +
+                ", partitionId='" + partitionId + '\'' +
+                '}';
+    }
 }

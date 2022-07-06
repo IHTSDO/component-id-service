@@ -79,4 +79,17 @@ public class SCTIDRegisterRequest {
     public void setAuthor(String author) {
         this.author = author;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "sctid='" + sctid + '\'' +
+                ", namespace=" + namespace +
+                ", systemId='" + systemId + '\'' +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                ", autoSysId=" + autoSysId +
+                ", author='" + author + '\'' +
+                '}';
+    }
 }

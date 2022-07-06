@@ -66,4 +66,22 @@ public class SchemeId implements Serializable {
         this.modified_at = modified_at;
     }
 
+    @Override
+    public String toString() {
+        return "{" +
+                "scheme='" + scheme + '\'' +
+                ", schemeId='" + schemeId + '\'' +
+                ", sequence=" + sequence +
+                ", checkDigit=" + checkDigit +
+                ", systemId='" + systemId + '\'' +
+                ", status='" + status + '\'' +
+                ", author='" + author + '\'' +
+                ", software='" + software + '\'' +
+                ", expirationDate=" + expirationDate +
+                ", jobId=" + jobId +
+                ", created_at=" + created_at +
+                ", modified_at=" + modified_at +
+                ", comment='" + comment + '\'' +
+                '}';
+    }
 }

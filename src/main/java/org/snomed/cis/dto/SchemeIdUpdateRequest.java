@@ -49,4 +49,14 @@ public class SchemeIdUpdateRequest {
     public void setAuthor(String author) {
         this.author = author;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "schemeId='" + schemeId + '\'' +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                ", author='" + author + '\'' +
+                '}';
+    }
 }

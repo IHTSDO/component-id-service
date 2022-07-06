@@ -81,5 +81,17 @@ public class SCTIDReserveRequest {
 
     public SCTIDReserveRequest() {
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "namespace=" + namespace +
+                ", partitionId='" + partitionId + '\'' +
+                ", expirationDate='" + expirationDate + '\'' +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                ", author='" + author + '\'' +
+                '}';
+    }
 }
 

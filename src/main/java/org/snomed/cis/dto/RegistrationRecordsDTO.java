@@ -24,4 +24,12 @@ public class RegistrationRecordsDTO {
     public void setSystemId(String systemId) {
         this.systemId = systemId;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "sctid='" + sctid + '\'' +
+                ", systemId='" + systemId + '\'' +
+                '}';
+    }
 }

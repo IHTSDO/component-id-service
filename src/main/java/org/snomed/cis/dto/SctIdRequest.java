@@ -17,4 +17,11 @@ public class SctIdRequest {
     public void setSctids(String sctids) {
         this.sctids = sctids;
     }
+
+    @Override
+    public String toString() {
+        return "SctIdRequest{" +
+                "sctids='" + sctids + '\'' +
+                '}';
+    }
 }

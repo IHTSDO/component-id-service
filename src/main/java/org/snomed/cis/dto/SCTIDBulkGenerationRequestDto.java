@@ -106,7 +106,7 @@ public class SCTIDBulkGenerationRequestDto {
                 "namespace=" + namespace +
                 ", partitionId='" + partitionId + '\'' +
                 ", quantity=" + quantity +
-                ", systemIds=" + systemIds +
+                ", systemIds size=" + (null==systemIds?"0": systemIds.size()) +
                 ", software='" + software + '\'' +
                 ", comment='" + comment + '\'' +
                 ", generateLegacyIds='" + generateLegacyIds + '\'' +

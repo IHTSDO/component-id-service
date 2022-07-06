@@ -115,4 +115,19 @@ public class SctidBulkReserve {
     public void setType(String type) {
         this.type = type;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "namespace=" + namespace +
+                ", partitionId='" + partitionId + '\'' +
+                ", expirationDate='" + expirationDate + '\'' +
+                ", quantity=" + quantity +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                ", model='" + model + '\'' +
+                ", author='" + author + '\'' +
+                ", type='" + type + '\'' +
+                '}';
+    }
 }

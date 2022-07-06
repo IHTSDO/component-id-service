@@ -38,4 +38,13 @@ public class PartitionsDto {
     public void setSequence(Integer sequence) {
         this.sequence = sequence;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "namespace=" + namespace +
+                ", partitionId='" + partitionId + '\'' +
+                ", sequence=" + sequence +
+                '}';
+    }
 }

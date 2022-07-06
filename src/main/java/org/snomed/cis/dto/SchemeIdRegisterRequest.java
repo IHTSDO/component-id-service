@@ -90,4 +90,17 @@ public class SchemeIdRegisterRequest {
     public void setAutoSysId(boolean autoSysId) {
         this.autoSysId = autoSysId;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "schemeId='" + schemeId + '\'' +
+                ", systemId='" + systemId + '\'' +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                ", author='" + author + '\'' +
+                ", expirationDate=" + expirationDate +
+                ", autoSysId=" + autoSysId +
+                '}';
+    }
 }

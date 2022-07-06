@@ -19,5 +19,13 @@ private String systemId;
     public void setSystemId(String systemId) {
         this.systemId = systemId;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "schemeId='" + schemeId + '\'' +
+                ", systemId='" + systemId + '\'' +
+                '}';
+    }
 }
 

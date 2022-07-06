@@ -64,6 +64,14 @@ public class SchemeIdBulkReserveRequestDto {
         this.comment = comment;
     }
 
-
+    @Override
+    public String toString() {
+        return "{" +
+                "quantity=" + quantity +
+                ", software='" + software + '\'' +
+                ", expirationDate='" + expirationDate + '\'' +
+                ", comment='" + comment + '\'' +
+                '}';
+    }
 }
 

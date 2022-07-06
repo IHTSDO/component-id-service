@@ -23,4 +23,12 @@ public class Partitions implements Serializable {
 
     private Integer sequence;
 
+    @Override
+    public String toString() {
+        return "{" +
+                "namespace=" + namespace +
+                ", partitionId='" + partitionId + '\'' +
+                ", sequence=" + sequence +
+                '}';
+    }
 }

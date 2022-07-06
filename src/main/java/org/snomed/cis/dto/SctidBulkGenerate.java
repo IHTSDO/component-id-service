@@ -160,4 +160,22 @@ public class SctidBulkGenerate {
         return copyObj;
     }
 
+    @Override
+    public String toString() {
+        return "SctidBulkGenerate{" +
+                "scheme='" + scheme + '\'' +
+                ", namespace=" + namespace +
+                ", partitionId='" + partitionId + '\'' +
+                ", quantity=" + quantity +
+                ", systemIds size=" + (null==systemIds?"0":systemIds.size()) +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                ", generateLegacyIds='" + generateLegacyIds + '\'' +
+                ", model='" + model + '\'' +
+                ", author='" + author + '\'' +
+                ", type='" + type + '\'' +
+                ", additionalJobs size=" + (null==additionalJobs?"0":additionalJobs.size()) +
+                ", autoSysId=" + autoSysId +
+                '}';
+    }
 }
