@@ -58,4 +58,15 @@ public class DeprecateSctRequest {
     public void setAuthor(String author) {
         this.author = author;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "sctid='" + sctid + '\'' +
+                ", namespace=" + namespace +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                ", author='" + author + '\'' +
+                '}';
+    }
 }

@@ -32,4 +32,16 @@ public class AuthenticateResponseDto {
     @JsonIgnore
     private List<String> roles;
 
+    @Override
+    public String toString() {
+        return "AuthenticateResponseDto{" +
+                "name='" + name + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", displayName='" + displayName + '\'' +
+                ", email='" + email + '\'' +
+                ", langKey='" + langKey + '\'' +
+                ", roles=" + roles.size() +
+                '}';
+    }
 }

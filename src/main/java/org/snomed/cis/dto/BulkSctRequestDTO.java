@@ -57,5 +57,13 @@ public class BulkSctRequestDTO {
         this.comment = comment;
     }
 
-
+    @Override
+    public String toString() {
+        return "{" +
+                "sctids=" + sctids.length +
+                ", namespace=" + namespace +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                '}';
+    }
 }

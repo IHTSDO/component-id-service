@@ -107,4 +107,20 @@ public class CheckSctidResponseDTO {
     public void setPartitionId(String partitionId) {
         this.partitionId = partitionId;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "sctid='" + sctid + '\'' +
+                ", sequence=" + sequence +
+                ", namespace=" + namespace +
+                ", partitionId='" + partitionId + '\'' +
+                ", componentType='" + componentType + '\'' +
+                ", checkDigit=" + checkDigit +
+                ", isSCTIDValid='" + isSCTIDValid + '\'' +
+                ", errorMessage='" + errorMessage + '\'' +
+                ", namespaceOrganization='" + namespaceOrganization + '\'' +
+                ", namespaceContactEmail='" + namespaceContactEmail + '\'' +
+                '}';
+    }
 }

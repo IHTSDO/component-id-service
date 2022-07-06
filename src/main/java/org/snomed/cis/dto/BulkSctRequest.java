@@ -89,4 +89,17 @@ public class BulkSctRequest {
     public void setType(String type) {
         this.type = type;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "sctids size=" + sctids.length +
+                ", namespace=" + namespace +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                ", author='" + author + '\'' +
+                ", model='" + model + '\'' +
+                ", type='" + type + '\'' +
+                '}';
+    }
 }

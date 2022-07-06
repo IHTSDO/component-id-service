@@ -239,5 +239,33 @@ public class BulkJobResponseDto {
         this.software = software;
     }
 
-
+    @Override
+    public String toString() {
+        return "BulkJobResponseDto{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", author='" + author + '\'' +
+                ", Comment='" + Comment + '\'' +
+                ", ExpirationDate=" + ExpirationDate +
+                ", status='" + status + '\'' +
+                ", request='" + request + '\'' +
+                ", created_at=" + created_at +
+                ", requested_at=" + requested_at +
+                ", additionalJobs size=" + additionalJobs.size() +
+                ", type='" + type + '\'' +
+                ", systemId size=" + systemId.length +
+                ", quantity=" + quantity +
+                ", autoSysId=" + autoSysId +
+                ", partitionId='" + partitionId + '\'' +
+                ", jobId=" + jobId +
+                ", namespace=" + namespace +
+                ", software='" + software + '\'' +
+                ", sctid size=" + sctid.length +
+                ", action='" + action + '\'' +
+                ", schemeId='" + schemeId + '\'' +
+                ", modified_at=" + modified_at +
+                ", scheme='" + scheme + '\'' +
+                ", records size=" + records.length +
+                '}';
+    }
 }

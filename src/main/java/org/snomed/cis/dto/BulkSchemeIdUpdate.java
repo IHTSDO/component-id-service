@@ -80,4 +80,17 @@ public class BulkSchemeIdUpdate {
     public void setType(String type) {
         this.type = type;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "schemeIds size=" + schemeIds.size() +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                ", author='" + author + '\'' +
+                ", model='" + model + '\'' +
+                ", scheme='" + scheme + '\'' +
+                ", type='" + type + '\'' +
+                '}';
+    }
 }

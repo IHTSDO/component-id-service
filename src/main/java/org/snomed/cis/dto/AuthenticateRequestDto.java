@@ -16,4 +16,11 @@ public class AuthenticateRequestDto {
     @NotEmpty
     private String token;
 
+
+    @Override
+    public String toString() {
+        return "{" +
+                "token='" + token + '\'' +
+                '}';
+    }
 }

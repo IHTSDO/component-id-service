@@ -11,4 +11,10 @@ public class LoginResponseDto {
 
     private String token;
 
+    @Override
+    public String toString() {
+        return "{" +
+                "token='" + token + '\'' +
+                '}';
+    }
 }

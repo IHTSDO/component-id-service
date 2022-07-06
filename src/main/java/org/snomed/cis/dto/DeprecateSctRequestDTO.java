@@ -60,4 +60,13 @@ public class DeprecateSctRequestDTO {
         this.comment = comment;
     }
 
+    @Override
+    public String toString() {
+        return "{" +
+                "sctid='" + sctid + '\'' +
+                ", namespace=" + namespace +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                '}';
+    }
 }

@@ -85,4 +85,19 @@ public class CleanUpServiceResponse {
     public void setModel(String model) {
         this.model = model;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "fieldCount=" + fieldCount +
+                ", affectedRows=" + affectedRows +
+                ", insertId=" + insertId +
+                ", serverStatus=" + serverStatus +
+                ", warningCount=" + warningCount +
+                ", message='" + message + '\'' +
+                ", protocol41=" + protocol41 +
+                ", changedRows=" + changedRows +
+                ", model='" + model + '\'' +
+                '}';
+    }
 }

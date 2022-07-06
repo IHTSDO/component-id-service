@@ -61,4 +61,15 @@ public class BulkJobsListResponse {
     public void setModified_at(Date modified_at) {
         this.modified_at = modified_at;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", status='" + status + '\'' +
+                ", created_at=" + created_at +
+                ", modified_at=" + modified_at +
+                '}';
+    }
 }

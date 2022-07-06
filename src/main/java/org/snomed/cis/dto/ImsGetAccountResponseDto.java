@@ -21,4 +21,15 @@ public class ImsGetAccountResponseDto {
 
     private List<String> roles;
 
+    @Override
+    public String toString() {
+        return "{" +
+                "login='" + login + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", email='" + email + '\'' +
+                ", langKey='" + langKey + '\'' +
+                ", roles size=" + roles.size() +
+                '}';
+    }
 }
