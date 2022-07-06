@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -147,9 +148,19 @@ public class SCTIdDM {
             sctIdRecord.setStatus(newStatus);
             sctIdRecord.setAuthor(operation.getAuthor());
             sctIdRecord.setSoftware(operation.getSoftware());
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            LocalDateTime expirationDate = LocalDateTime.parse(operation.getExpirationDate(), formatter);
-            sctIdRecord.setExpirationDate(expirationDate);
+            LocalDateTime expirationDateTime = null;
+            if(!operation.getExpirationDate().isEmpty() && !operation.getExpirationDate().isBlank()
+            && null != operation.getExpirationDate())
+            {
+                String str = operation.getExpirationDate();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                expirationDateTime = LocalDate.parse(str, formatter).atStartOfDay();
+                sctIdRecord.setExpirationDate(expirationDateTime);
+            }
+            else
+            {
+                sctIdRecord.setExpirationDate(null);
+            }
             sctIdRecord.setComment(operation.getComment());
             sctIdRecord.setJobId(null);
             Sctid updatedRecord = sctidRepository.save(sctIdRecord);
