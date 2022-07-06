@@ -241,7 +241,7 @@ public class BulkJobResponseDto {
 
     @Override
     public String toString() {
-        return "BulkJobResponseDto{" +
+        return "{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", author='" + author + '\'' +

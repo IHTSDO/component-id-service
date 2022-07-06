@@ -67,5 +67,13 @@ public class RegistrationDataDTO {
         this.comment = comment;
     }
 
-
+    @Override
+    public String toString() {
+        return "{" +
+                "records size=" + records.length +
+                ", namespace=" + namespace +
+                ", software='" + software + '\'' +
+                ", comment='" + comment + '\'' +
+                '}';
+    }
 }

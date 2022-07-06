@@ -31,4 +31,12 @@ public class PermissionsNamespace implements Serializable {
     @NotNull
     private String role;
 
+    @Override
+    public String toString() {
+        return "{" +
+                "namespace=" + namespace +
+                ", username='" + username + '\'' +
+                ", role='" + role + '\'' +
+                '}';
+    }
 }

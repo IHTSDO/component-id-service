@@ -34,7 +34,7 @@ public class AuthenticateResponseDto {
 
     @Override
     public String toString() {
-        return "AuthenticateResponseDto{" +
+        return "{" +
                 "name='" + name + '\'' +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
