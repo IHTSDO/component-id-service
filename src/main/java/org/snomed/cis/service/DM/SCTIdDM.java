@@ -165,8 +165,6 @@ public class SCTIdDM {
             sctIdRecord.setJobId(null);
             Sctid updatedRecord = sctidRepository.save(sctIdRecord);
             result = updatedRecord;
-        } else {
-            counterMode(operation, action);
         }
         return result;
     }
@@ -174,8 +172,11 @@ public class SCTIdDM {
     public Integer getNextNumber(SCTIDReserveRequest operation) throws CisException {
         Optional<Partitions> partitionsList = partitionsRepository.findById(new PartitionsPk(operation.getNamespace(), operation.getPartitionId()));
         Integer nextNumber = null;
-        if (partitionsList.isPresent())
+        if (partitionsList.isPresent()) {
             nextNumber = ((partitionsList.get().getSequence()) + 1);
+            partitionsList.get().setSequence(nextNumber);
+            partitionsRepository.save(partitionsList.get());
+        }
         return nextNumber;
     }
 //requestbody change
