@@ -86,6 +86,8 @@ public class SCTIdDM {
                 sctIdRecord.setExpirationDate(sctIdRecord.getExpirationDate());
                 sctIdRecord.setComment(sctidRegistrationRequest.getComment());
                 sctIdRecord.setJobId(null);
+                sctIdRecord.setCreated_at(sctIdRecord.getCreated_at()!=null?sctIdRecord.getCreated_at():LocalDateTime.now());
+                sctIdRecord.setModified_at(LocalDateTime.now());
                 Sctid updatedRecord = sctidRepository.save(sctIdRecord);
                 result = updatedRecord;
             } else {
@@ -163,6 +165,8 @@ public class SCTIdDM {
             }
             sctIdRecord.setComment(operation.getComment());
             sctIdRecord.setJobId(null);
+            sctIdRecord.setCreated_at(sctIdRecord.getCreated_at()!=null?sctIdRecord.getCreated_at():LocalDateTime.now());
+            sctIdRecord.setModified_at(LocalDateTime.now());
             Sctid updatedRecord = sctidRepository.save(sctIdRecord);
             result = updatedRecord;
         }
@@ -213,8 +217,9 @@ public class SCTIdDM {
             sctIdRecord.setAuthor(operation.getAuthor());
             sctIdRecord.setSoftware(operation.getSoftware());
             sctIdRecord.setComment(operation.getComment());
-
             sctIdRecord.setJobId(null);
+            sctIdRecord.setCreated_at(sctIdRecord.getCreated_at()!=null?sctIdRecord.getCreated_at():LocalDateTime.now());
+            sctIdRecord.setModified_at(LocalDateTime.now());
             Sctid updatedRecord = sctidRepository.save(sctIdRecord);
             result = updatedRecord;
         }

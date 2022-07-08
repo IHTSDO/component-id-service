@@ -389,6 +389,7 @@ public class SchemeIdService {
                     schemeIdrecord.setSoftware(updateRequest.getSoftware());
                     schemeIdrecord.setComment(updateRequest.getComment());
                     schemeIdrecord.setJobId(null);
+                    schemeIdrecord.setModified_at(LocalDateTime.now());
                     schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
                 } else {
                     logger.error("error releaseSchemeIdList():: Cannot release SchemeId:{} , current status:{}", schemeIdrecord.getSchemeId(), schemeIdrecord.getStatus());
@@ -434,6 +435,7 @@ public class SchemeIdService {
                     schemeIdrecord.setSoftware(updateRequest.getSoftware());
                     schemeIdrecord.setComment(updateRequest.getComment());
                     schemeIdrecord.setJobId(null);
+                    schemeIdrecord.setModified_at(LocalDateTime.now());
                     schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
                 } else {
                     logger.error("error publishSchemeIdList():: Cannot publish SchemeId:{}, current status:{}", schemeIdrecord.getSchemeId(), schemeIdrecord.getStatus());
@@ -525,6 +527,8 @@ public class SchemeIdService {
                 schemeIdRecords.get(0).setExpirationDate(null);
                 schemeIdRecords.get(0).setComment(request.getComment());
                 schemeIdRecords.get(0).setJobId(null);
+                schemeIdRecords.get(0).setCreated_at(schemeIdRecords.get(0).getCreated_at()!=null?schemeIdRecords.get(0).getCreated_at():LocalDateTime.now());
+                schemeIdRecords.get(0).setModified_at(LocalDateTime.now());
                 updatedrecord = bulkSchemeIdRepository.save(schemeIdRecords.get(0));
                 return updatedrecord;
             } else {
@@ -558,6 +562,7 @@ public class SchemeIdService {
                     schemeIdRecord.setExpirationDate(null);
                     schemeIdRecord.setComment(request.getComment());
                     schemeIdRecord.setJobId(null);
+                    schemeIdRecord.setModified_at(LocalDateTime.now());
                     updatedrecord = bulkSchemeIdRepository.save(schemeIdRecord);
                 } else {
                     updatedrecord = counterMode(schemeName, request, reserve);
@@ -780,6 +785,8 @@ public class SchemeIdService {
                     schemeIdRecord.setExpirationDate(null);
                     schemeIdRecord.setComment(request.getComment());
                     schemeIdRecord.setJobId(null);
+                    schemeIdRecord.setCreated_at(schemeIdRecord.getCreated_at()!=null?schemeIdRecord.getCreated_at():LocalDateTime.now());
+                    schemeIdRecord.setModified_at(LocalDateTime.now());
                     updatedrecord = bulkSchemeIdRepository.save(schemeIdRecord);
                 } else {
                     counterModeGen(schemeName, request, reserve);
@@ -882,6 +889,8 @@ public class SchemeIdService {
                 schemeId.setExpirationDate(request.getExpirationDate());
                 schemeIdrecord.setComment(request.getComment());
                 schemeIdrecord.setJobId(null);
+                schemeIdrecord.setCreated_at(schemeIdrecord.getCreated_at()!=null?schemeIdrecord.getCreated_at():LocalDateTime.now());
+                schemeIdrecord.setModified_at(LocalDateTime.now());
                 schemeId = bulkSchemeIdRepository.save(schemeIdrecord);
             } else {
                 logger.error("error registerNewSchemeId():: Cannot register SchemeId:{}, current status:{}", request.getSchemeId(), schemeIdrecord.getStatus());
