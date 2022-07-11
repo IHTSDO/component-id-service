@@ -523,10 +523,12 @@ public class BackendJobService {
 
             var newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(), action);
             LocalDateTime expirationDateTime = null;
-            if (record.has("expirationDate") && !record.getString("expirationDate").equalsIgnoreCase("null") && record.get("expirationDate") != null) {
-                String str = record.getString("expirationDate");
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                expirationDateTime = LocalDate.parse(str, formatter).atStartOfDay();
+            if (record.has("expirationDate")) {
+                if(!record.get("expirationDate").equals(null)) {
+                    String str = record.getString("expirationDate");
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                    expirationDateTime = LocalDate.parse(str, formatter).atStartOfDay();
+                }
             }
             if (newStatus != null) {
                 schemeIdRecord.setStatus(newStatus);
@@ -734,10 +736,13 @@ public class BackendJobService {
                             else
                                 newSchemeId = CTV3ID.getNextId(previousCode);
                             LocalDateTime expirationDateTime = null;
-                            if (record.has("expirationDate") && !record.getString("expirationDate").equalsIgnoreCase("null") && record.get("expirationDate") != null) {
-                                String str = record.getString("expirationDate");
-                                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                                expirationDateTime = LocalDate.parse(str, formatter).atStartOfDay();
+                            if (record.has("expirationDate")) {
+                                if(!record.get("expirationDate").equals(null))
+                                {
+                                    String str = record.getString("expirationDate");
+                                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                                    expirationDateTime = LocalDate.parse(str, formatter).atStartOfDay();
+                                }
                             }
                             SchemeId schemeId = SchemeId.builder()
                                     .scheme(record.getString("scheme"))
@@ -1103,10 +1108,12 @@ public class BackendJobService {
                             seq++;
                             String newSctid = computeSctId(record, seq);
                             LocalDateTime expirationDateTime = null;
-                            if (record.has("expirationDate") && !record.getString("expirationDate").equalsIgnoreCase("null") && record.get("expirationDate") != null) {
-                                String str = record.getString("expirationDate");
-                                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                                expirationDateTime = LocalDate.parse(str, formatter).atStartOfDay();
+                            if (record.has("expirationDate")) {
+                                if(!record.get("expirationDate").equals(null)) {
+                                    String str = record.getString("expirationDate");
+                                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                                    expirationDateTime = LocalDate.parse(str, formatter).atStartOfDay();
+                                }
                             }
                             Sctid rec = Sctid.builder().sctid(newSctid).sequence(seq).
                                     namespace(record.getInt("namespace")).
