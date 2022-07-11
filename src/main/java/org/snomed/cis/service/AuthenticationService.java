@@ -41,10 +41,10 @@ public class AuthenticationService {
             imsResponse = requestManager.postRequest(url, null, payload.toString());
         } catch (CisException e) {
             if (e.getStatus().is4xxClientError()) {
-                logger.error("call to IMS returned 4xx while trying to login for user '{}'", loginRequestDto.getUsername(), e);
+                logger.error("call to IMS returned 4xx while trying to login for user '{}'", loginRequestDto.getUsername());
                 throw new CisException(HttpStatus.UNAUTHORIZED, "username/password incorrect for input user '"+loginRequestDto.getPassword()+"'");
             } else if (e.getStatus().is5xxServerError()) {
-                logger.error("call to IMS returned 5xx while trying to login for user '{}'", loginRequestDto.getUsername(), e);
+                logger.error("call to IMS returned 5xx while trying to login for user '{}'", loginRequestDto.getUsername());
                 throw new CisException(e.getStatus(), "unknown error");
             } else {
                 logger.error("call to IMS returned unknown error while trying to login for user '{}'", loginRequestDto.getUsername(), e);
@@ -83,10 +83,10 @@ public class AuthenticationService {
             imsResponse = requestManager.getRequest(url, getHttpHeaders(token));
         } catch (CisException e) {
             if (e.getStatus().is4xxClientError()) {
-                logger.error("call to IMS returned 4xx error while trying to authenticate", e);
+                logger.error("call to IMS returned 4xx error while trying to authenticate");
                 throw new CisException(HttpStatus.UNAUTHORIZED, "invalid token");
             } else if (e.getStatus().is5xxServerError()) {
-                logger.error("call to IMS returned 5xx error while trying to authenticate", e);
+                logger.error("call to IMS returned 5xx error while trying to authenticate");
                 throw new CisException(e.getStatus(), "unknown error");
             } else {
                 logger.error("call to IMS returned unknown error while trying to authenticate", e);
