@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -85,6 +86,8 @@ public class SCTIdDM {
                 sctIdRecord.setExpirationDate(sctIdRecord.getExpirationDate());
                 sctIdRecord.setComment(sctidRegistrationRequest.getComment());
                 sctIdRecord.setJobId(null);
+                sctIdRecord.setCreated_at(sctIdRecord.getCreated_at()!=null?sctIdRecord.getCreated_at():LocalDateTime.now());
+                sctIdRecord.setModified_at(LocalDateTime.now());
                 Sctid updatedRecord = sctidRepository.save(sctIdRecord);
                 result = updatedRecord;
             } else {
@@ -147,15 +150,25 @@ public class SCTIdDM {
             sctIdRecord.setStatus(newStatus);
             sctIdRecord.setAuthor(operation.getAuthor());
             sctIdRecord.setSoftware(operation.getSoftware());
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            LocalDateTime expirationDate = LocalDateTime.parse(operation.getExpirationDate(), formatter);
-            sctIdRecord.setExpirationDate(expirationDate);
+            LocalDateTime expirationDateTime = null;
+            if(!operation.getExpirationDate().isEmpty() && !operation.getExpirationDate().isBlank()
+            && null != operation.getExpirationDate())
+            {
+                String str = operation.getExpirationDate();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                expirationDateTime = LocalDate.parse(str, formatter).atStartOfDay();
+                sctIdRecord.setExpirationDate(expirationDateTime);
+            }
+            else
+            {
+                sctIdRecord.setExpirationDate(null);
+            }
             sctIdRecord.setComment(operation.getComment());
             sctIdRecord.setJobId(null);
+            sctIdRecord.setCreated_at(sctIdRecord.getCreated_at()!=null?sctIdRecord.getCreated_at():LocalDateTime.now());
+            sctIdRecord.setModified_at(LocalDateTime.now());
             Sctid updatedRecord = sctidRepository.save(sctIdRecord);
             result = updatedRecord;
-        } else {
-            counterMode(operation, action);
         }
         return result;
     }
@@ -163,8 +176,11 @@ public class SCTIdDM {
     public Integer getNextNumber(SCTIDReserveRequest operation) throws CisException {
         Optional<Partitions> partitionsList = partitionsRepository.findById(new PartitionsPk(operation.getNamespace(), operation.getPartitionId()));
         Integer nextNumber = null;
-        if (partitionsList.isPresent())
+        if (partitionsList.isPresent()) {
             nextNumber = ((partitionsList.get().getSequence()) + 1);
+            partitionsList.get().setSequence(nextNumber);
+            partitionsRepository.save(partitionsList.get());
+        }
         return nextNumber;
     }
 //requestbody change
@@ -201,8 +217,9 @@ public class SCTIdDM {
             sctIdRecord.setAuthor(operation.getAuthor());
             sctIdRecord.setSoftware(operation.getSoftware());
             sctIdRecord.setComment(operation.getComment());
-
             sctIdRecord.setJobId(null);
+            sctIdRecord.setCreated_at(sctIdRecord.getCreated_at()!=null?sctIdRecord.getCreated_at():LocalDateTime.now());
+            sctIdRecord.setModified_at(LocalDateTime.now());
             Sctid updatedRecord = sctidRepository.save(sctIdRecord);
             result = updatedRecord;
         }

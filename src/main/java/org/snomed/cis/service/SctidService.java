@@ -317,6 +317,8 @@ public class SctidService {
                         sctRec.setSoftware(deprecateSctRequest.getSoftware());
                         sctRec.setComment(deprecateSctRequest.getComment());
                         sctRec.setJobId(null);
+                        sctRec.setCreated_at(sctRec.getCreated_at()!=null?sctRec.getCreated_at():LocalDateTime.now());
+                        sctRec.setModified_at(LocalDateTime.now());
                         output = sctidRepository.save(sctRec);
                     } else {
                         logger.error("error deprecateSct():: Cannot deprecate SCTID:{}, current status: {}", request.getSctid(), sctRec.getStatus());
@@ -361,7 +363,8 @@ public class SctidService {
                         sctRec.setAuthor(deprecateSctRequest.getAuthor());
                         sctRec.setSoftware(deprecateSctRequest.getSoftware());
                         sctRec.setComment(deprecateSctRequest.getComment());
-
+                        sctRec.setCreated_at(sctRec.getCreated_at()!=null?sctRec.getCreated_at():LocalDateTime.now());
+                        sctRec.setModified_at(LocalDateTime.now());
                         sctRec.setJobId(null);
                         output = sctidRepository.save(sctRec);
                     } else {
@@ -407,8 +410,8 @@ public class SctidService {
                         sctRec.setAuthor(deprecateSctRequest.getAuthor());
                         sctRec.setSoftware(deprecateSctRequest.getSoftware());
                         sctRec.setComment(deprecateSctRequest.getComment());
-
-
+                        sctRec.setCreated_at(sctRec.getCreated_at()!=null?sctRec.getCreated_at():LocalDateTime.now());
+                        sctRec.setModified_at(LocalDateTime.now());
                         sctRec.setJobId(null);
                         output = sctidRepository.save(sctRec);
                     } else {
@@ -537,6 +540,7 @@ public class SctidService {
                     sctList.get(0).setExpirationDate(LocalDateTime.now());
                     sctList.get(0).setComment(generationData.getComment());
                     sctList.get(0).setJobId(null);
+                    sctList.get(0).setCreated_at( sctList.get(0).getCreated_at()!=null? sctList.get(0).getCreated_at():LocalDateTime.now());
                     sctList.get(0).setModified_at(LocalDateTime.now());
                     sctOutput = sctidRepository.save(sctList.get(0));
                 } else {
