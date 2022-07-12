@@ -524,7 +524,7 @@ public class BackendJobService {
             var newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(), action);
             LocalDateTime expirationDateTime = null;
             if (record.has("expirationDate")) {
-                if(!record.get("expirationDate").equals(null)) {
+                if(!record.get("expirationDate").equals(null) && !record.get("expirationDate").equals("null") && !record.get("expirationDate").equals("")) {
                     String str = record.getString("expirationDate");
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                     expirationDateTime = LocalDate.parse(str, formatter).atStartOfDay();
@@ -737,7 +737,7 @@ public class BackendJobService {
                                 newSchemeId = CTV3ID.getNextId(previousCode);
                             LocalDateTime expirationDateTime = null;
                             if (record.has("expirationDate")) {
-                                if(!record.get("expirationDate").equals(null))
+                                if(!record.get("expirationDate").equals(null) && !record.get("expirationDate").equals("null") && !record.get("expirationDate").equals(""))
                                 {
                                     String str = record.getString("expirationDate");
                                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -1109,7 +1109,7 @@ public class BackendJobService {
                             String newSctid = computeSctId(record, seq);
                             LocalDateTime expirationDateTime = null;
                             if (record.has("expirationDate")) {
-                                if(!record.get("expirationDate").equals(null)) {
+                                if(!record.get("expirationDate").equals(null) && !record.get("expirationDate").equals("null") && !record.get("expirationDate").equals("")) {
                                     String str = record.getString("expirationDate");
                                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                                     expirationDateTime = LocalDate.parse(str, formatter).atStartOfDay();
