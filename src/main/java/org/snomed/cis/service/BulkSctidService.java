@@ -126,7 +126,7 @@ public class BulkSctidService {
         logger.debug("BulkSctidService.validSctidCheck() sctidsArray :: {} ", sctidsArray);
         for (int i = 0; i < sctidsArray.size(); i++) {
             if (!(sctIdHelper.validSCTId(sctidsArray.get(i))))
-                logger.error("error getSchemeIds():: Not a Valid Sctid: {}", sctidsArray.get(i));
+                logger.error("error validSctidCheck():: Not a Valid Sctid: {}", sctidsArray.get(i));
             throw new CisException(HttpStatus.NOT_ACCEPTABLE, "Not a Valid Sctid:" + sctidsArray.get(i));
         }
     }
@@ -223,8 +223,8 @@ public class BulkSctidService {
             sctidBulkRegister.setComment(registrationData.getComment());
 
             if ((registrationData.getRecords() == null) || (registrationData.getRecords().length == 0)) {
-                logger.error("error registerScts():: Records property cannot be empty.");
-                throw new CisException(HttpStatus.ACCEPTED, "Records property cannot be empty.");
+                logger.error("error registerScts():: Register SCTIDS: Request Records Size-{} cannot be 0 or empty or null.",registrationData.getRecords().length);
+                throw new CisException(HttpStatus.ACCEPTED, "Register SCTIDS: Request Records Size-"+registrationData.getRecords().length+" cannot be 0 or empty or null.");
             } else {
                 int namespace;
                 boolean error = false;
@@ -232,8 +232,8 @@ public class BulkSctidService {
                     namespace = sctIdHelper.getNamespace(record.getSctid());
                     if (namespace != registrationData.getNamespace()) {
                         error = true;
-                        logger.error("error registerScts():: Namespaces differences between schemeid: {} and parameter: {} ", record.getSctid(), registrationData.getNamespace());
-                        throw new CisException(HttpStatus.CONFLICT, "Namespaces differences between schemeid: " + record.getSctid() + " and parameter: " + registrationData.getNamespace());
+                        logger.error("error registerScts():: Namespaces differences between Generated Namespace : {} from SCTID: {} and Namespace Request parameter: {} ",namespace, record.getSctid(), registrationData.getNamespace());
+                        throw new CisException(HttpStatus.CONFLICT, "Namespaces differences between Generated Namespace: " + namespace + "from SCTID: " + record.getSctid() + " and Namespace Request parameter: " + registrationData.getNamespace());
                     }
                 }
                 if (!error) {
@@ -253,7 +253,7 @@ public class BulkSctidService {
                         bulk.setCreated_at(LocalDateTime.now());
                         bulk.setModified_at(LocalDateTime.now());
                     } catch (JsonProcessingException e) {
-                        logger.error("error registerScts():: ", e);
+                        logger.error("error registerScts():: While converting Object: {} to String.Exception ",sctidBulkRegister.toString(), e);
                         throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
                     }
 
@@ -262,8 +262,8 @@ public class BulkSctidService {
                 }
             }
         } else {
-            logger.error("error registerScts():: No permission for the selected operation.");
-            throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
+            logger.error("error registerScts():: User: {} has Neither admin access nor Namespace Permission for Namespace: {} for the selected operation.",token.getName(),registrationData.getNamespace().toString());
+            throw new CisException(HttpStatus.UNAUTHORIZED, "registerScts():: User: "+token.getName()+" has Neither admin access nor Namespace Permission for Namespace: "+registrationData.getNamespace().toString()+" for the selected operation.");
         }
         return resultJob;
     }
@@ -322,19 +322,19 @@ public class BulkSctidService {
 
         boolean able = isAbleUser(sctidBulkGenerationRequestDto.getNamespace().toString(), token);
         if (!able) {
-            logger.error("error generateSctids():: No permission for the selected operation");
-            throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
+            logger.error("error generateSctids():: User: {} has Neither admin access nor Namespace Permission for Namespace: {} for the selected operation.",token.getName(),sctidBulkGenerationRequestDto.getNamespace().toString());
+            throw new CisException(HttpStatus.UNAUTHORIZED, "error generateSctids():: User: "+token.getName()+" has Neither admin access nor Namespace Permission for Namespace: "+sctidBulkGenerationRequestDto.getNamespace().toString()+ " for the selected operation.");
         }
         if(null!=sctidBulkGenerationRequestDto.getQuantity() && sctidBulkGenerationRequestDto.getQuantity() <= 0)
             throw new CisException(HttpStatus.BAD_REQUEST, "quantity value must be positive number");
         if (((sctidBulkGenerationRequestDto.getNamespace() == 0) && (!"0".equalsIgnoreCase(sctidBulkGenerationRequestDto.getPartitionId().substring(0, 1))))
                 || (0 != (sctidBulkGenerationRequestDto.getNamespace()) && (!"1".equalsIgnoreCase(sctidBulkGenerationRequestDto.getPartitionId().substring(0, 1))))) {
-            logger.error("error generateSctids():: Namespace and partitionId parameters are not consistent.");
-            throw new CisException(HttpStatus.BAD_REQUEST, "Namespace and partitionId parameters are not consistent.");
+            logger.error("error generateSctids():: Namespace - {} and partitionId - {} parameters are not consistent.",sctidBulkGenerationRequestDto.getNamespace(),sctidBulkGenerationRequestDto.getPartitionId());
+            throw new CisException(HttpStatus.BAD_REQUEST, "generateSctids():: Namespace- "+sctidBulkGenerationRequestDto.getNamespace()+" and partitionId- "+sctidBulkGenerationRequestDto.getPartitionId()+" parameters are not consistent.");
         }
         if ((null!=bulkGenerate.getSystemIds() && sctidBulkGenerationRequestDto.getSystemIds().size()> 0 && (sctidBulkGenerationRequestDto.getSystemIds().size() != sctidBulkGenerationRequestDto.getQuantity()))) {
-            logger.error("error generateSctids():: SystemIds quantity is not equal to quantity requirement");
-            throw new CisException(HttpStatus.BAD_REQUEST, "SystemIds quantity is not equal to quantity requirement");
+            logger.error("error generateSctids():: SystemIds quantity -{} is not equal to quantity -{} requirement",sctidBulkGenerationRequestDto.getSystemIds().size(),sctidBulkGenerationRequestDto.getQuantity());
+            throw new CisException(HttpStatus.BAD_REQUEST, "SystemIds quantity - "+ sctidBulkGenerationRequestDto.getSystemIds().size() +" is not equal to quantity - "+ sctidBulkGenerationRequestDto.getQuantity() +" requirement");
         }
 
         bulkGenerate.setAuthor(token.getName());
@@ -490,12 +490,12 @@ public class BulkSctidService {
 
         boolean able = isAbleUser(deprecateBulkSctRequestDTO.getNamespace().toString(), token);
         if (!able) {
-            logger.error("error deprecateSctid():: No permission for the selected operation.");
-            throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation.");
+            logger.error("error deprecateSctid():: User: {} has Neither admin access nor Namespace Permission for Namespace: {} for the selected operation.",token.getName(),deprecateBulkSctRequestDTO.getNamespace().toString());
+            throw new CisException(HttpStatus.UNAUTHORIZED, "deprecateSctid():: User:"+token.getName()+" has Neither admin access nor Namespace Permission for Namespace:"+deprecateBulkSctRequestDTO.getNamespace().toString()+" for the selected operation.");
         } else {
             if (null == deprecateBulkSctRequestDTO.getSctids() || deprecateBulkSctRequestDTO.getSctids().length < 1) {
-                logger.error("error deprecateSctid():: Sctids property cannot be empty.");
-                throw new CisException(HttpStatus.ACCEPTED, "Sctids property cannot be empty.");
+                logger.error("error deprecateSctid():: Sctid's List size - {} cannot be 0 or property cannot be empty or null.",deprecateBulkSctRequestDTO.getSctids().length);
+                throw new CisException(HttpStatus.ACCEPTED, "deprecateSctid():: Sctid's List size -"+deprecateBulkSctRequestDTO.getSctids().length+" cannot be 0 or property cannot be empty or null.");
             } else {
                 int namespace;
                 boolean error = false;
@@ -503,7 +503,7 @@ public class BulkSctidService {
                     namespace = sctIdHelper.getNamespace(sctid);
                     if (namespace != deprecateBulkSctRequestDTO.getNamespace()) {
                         error = true;
-                        logger.error("error deprecateSctid():: SNamespaces differences between sctid: {} and parameter: {}", sctid, deprecateBulkSctRequestDTO.getNamespace());
+                        logger.error("error deprecateSctid():: Namespaces differences between sctid: {} and parameter: {}", sctid, deprecateBulkSctRequestDTO.getNamespace());
                         throw new CisException(HttpStatus.ACCEPTED, "Namespaces differences between sctid: " + sctid + " and parameter: " + deprecateBulkSctRequestDTO.getNamespace());
                     }
                 }
@@ -523,8 +523,8 @@ public class BulkSctidService {
                         bulk.setCreated_at(LocalDateTime.now());
                         bulk.setModified_at(LocalDateTime.now());
                     } catch (JsonProcessingException e) {
-                        logger.error("error deprecateSctid():: {}", e.getMessage());
-                        throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
+                        logger.error("error deprecateSctid():: while Converting JsonObject- {} to String.Exception is : {}",bulkSctRequest.toString(), e.getMessage());
+                        throw new CisException(HttpStatus.BAD_REQUEST,"error deprecateSctid():: while Converting JsonObject-"+bulkSctRequest.toString()+"to String.Exception is :"+ e.getMessage());
                     }
                     resultJob = this.bulkJobRepository.save(bulk);
                 }
@@ -546,12 +546,12 @@ public class BulkSctidService {
         bulkSctRequest.setComment(publishBulkSctRequestDTO.getComment());
         boolean able = isAbleUser(publishBulkSctRequestDTO.getNamespace().toString(), token);
         if (!able) {
-            logger.error("error publishSctid():: No permission for the selected operation");
-            throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
+            logger.error("error publishSctid():: User: {} has Neither admin access nor Namespace Permission for Namespace: {} for the selected operation.",token.getName(),publishBulkSctRequestDTO.getNamespace().toString());
+            throw new CisException(HttpStatus.UNAUTHORIZED, "publishSctid():: User: {} "+token.getName()+" has Neither admin access nor Namespace Permission for Namespace:"+publishBulkSctRequestDTO.getNamespace().toString()+" for the selected operation.");
         } else {
             if (null == publishBulkSctRequestDTO.getSctids() || publishBulkSctRequestDTO.getSctids().length < 1) {
-                logger.error("error publishSctid():: ctids property cannot be empty.");
-                throw new CisException(HttpStatus.ACCEPTED, "Sctids property cannot be empty.");
+                logger.error("error publishSctid():: Sctids Request property Size is:{}. It cannot be 0 or empty or null.",publishBulkSctRequestDTO.getSctids().length );
+                throw new CisException(HttpStatus.ACCEPTED, "error publishSctid():: Sctids Request property Size is:"+publishBulkSctRequestDTO.getSctids().length+" .It cannot be 0 or empty or null.");
             } else {
                 int namespace;
                 boolean error = false;
@@ -579,8 +579,8 @@ public class BulkSctidService {
                         bulk.setCreated_at(LocalDateTime.now());
                         bulk.setModified_at(LocalDateTime.now());
                     } catch (JsonProcessingException e) {
-                        logger.error("error publishSctid()::{}", e.getMessage());
-                        throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
+                        logger.error("error publishSctid():: Converting Json Object - {} to String. Exception is: {}",bulkSctRequest.toString(), e.getMessage());
+                        throw new CisException(HttpStatus.BAD_REQUEST,"error publishSctid():: Converting Json Object -"+ bulkSctRequest.toString()+" to String. Exception is: "+e.getMessage());
                     }
 
                     resultJob = this.bulkJobRepository.save(bulk);
@@ -605,12 +605,12 @@ public class BulkSctidService {
         //UserDTO userObj = this.getAuthenticatedUser();
         boolean able = isAbleUser(releaseBulkSctRequestDTO.getNamespace().toString(), token);
         if (!able) {
-            logger.error("error releaseSctid():: No permission for the selected operation");
-            throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
+            logger.error("error releaseSctid():: User: {} has Neither admin access nor Namespace Permission for Namespace: {} for the selected operation.",token.getName(),releaseBulkSctRequestDTO.getNamespace().toString());
+            throw new CisException(HttpStatus.UNAUTHORIZED, "releaseSctid():: User: "+token.getName() + " has Neither admin access nor Namespace Permission for Namespace: "+releaseBulkSctRequestDTO.getNamespace().toString()+" for the selected operation.");
         } else {
             if (null == releaseBulkSctRequestDTO.getSctids() || releaseBulkSctRequestDTO.getSctids().length < 1) {
-                logger.error("error releaseSctid():: Sctids property cannot be empty.");
-                throw new CisException(HttpStatus.ACCEPTED, "Sctids property cannot be empty.");
+                logger.error("error releaseSctid():: Sctids Request property size is - {}.It cannot be 0 or empty or null.",releaseBulkSctRequestDTO.getSctids().length);
+                throw new CisException(HttpStatus.ACCEPTED, "error releaseSctid():: Sctids Request property size is -"+releaseBulkSctRequestDTO.getSctids().length+"It cannot be 0 or empty or null.");
             } else {
                 int namespace;
                 boolean error = false;
@@ -638,8 +638,8 @@ public class BulkSctidService {
                         bulk.setCreated_at(LocalDateTime.now());
                         bulk.setModified_at(LocalDateTime.now());
                     } catch (JsonProcessingException e) {
-                        logger.error("error releaseSctid():: {}", e.getMessage());
-                        throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
+                        logger.error("error releaseSctid():: While Converting Object-{} to String. Exception is- {}",bulkSctRequest.toString(), e.getMessage());
+                        throw new CisException(HttpStatus.BAD_REQUEST, "error releaseSctid():: While Converting Object-"+ bulkSctRequest.toString() + "to String. Exception is-"+e.getMessage());
                     }
                     resultJob = this.bulkJobRepository.save(bulk);
                 }
@@ -657,8 +657,8 @@ public class BulkSctidService {
         if (able)
             output = bulkReserveSctids(sctidBulkReservationRequestDto, authToken.getName());
         else {
-            logger.error("error reserveSctids():: No permission for the selected operation.");
-            throw new CisException(HttpStatus.FORBIDDEN, "No permission for the selected operation");
+            logger.error("error reserveSctids():: User: {} has Neither admin access nor Namespace Permission for Namespace: {} for the selected operation.",authToken.getName(),sctidBulkReservationRequestDto.getNamespace().toString());
+            throw new CisException(HttpStatus.FORBIDDEN, "reserveSctids():: User: "+authToken.getName()+" has Neither admin access nor Namespace Permission for Namespace: "+sctidBulkReservationRequestDto.getNamespace().toString()+" for the selected operation.");
         }
         logger.debug("BulkSctidService.reserveSctids() - Response :: {}", output);
         return output;
@@ -676,11 +676,11 @@ public class BulkSctidService {
 
         if (((sctidBulkReservationRequestDto.getNamespace() == 0) && (!("0".equalsIgnoreCase(sctidBulkReservationRequestDto.getPartitionId().substring(0, 1)))))
                 || (sctidBulkReservationRequestDto.getNamespace() != 0 && (!("1".equalsIgnoreCase(sctidBulkReservationRequestDto.getPartitionId().substring(0, 1)))))) {
-            logger.error("error bulkReserveSctids():: Namespace and partitionId parameters are not consistent.");
-            throw new CisException(HttpStatus.BAD_REQUEST, "Namespace and partitionId parameters are not consistent.");
+            logger.error("error bulkReserveSctids():: Namespace - {} and partitionId - {} parameters are not consistent.",sctidBulkReservationRequestDto.getNamespace(),sctidBulkReservationRequestDto.getPartitionId());
+            throw new CisException(HttpStatus.BAD_REQUEST, "Namespace - "+sctidBulkReservationRequestDto.getNamespace() +" and partitionId - "+sctidBulkReservationRequestDto.getPartitionId() +" parameters are not consistent.");
         } else if (sctidBulkReservationRequestDto.getQuantity() == null || sctidBulkReservationRequestDto.getQuantity() < 1) {
-            logger.error("error bulkReserveSctids():: Quantity property cannot be lower to 1.");
-            throw new CisException(HttpStatus.BAD_REQUEST, "Quantity property cannot be lower to 1.");
+            logger.error("error bulkReserveSctids():: Quantity property: {} - cannot be lower to 1.",sctidBulkReservationRequestDto.getQuantity());
+            throw new CisException(HttpStatus.BAD_REQUEST, "Quantity property:"+sctidBulkReservationRequestDto.getQuantity()+" cannot be lower to 1.");
         }
         {
             sctidBulkReserve.setAuthor(username);
@@ -696,8 +696,8 @@ public class BulkSctidService {
                 bulkJob.setCreated_at(LocalDateTime.now());
                 bulkJob.setModified_at(LocalDateTime.now());
             } catch (JsonProcessingException e) {
-                logger.error("error bulkReserveSctids():: {}", e.getMessage());
-                throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
+                logger.error("error bulkReserveSctids():: Error while converting Object - {} to String. Exception : {}",sctidBulkReserve.toString(), e.getMessage());
+                throw new CisException(HttpStatus.BAD_REQUEST, "error bulkReserveSctids():: Error while converting Object -"+sctidBulkReserve.toString()+ "to String. Exception is:" +e.getMessage());
             }
             bulkJob = bulkJobRepository.save(bulkJob);
             logger.debug("BulkSctidService.bulkReserveSctids() - Response :: {}", bulkJob);
