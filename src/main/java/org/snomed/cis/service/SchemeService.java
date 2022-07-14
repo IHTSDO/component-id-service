@@ -160,7 +160,7 @@ public class SchemeService {
             }
 
         } else {
-            logger.error("error updateSchemes():: No permission for the selected operation");
+            logger.error("error updateSchemes():: user:{} has neither admin access nor scheme permission for the selected operation. Scheme:{}",token.getName(),schemeName);
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -183,7 +183,7 @@ public class SchemeService {
             logger.debug("deleteSchemePermissions() Response:{}", response.toString());
             return response.toString();
         } else {
-            logger.error("error deleteSchemePermissions():: No permission for the selected operation");
+            logger.error("error deleteSchemePermissions()::user:{} has neither admin access nor scheme permission for the selected operation. Scheme:{}",authenticateResponseDto.getName(),schemeName);
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
 
@@ -203,7 +203,7 @@ public class SchemeService {
             logger.debug("createSchemePermissions() Response:{}", response.toString());
             return response.toString();
         } else {
-            logger.error("error createSchemePermissions():: No permission for the selected operation");
+            logger.error("error createSchemePermissions():: user :{} has neither admin access nor scheme permission for the selected operation. Scheme:{}",authenticateResponseDto.getName(),schemeName);
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
 

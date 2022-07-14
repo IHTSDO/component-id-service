@@ -109,13 +109,13 @@ public class NamespaceService {
         NamespaceDto output = new NamespaceDto();
         if (this.isAbleToEdit(namespace.getNamespace(), authenticateResponseDto)) {
             if (namespaceString.length() != 7 && !namespaceString.equalsIgnoreCase("0")) {
-                logger.error("error createNamespaces():: Invalid namespace");
+                logger.error("error createNamespaces():: Invalid namespace:{}",namespace.getNamespace());
                 throw new CisException(HttpStatus.BAD_REQUEST, "Invalid namespace");
             } else {
                 return createNamespaceList(namespace);
             }
         } else {
-            logger.error("error createNamespaces():: No permission for the selected operation");
+            logger.error("error createNamespaces():: user:{} has neither admin access nor namespace permission for the selected operation.namespace:{}",authenticateResponseDto.getName(),namespace.getNamespace());
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -227,7 +227,7 @@ public class NamespaceService {
             return result;
 
         } else {
-            logger.error("error updateNamespaces():: No permission for the selected operation");
+            logger.error("error updateNamespaces():: user:{} has neither admin access nor namespace permission for the selected operation.namespace:{}",authenticateResponseDto.getName(),namespace.getNamespace());
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -259,7 +259,7 @@ public class NamespaceService {
             namespace = namespaceRepository.save(namespaceGet);
             response.put("message", "Success");
         } catch (Exception e) {
-            logger.error("error editNamespace():: ", e);
+            logger.error("error editNamespace():: while saving namespace object to Database.namespace:{} and Exception :{}",namespaceId, e);
             throw new CisException(HttpStatus.BAD_REQUEST, String.valueOf(response.put("message", e.getMessage())));
         }
         logger.debug("editNamespace() Response-{} ", response.toString());
@@ -338,7 +338,7 @@ public class NamespaceService {
         logger.debug("NamespaceService.getNamespaceId() namespaceId-{} ", namespaceId);
         JSONObject response = new JSONObject();
         if (namespaceId.length() != 7 && !(namespaceId.equalsIgnoreCase("0"))) {
-            logger.error("error getSchemeIds()::Invalid namespace");
+            logger.error("error getSchemeIds()::Invalid namespace: {}",namespaceId);
             throw new CisException(HttpStatus.NOT_FOUND, "Invalid namespace");
         }
         NamespaceDto namespacesObj = new NamespaceDto();
@@ -397,7 +397,7 @@ public class NamespaceService {
                     partitionsRepository.deleteAll(partNamespace);
                 response.put("message", "Success");
             } else {
-                logger.error("error getSchemeIds():: No permission for the selected operation");
+                logger.error("error getSchemeIds():: user:{} has neither admin access nor namespace permission for the selected operation.namespace:{}",authenticateResponseDto.getName(),namespaceId);
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
             }
@@ -428,7 +428,7 @@ public class NamespaceService {
             if ((partResult.getSequence()).equals(Integer.parseInt(value)))
                 response.put("message", "Success");
         } else {
-            logger.error("error getSchemeIds():: No permission for the selected operation");
+            logger.error("error getSchemeIds():: user:{} has neither admin access nor namespace permission for the selected operation. namespace:{}",authenticateResponseDto.getName(),namespaceId);
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -448,7 +448,7 @@ public class NamespaceService {
                 return Collections.EMPTY_LIST;
             }
         } catch (Exception e) {
-            logger.error("error getSchemeIds():: BAd Request: ", e);
+            logger.error("error getSchemeIds():: DB Exception while finding namespace:{} . Exception is :{} ",namespaceId, e);
             throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
@@ -462,7 +462,7 @@ public class NamespaceService {
             logger.debug("deleteNamespacePermissionsOfUser() Response :: {}", response.toString());
             return response.toString();
         } else {
-            logger.error("error deleteNamespacePermissionsOfUser():: No permission for the selected operation");
+            logger.error("error deleteNamespacePermissionsOfUser():: user:{} has neither admin access nor namespace permission for the selected operation. namespace:{}",authenticateResponseDto.getName(),namespaceId);
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
     }
@@ -480,7 +480,7 @@ public class NamespaceService {
             logger.debug("createNamespacePermissionsOfUser() Response :: {}", response.toString());
             return response.toString();
         } else {
-            logger.error("error createNamespacePermissionsOfUser():: No permission for the selected operation");
+            logger.error("error createNamespacePermissionsOfUser():: user: {} has neither admin access nor namespace permission for the selected operation. namespace:{}",authenticateResponseDto.getName(),namespaceId);
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
     }

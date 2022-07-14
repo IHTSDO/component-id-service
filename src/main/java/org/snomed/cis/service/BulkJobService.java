@@ -287,8 +287,8 @@ public class BulkJobService {
                                 }*/
                 }
             } catch (Exception e) {
-                logger.error("error cleanUpExpiredIds():: [Error] in clean up service - SctId expiration date", e);
-                throw new CisException(HttpStatus.UNAUTHORIZED, " [Error] in clean up service - SctId expiration date: " + e.getMessage());
+                logger.error("error cleanUpExpiredIds():: [Error] in clean up service - with expirationDate: 'null', status:'available' and status:'Reserved'", e);
+                throw new CisException(HttpStatus.UNAUTHORIZED, " [Error] in clean up service -" + e.getMessage());
             }
             try {
                 String sql = "Update schemeId set expirationDate=null,status='Available',software='Clean Service' where status='Reserved' and expirationDate<now()";
@@ -320,11 +320,11 @@ public class BulkJobService {
                                 }*/
                 }
             } catch (Exception e) {
-                logger.error("error cleanUpExpiredIds():: [Error] in clean up service - SctId expiration date : ", e);
+                logger.error("error cleanUpExpiredIds():: [Error] in clean up service - with expirationDate: 'null', status:'available' and status:'Reserved'", e);
                 throw new CisException(HttpStatus.UNAUTHORIZED, " [Error] in clean up service - SctId expiration date: " + e.getMessage());
             }
         } else {
-            logger.error("error cleanUpExpiredIds():: No permission for the selected operation.");
+            logger.error("error cleanUpExpiredIds():: user:{} has neither admin access nor permission for the selected operation.",token.getName());
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
         logger.debug("BulkJobService.cleanUpExpiredIds() - Response size:: {}", (null==result?"0":result.size()));
