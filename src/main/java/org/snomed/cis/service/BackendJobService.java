@@ -241,13 +241,14 @@ public class BackendJobService {
                 }
                 try {
                     if (jobType.GENERATE_SCTIDS.equalsIgnoreCase(requestJson.getString("type"))) {
+                        if(requestJson.has("autoSysId"))
                         requestJson.remove("autoSysId");
                         if (requestJson.has("scheme"))
                             requestJson.remove("scheme");
                         if (requestJson.has("additionalJobs"))
                             requestJson.remove("additionalJobs");
                     } else if ((jobType.RESERVE_SCTIDS).equalsIgnoreCase(requestJson.getString("type"))) {
-                        if (requestJson.has("expirationDate"))
+                        if (requestJson.has("autoSysId"))
                             requestJson.remove("autoSysId");
                         if (requestJson.has("expirationDate"))
                             requestJson.remove("expirationDate");
@@ -422,10 +423,25 @@ public class BackendJobService {
             if (null != schemeIdRecord) {
                 String newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(), record.getString("action"));
                 if (null != newStatus) {
+                    String comment = null;
+                    String software  = null;
+                    String author  = null;
+                    if(record.has("comment") && !record.get("comment").equals(null) && !record.get("comment").equals("null") && !record.get("comment").equals(""))
+                    {
+                        comment = record.getString("comment");
+                    }
+                    if(record.has("software") && !record.get("software").equals(null) && !record.get("software").equals("null") && !record.get("software").equals(""))
+                    {
+                        software = record.getString("software");
+                    }
+                    if(record.has("author") && !record.get("author").equals(null) && !record.get("author").equals("null") && !record.get("author").equals(""))
+                    {
+                        author = record.getString("author");
+                    }
                     schemeIdRecord.setStatus(newStatus);
-                    schemeIdRecord.setAuthor(record.getString("author"));
-                    schemeIdRecord.setSoftware(record.getString("software"));
-                    schemeIdRecord.setComment(record.getString("comment"));
+                    schemeIdRecord.setAuthor(author);
+                    schemeIdRecord.setSoftware(software);
+                    schemeIdRecord.setComment(comment);
                     schemeIdRecord.setJobId(record.getInt("jobId"));
                     records.add(schemeIdRecord);
                 } else {
@@ -467,11 +483,26 @@ public class BackendJobService {
                     newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(), stateMachine.actions.get("register"));
                 }
                 if (newStatus != null && !newStatus.isEmpty()) {
+                    String comment = null;
+                    String software = null;
+                    String author = null;
+                    if(record.has("comment") && !record.get("comment").equals(null) && !record.get("comment").equals("null") && !record.get("comment").equals(""))
+                    {
+                        comment = record.getString("comment");
+                    }
+                    if(record.has("software") && !record.get("software").equals(null) && !record.get("software").equals("null") && !record.get("software").equals(""))
+                    {
+                        software = record.getString("software");
+                    }
+                    if(record.has("author") && !record.get("author").equals(null) && !record.get("author").equals("null") && !record.get("author").equals(""))
+                    {
+                        author = record.getString("author");
+                    }
                     schemeIdRecord.setStatus(newStatus);
-                    schemeIdRecord.setAuthor(record.getString("author"));
-                    schemeIdRecord.setSoftware(record.getString("software"));
+                    schemeIdRecord.setAuthor(author);
+                    schemeIdRecord.setSoftware(software);
                     schemeIdRecord.setExpirationDate((record.has("expirationDate")) ? (LocalDateTime) record.get("expirationDate") : null);
-                    schemeIdRecord.setComment(record.getString("comment"));
+                    schemeIdRecord.setComment(comment);
                     schemeIdRecord.setJobId(record.getInt("jobId"));
                     schemeIdRecord.setModified_at(LocalDateTime.now());
                     records.add(schemeIdRecord);
@@ -529,11 +560,26 @@ public class BackendJobService {
                     expirationDateTime = LocalDate.parse(str, formatter).atStartOfDay();
                 }
             if (newStatus != null) {
+                String comment = null;
+                String software = null;
+                String author = null;
+                if(record.has("comment") && !record.get("comment").equals(null) && !record.get("comment").equals("null") && !record.get("comment").equals(""))
+                {
+                    comment = record.getString("comment");
+                }
+                if(record.has("software") && !record.get("software").equals(null) && !record.get("software").equals("null") && !record.get("software").equals(""))
+                {
+                    software = record.getString("software");
+                }
+                if(record.has("author") && !record.get("author").equals(null) && !record.get("author").equals("null") && !record.get("author").equals(""))
+                {
+                    author = record.getString("author");
+                }
                 schemeIdRecord.setStatus(newStatus);
-                schemeIdRecord.setAuthor(record.getString("author"));
-                schemeIdRecord.setSoftware(record.getString("software"));
+                schemeIdRecord.setAuthor(author);
+                schemeIdRecord.setSoftware(software);
                 schemeIdRecord.setExpirationDate(expirationDateTime);
-                schemeIdRecord.setComment(record.getString("comment"));
+                schemeIdRecord.setComment(comment);
                 schemeIdRecord.setJobId(record.getInt("jobId"));
                 schemeIdRepository.save(schemeIdRecord);
                 //saveScheme((List<SchemeId>) schemeIdRecord, record.getScheme());
@@ -740,6 +786,21 @@ public class BackendJobService {
                                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                                     expirationDateTime = LocalDate.parse(str, formatter).atStartOfDay();
                                 }
+                            String comment = null;
+                            String software = null;
+                            String author = null;
+                            if(record.has("comment") && !record.get("comment").equals(null) && !record.get("comment").equals("null") && !record.get("comment").equals(""))
+                            {
+                                comment = record.getString("comment");
+                            }
+                            if(record.has("software") && !record.get("software").equals(null) && !record.get("software").equals("null") && !record.get("software").equals(""))
+                            {
+                                software = record.getString("software");
+                            }
+                            if(record.has("author") && !record.get("author").equals(null) && !record.get("author").equals("null") && !record.get("author").equals(""))
+                            {
+                                author = record.getString("author");
+                            }
                             SchemeId schemeId = SchemeId.builder()
                                     .scheme(record.getString("scheme"))
                                     .schemeId(newSchemeId)
@@ -747,10 +808,10 @@ public class BackendJobService {
                                     .checkDigit(null)
                                     .systemId(systemId)
                                     .status(stateMachine.statuses.get("assigned"))
-                                    .author(record.getString("author"))
-                                    .software(record.getString("software"))
+                                    .author(author)
+                                    .software(software)
                                     .expirationDate(expirationDateTime)
-                                    .comment(record.getString("comment"))
+                                    .comment(comment)
                                     .jobId(record.getInt("jobId"))
                                     .created_at(createAt)
                                     .build();
@@ -791,11 +852,26 @@ public class BackendJobService {
             if (sctIdRecord.isPresent()) {
                 String newStatus = stateMachine.getNewStatus(sctIdRecord.get().getStatus(), record.getString("action"));
                 if (newStatus != null) {
+                    String comment = null;
+                    String software = null;
+                    String author = null;
+                    if(record.has("comment") && !record.get("comment").equals(null) && !record.get("comment").equals("null") && !record.get("comment").equals(""))
+                    {
+                        comment = record.getString("comment");
+                    }
+                    if(record.has("software") && !record.get("software").equals(null) && !record.get("software").equals("null") && !record.get("software").equals(""))
+                    {
+                        software = record.getString("software");
+                    }
+                    if(record.has("author") && !record.get("author").equals(null) && !record.get("author").equals("null") && !record.get("author").equals(""))
+                    {
+                        author = record.getString("author");
+                    }
                     sctIdRecord.get().setStatus(newStatus);
-                    sctIdRecord.get().setAuthor(record.getString("author"));
-                    sctIdRecord.get().setSoftware(record.getString("software"));
+                    sctIdRecord.get().setAuthor(author);
+                    sctIdRecord.get().setSoftware(software);
                     sctIdRecord.get().setExpirationDate(null);
-                    sctIdRecord.get().setComment(record.getString("comment"));
+                    sctIdRecord.get().setComment(comment);
                     sctIdRecord.get().setJobId(record.getInt("jobId"));
                     records.add(sctIdRecord.get());
                 } else {
@@ -868,6 +944,21 @@ public class BackendJobService {
                         var createAt = LocalDateTime.now();
 
                         for (String sid : sctIdToRegister) {
+                            String comment = null;
+                            String software = null;
+                            String author = null;
+                            if(record.has("comment") && !record.get("comment").equals(null) && !record.get("comment").equals("null") && !record.get("comment").equals(""))
+                            {
+                                comment = record.getString("comment");
+                            }
+                            if(record.has("software") && !record.get("software").equals(null) && !record.get("software").equals("null") && !record.get("software").equals(""))
+                            {
+                                software = record.getString("software");
+                            }
+                            if(record.has("author") && !record.get("author").equals(null) && !record.get("author").equals("null") && !record.get("author").equals(""))
+                            {
+                                author = record.getString("author");
+                            }
                             Sctid sctidInsert = Sctid.builder()
                                     .sctid(sid)
                                     .sequence(sctIdHelper.getSequence(sid))
@@ -876,10 +967,10 @@ public class BackendJobService {
                                     .checkDigit(sctIdHelper.getCheckDigit(sid))
                                     .systemId(uuidsMap.get(sid))
                                     .status(newStatus)
-                                    .author(record.getString("author"))
-                                    .software(record.getString("software"))
+                                    .author(author)
+                                    .software(software)
                                     .expirationDate(null != record.get("expirationDate") ? (LocalDateTime) record.get("expirationDate") : null)
-                                    .comment(record.getString("comment"))
+                                    .comment(comment)
                                     .jobId(record.getInt("jobId"))
                                     .created_at(createAt)
                                     .build();
@@ -1104,21 +1195,36 @@ public class BackendJobService {
                             seq++;
                             String newSctid = computeSctId(record, seq);
                             LocalDateTime expirationDateTime = null;
+                            String comment = null;
+                            String software = null;
+                            String author = null;
                                 if(record.has("expirationDate") && !record.get("expirationDate").equals(null) && !record.get("expirationDate").equals("null") && !record.get("expirationDate").equals("")) {
                                     String str = record.getString("expirationDate");
                                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                                     expirationDateTime = LocalDate.parse(str, formatter).atStartOfDay();
                                 }
+                            if(record.has("comment") && !record.get("comment").equals(null) && !record.get("comment").equals("null") && !record.get("comment").equals(""))
+                            {
+                                comment = record.getString("comment");
+                            }
+                            if(record.has("software") && !record.get("software").equals(null) && !record.get("software").equals("null") && !record.get("software").equals(""))
+                            {
+                                software = record.getString("software");
+                            }
+                            if(record.has("author") && !record.get("author").equals(null) && !record.get("author").equals("null") && !record.get("author").equals(""))
+                            {
+                                author = record.getString("author");
+                            }
                             Sctid rec = Sctid.builder().sctid(newSctid).sequence(seq).
                                     namespace(record.getInt("namespace")).
                                     partitionId(record.getString("partitionId")).
                                     checkDigit(sctIdHelper.getCheckDigit(newSctid)).
                                     systemId(systemId).
                                     status(newStatus).
-                                    author(record.getString("author")).
-                                    software(record.getString("software")).
+                                    author(author).
+                                    software(software).
                                     expirationDate(expirationDateTime).
-                                    comment(record.getString("comment")).
+                                    comment(comment).
                                     jobId(record.getInt("jobId")).
                                     created_at(createAt).
                                     build();
