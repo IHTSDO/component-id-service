@@ -125,9 +125,10 @@ public class BulkSctidService {
     public void validSctidCheck(ArrayList<String> sctidsArray) throws CisException {
         logger.debug("BulkSctidService.validSctidCheck() sctidsArray :: {} ", sctidsArray);
         for (int i = 0; i < sctidsArray.size(); i++) {
-            if (!(sctIdHelper.validSCTId(sctidsArray.get(i))))
+            if (!(sctIdHelper.validSCTId(sctidsArray.get(i)))) {
                 logger.error("error validSctidCheck():: Not a Valid Sctid: {}", sctidsArray.get(i));
-            throw new CisException(HttpStatus.NOT_ACCEPTABLE, "Not a Valid Sctid:" + sctidsArray.get(i));
+                throw new CisException(HttpStatus.NOT_ACCEPTABLE, "Not a Valid Sctid:" + sctidsArray.get(i));
+            }
         }
     }
 
