@@ -40,7 +40,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             "/info/**", //UI resource
             "/login",
             "/loginUI",
-            "/sct/check/**"
+            "/sct/check/**",
+            "/backendJobServices",
+            "/testService"
     };
 
     @Override
