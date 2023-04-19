@@ -1,4 +1,4 @@
-# sct-id-service-API   
+# Component-id-service-API   
 A REST Server for managing the generation and assignment of Terminology Component Identifiers. Supports SNOMED CT Identifiers and other identifier Schemes. Pre-bundled implementations for optional generation of legacy identifiers in SNOMED CT (SNOMEDIDs and CTV3IDs)
 Installation
 This application requires a MySQL database running on localhost. A new Database with your Specified name needs to be available before running the application.
