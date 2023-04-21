@@ -42,6 +42,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             "/loginUI",
             "/sct/check/**",
             "/backendJobServices",
+            "/version",
             "/testService"
     };
 
