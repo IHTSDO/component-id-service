@@ -30,9 +30,11 @@
     </root>
 
     <!-- LOG everything in the mentioned package at TRACE level -->
+    <!--
     <logger name="org.snomed.cis" level="trace" additivity="false">
-        <!--<appender-ref ref="RollingFile"/>-->
+        < ! - - <appender-ref ref="RollingFile"/> - - >
         <appender-ref ref="Console"/>
     </logger>
+    -->
 
 </configuration>

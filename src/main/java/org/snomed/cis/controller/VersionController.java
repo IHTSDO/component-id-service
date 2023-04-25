@@ -21,7 +21,7 @@ public class VersionController {
 	@RequestMapping(value = "/version", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
 	public BuildVersion getBuildInformation() {
-		logger.info("/version -> {} built on {}", buildProperties.getVersion(), buildProperties.getTime().toString());
+		logger.debug("/version -> {} built on {}", buildProperties.getVersion(), buildProperties.getTime().toString());
 		return new BuildVersion(buildProperties.getVersion(), buildProperties.getTime().toString());
 	}
 }
