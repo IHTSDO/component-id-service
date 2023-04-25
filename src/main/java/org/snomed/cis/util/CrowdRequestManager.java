@@ -39,13 +39,13 @@ public class CrowdRequestManager {
         try {
             users = crowdClient.searchUserNames(searchRestriction, 0, Integer.MAX_VALUE);
         } catch (InvalidAuthenticationException e) {
-            logger.error("application name/password invalid");
+            logger.error("application name/password invalid", e);
             throw new CisException(HttpStatus.NOT_FOUND, "application name/password invalid");
         } catch (ApplicationPermissionException e) {
-            logger.error("application not permitted to perform the operation");
+            logger.error("application not permitted to perform the operation", e);
             throw new CisException(HttpStatus.FORBIDDEN, "application not permitted to perform the operation");
         } catch (OperationFailedException e) {
-            logger.error("unknown error from crowd");
+            logger.error("unknown error from crowd", e);
             throw new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "unknown error from crowd");
         }
         return users;
@@ -97,16 +97,16 @@ public class CrowdRequestManager {
         try {
             users = crowdClient.getUsersOfGroup(groupName, 0, Integer.MAX_VALUE);
         } catch (InvalidAuthenticationException e) {
-            logger.error("application name/password invalid");
+            logger.error("Application name/password invalid, for group: {}", groupName);
             throw new CisException(HttpStatus.NOT_FOUND, "application name/password invalid");
         } catch (ApplicationPermissionException e) {
-            logger.error("application not permitted to perform the operation");
+            logger.error("Application not permitted to perform the operation for group name: {}", groupName);
             throw new CisException(HttpStatus.FORBIDDEN, "application not permitted to perform the operation");
         } catch (GroupNotFoundException e) {
-            logger.error("group not found");
+            logger.error("Group not found: {}", groupName);
             throw new CisException(HttpStatus.NOT_FOUND, "group not found");
         } catch (OperationFailedException e) {
-            logger.error("unknown error from crowd");
+            logger.error("Unknown error from crowd for group: {}", groupName);
             throw new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "unknown error from crowd");
         }
         return users.stream().map(User::getName).collect(Collectors.toList());

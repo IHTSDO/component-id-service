@@ -83,10 +83,10 @@ public class AuthenticationService {
             imsResponse = requestManager.getRequest(url, getHttpHeaders(token));
         } catch (CisException e) {
             if (e.getStatus().is4xxClientError()) {
-                logger.error("call to IMS returned 4xx error while trying to authenticate");
+                logger.error("Call to IMS returned 4xx error while trying to authenticate: {}", e.getStatus(), e);
                 throw new CisException(HttpStatus.UNAUTHORIZED, "invalid token");
             } else if (e.getStatus().is5xxServerError()) {
-                logger.error("call to IMS returned 5xx error while trying to authenticate");
+                logger.error("Call to IMS returned 5xx error while trying to authenticate: {}", e.getStatus(), e);
                 throw new CisException(e.getStatus(), "unknown error");
             } else {
                 logger.error("call to IMS returned unknown error while trying to authenticate", e);
