@@ -6,30 +6,28 @@ This application requires a MySQL database. A new Database with your Specified n
 Clone this project with:
 
 - Clone this Project in IDE: https://github.com/IHTSDO/component-id-service
-- Execute the MySQL Schema generator script to create all the necessary tables and indexes: `config/db_script.sql`
+- Execute the MySQL scripts to create all necessary tables, indices and triggers:
+    - Schema generator script: `config/db_script.sql`
+    - Trigger generator script: `config/db_script_triggers.sql`
 - Configure Java 11 in your IDE.
-- Right Click on pom.xml, then select Add to Maven project.
+- Import as a `maven` project.
 - This will add all essential dependencies to project.
-- Create a new file named "application.properties" under Resources Folder.
-- Copy the contents Present in application.stage.properties and paste in application.properties.
-- Replace Ip,Port,DB Name in spring.datasource.url
-- Enter your DB username in spring.datasource.username
-- Enter your DB Password in spring.datasource.password
-- Enter dev-IMSURL in snomed.devIms.url
-
+- Enter your DB username in `spring.datasource.username`
+- Enter your DB Password in `spring.datasource.password`
+- Enter dev-IMSURL in `snomed.devIms.url`
 - To Execute login API from Security Controller to connect devIMS authenticate API, Please fill All the Details of snomed.user in appication.properties file
-
 - Now you can run your local and check API:
-
-- This API will Authenticate you : http://localhost:port/login
-
-- API to logout : http://localhost:port/logout
+    - This API will Authenticate you : http://localhost:port/login
+    - API to logout : http://localhost:port/logout
 
 # Component Identifiers
 The application supports to basic types of component identifiers, SCTIDS and generic Identifier Schemes. 
+
 SCTIDs are assigned based on namespaces, Namespaces can be created and managed with the Api.
+
 Identifier Schemes represent additional identifiers, like SNOMEDIDs (legacy ids from previous SNOMED Versions) 
 and CTV3IDs (legacy Ids from the UK NHS Read Codes). 
+
 Other identifiers can be added using code extension points without the need for alterations in the data 
 structure or the Api.
 
@@ -119,14 +117,14 @@ mvn clean package
 
 Output:
 - `jar` file in target folder (Eg. `target/cis.jar`)
-- `deb` file in target folder (Eg. `target/cis-0.0.1-SNAPSHOT-all.deb`)
+- `deb` file in target folder (Eg. `target/cis-2.1.0-SNAPSHOT-all.deb`)
 
 ### Deployment
 Deployment requires JRE11 installed on the target machine.
 
 Example commands to run the application:
 
-```
+```bash
 mvn spring-boot:run -Dspring.config.location=LOCATION_OF_PROPERTIES_FILE
 mvn spring-boot:run -Dspring-boot.run.profiles=PROFILE_NAME
 java -jar target/cis.jar --spring.config.location=LOCATION_OF_PROPERTIES_FILE
@@ -137,3 +135,14 @@ Input parameters:
 
 Output:
 - jar file deployed in target machine
+
+### Check for CVE's
+This maven project can run OWASP plugin to scan the java libraries in the project for any CVE's.  See https://owasp.org/www-project-dependency-check/
+
+To run it:
+
+```bash
+mvn clean compile dependency-check:check
+```
+
+Note it will (as of May 2023) fail for the javascript libraries present: i.e. `handlebars-v1.3.0.js`, `jquery.dataTables.js` and `jquery.dataTables.min.js`.
