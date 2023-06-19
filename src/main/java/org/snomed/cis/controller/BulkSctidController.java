@@ -55,9 +55,9 @@ public class BulkSctidController {
     })
 
     @GetMapping("/sct/bulk/ids")
-    public ResponseEntity<List<Sctid>> getSctidsByQL(@RequestParam String token, @RequestParam String ids) throws CisException {
-        logger.info("Request received for - ids :: {}", ids);
-        return ResponseEntity.ok(service.getSctByIds(ids));
+    public ResponseEntity<List<Sctid>> getSctidsByQL(@RequestParam String token, @RequestParam String sctids) throws CisException {
+        logger.info("Request received for - ids :: {}", sctids);
+        return ResponseEntity.ok(service.getSctByIds(sctids));
     }
 
     @PostMapping("/sct/bulk/ids")
