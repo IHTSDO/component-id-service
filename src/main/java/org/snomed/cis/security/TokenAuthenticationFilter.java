@@ -108,7 +108,7 @@ public class TokenAuthenticationFilter extends AbstractAuthenticationProcessingF
         SecurityContextHolder.clearContext();
         JSONObject errorResponse = new JSONObject();
         errorResponse.put("message",exception.getMessage());
-        response.setStatus(HttpStatus.FORBIDDEN.value());
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType("application/json");
         response.getOutputStream().println(errorResponse.toString());
     }

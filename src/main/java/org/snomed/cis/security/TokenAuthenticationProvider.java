@@ -47,7 +47,9 @@ public class TokenAuthenticationProvider implements AuthenticationProvider {
             if (HttpStatus.INTERNAL_SERVER_ERROR.equals(e.getStatus())) {
                 throw new AuthenticationServiceException(e.getErrorMessage());
             }
-            throw new BadCredentialsException(e.getErrorMessage());
+            else {
+                throw new BadCredentialsException(e.getErrorMessage());
+            }
         }
         AuthenticateResponseDto authenticateResponseDto = authenticateResponse.getBody();
         List<GrantedAuthority> authorities = new LinkedList<>();
