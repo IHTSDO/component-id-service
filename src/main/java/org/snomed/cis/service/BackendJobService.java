@@ -738,15 +738,23 @@ public class BackendJobService {
                     boolean allExisting = false;
                     String[] sysIdToCreate = converttoArray(sysIdInChunk);
                     if (!record.getBoolean("autoSysId")) {
+// CIS-52
                         List<SchemeId> existingSystemId = schemeIdRepository.findBySchemeAndSystemIdIn(record.getString("scheme"), List.of(sysIdToCreate));
 
                         if (existingSystemId.size() > 0) {
                             //update
-                            updateJobIdscheme(existingSystemId, record.getString("scheme"), record.getInt("jobId"));
+                            int result = updateJobIdscheme(existingSystemId, record.getString("scheme"), record.getInt("jobId"));
+                            System.out.println("system id size: "+existingSystemId.size()+" ,result: "+result);
                             if (existingSystemId.size() < sysIdInChunk.size()) {
 
+                                List<String> newExistsysId = new ArrayList<>();
+                                for(int j=0; j<existingSystemId.size();j++){
+                                     String exist = existingSystemId.get(j).getSystemId();
+                                     newExistsysId.add(exist);
+                                }
+                                Set<String> setExistSysIds = newExistsysId.stream().collect(Collectors.toSet());
                                 Set<SchemeId> setExistSysId = existingSystemId.stream().collect(Collectors.toSet());
-                                diff = Sets.difference(sysIdInChunk, setExistSysId);
+                                diff = Sets.difference(sysIdInChunk, setExistSysIds);
                                 insertedCount += setExistSysId.size();
 
                             } else {
@@ -1266,10 +1274,19 @@ public class BackendJobService {
         }
     }
 
-
-    private List<SchemeId> updateJobIdscheme(List<SchemeId> existingSystemId, String scheme, Integer jobId) {
-        List<SchemeId> result = schemeIdRepository.update(existingSystemId, scheme, jobId);
+// CIS-52
+    private int updateJobIdscheme(List<SchemeId> existingSystemId, String scheme, Integer jobId) {
+        List<String> systemIds = extractSystemIds(existingSystemId);
+        int result = schemeIdRepository.update(systemIds, scheme, jobId);
         return result;
+    }
+
+    private List<String> extractSystemIds(List<SchemeId> existingSystemIds) {
+        List<String> systemIds = new ArrayList<>();
+        for (SchemeId systemId : existingSystemIds) {
+            systemIds.add(systemId.getSystemId());
+        }
+        return systemIds;
     }
 
     private List<String> findExistingSystemId(Map<String, Object> obj1, String[] sysIdToCreate) {

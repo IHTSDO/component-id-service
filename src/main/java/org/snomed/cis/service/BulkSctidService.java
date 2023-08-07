@@ -107,8 +107,8 @@ public class BulkSctidService {
             Sctid sctObj = resArr.get(i);
             respSctArr.add(sctObj.getSctid());
         }
-        Set<String> rqSet = new HashSet<>(respSctArr);
-        Set<String> respSet = new HashSet<>(sctidsReqArray);
+        Set<String> rqSet = new HashSet<>(sctidsReqArray);
+        Set<String> respSet = new HashSet<>(respSctArr);
         Set<String> resultDiff = new HashSet<>(rqSet);
         resultDiff.removeAll(respSet);
         if (resultDiff.size() > 0) {

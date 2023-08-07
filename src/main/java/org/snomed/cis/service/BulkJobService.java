@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.transaction.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -246,9 +247,11 @@ public class BulkJobService {
         return cleanRows;
     }
 
+    @Transactional
     public List<CleanUpServiceResponse> cleanUpExpiredIds(AuthenticateResponseDto token) throws CisException {
         logger.debug("BulkJobService.cleanUpExpiredIds() AuthenticateResponseDto :: {}", token);
-        List<CleanUpServiceResponse> result = null;
+        List<CleanUpServiceResponse> result = new ArrayList<>();
+
 
         if (this.isAbleUser(token)) {
             String strErr = "";
@@ -258,66 +261,49 @@ public class BulkJobService {
 
             int step = 0;
             try {
-                String sql = "Update sctId set expirationDate=null,status='Available',software='Clean Service' where status='Reserved' and expirationDate<now()";
-                Query genQuery = entityManager.createNativeQuery(sql, Sctid.class);
-                int returnVal = genQuery.executeUpdate();
-                List<Sctid> outputList = genQuery.getResultList();
-                if (outputList.size() >= 0) {
+                int outputList = bulkJobRepository.cleanExpiredSctids();
+                System.out.println(outputList);
+
+                if (outputList >= 0) {
+                    CleanUpServiceResponse cleanUpServiceResponse = new CleanUpServiceResponse();
                     cleanUpServiceResponse.setModel("SctId");
-                    cleanUpServiceResponse.setAffectedRows(returnVal);
-                    cleanUpServiceResponse.setChangedRows(returnVal);
+                    cleanUpServiceResponse.setAffectedRows(outputList);
+                    cleanUpServiceResponse.setChangedRows(outputList);
                     cleanUpServiceResponse.setFieldCount(0);
                     cleanUpServiceResponse.setInsertId(0);
                     cleanUpServiceResponse.setServerStatus(34);
                     cleanUpServiceResponse.setProtocol41(true);
                     cleanUpServiceResponse.setWarningCount(0);
-                    cleanUpServiceResponse.setMessage("(Rows matched:" + returnVal + "  Changed:" + 0 + " Warnings:" + 0);
+                    cleanUpServiceResponse.setMessage("(Rows matched:" + outputList + "  Changed:" + 0 + " Warnings:" + 0);
                     result.add(cleanUpServiceResponse);
-                    var strD = " SctId Expiration date clean up process:" + returnVal;
+                    var strD = " SctId Expiration date clean up process:" + outputList;
                     strData += strD;
                     arrMsg.add(strD);
                     step++;
-                                /*if (step>1) {
-                                    if (strErr=="") {
-                                        callback( null,arrMsg);
-                                    }else{
-                                        strMsg=strErr + strData;
-                                        callback(strMsg, null);
-                                    }
-                                }*/
                 }
             } catch (Exception e) {
                 logger.error("error cleanUpExpiredIds():: [Error] in clean up service - with expirationDate: 'null', status:'available' and status:'Reserved'", e);
                 throw new CisException(HttpStatus.UNAUTHORIZED, " [Error] in clean up service -" + e.getMessage());
             }
             try {
-                String sql = "Update schemeId set expirationDate=null,status='Available',software='Clean Service' where status='Reserved' and expirationDate<now()";
-                Query genQuery = entityManager.createNativeQuery(sql, SchemeId.class);
-                int returnVal = genQuery.executeUpdate();
-                List<SchemeId> outputList = genQuery.getResultList();
-                if (outputList.size() >= 0) {
+                int outputList = bulkJobRepository.cleanExpiredSchemeids();
+                System.out.println(outputList);
+                if (outputList >= 0) {
+                    CleanUpServiceResponse cleanUpServiceResponse = new CleanUpServiceResponse();
                     cleanUpServiceResponse.setModel("SchemeId");
-                    cleanUpServiceResponse.setAffectedRows(returnVal);
-                    cleanUpServiceResponse.setChangedRows(returnVal);
+                    cleanUpServiceResponse.setAffectedRows(outputList);
+                    cleanUpServiceResponse.setChangedRows(outputList);
                     cleanUpServiceResponse.setFieldCount(0);
                     cleanUpServiceResponse.setInsertId(0);
                     cleanUpServiceResponse.setServerStatus(34);
                     cleanUpServiceResponse.setProtocol41(true);
                     cleanUpServiceResponse.setWarningCount(0);
-                    cleanUpServiceResponse.setMessage("(Rows matched:" + returnVal + "  Changed:" + 0 + " Warnings:" + 0);
+                    cleanUpServiceResponse.setMessage("(Rows matched:" + outputList + "  Changed:" + 0 + " Warnings:" + 0);
                     result.add(cleanUpServiceResponse);
-                    var strD = " SchemeId Expiration date clean up process:" + returnVal;
+                    var strD = " SchemeId Expiration date clean up process:" + outputList;
                     strData += strD;
                     arrMsg.add(strD);
                     step++;
-                                /*if (step>1) {
-                                    if (strErr=="") {
-                                        callback( null,arrMsg);
-                                    }else{
-                                        strMsg=strErr + strData;
-                                        callback(strMsg, null);
-                                    }
-                                }*/
                 }
             } catch (Exception e) {
                 logger.error("error cleanUpExpiredIds():: [Error] in clean up service - with expirationDate: 'null', status:'available' and status:'Reserved'", e);

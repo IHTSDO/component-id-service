@@ -22,4 +22,15 @@ public interface BulkJobRepository extends JpaRepository<BulkJob, Integer> {
 
     @Query(value="select * from bulkjob where status=(:status) order by created_at limit 1",nativeQuery = true)
     Optional<BulkJob> findTopByStatusOrderByCreated_at(@Param("status") String status);
+
+    @Transactional
+    @Modifying
+    @Query(value="Update sctId set expirationDate=null,status='Available',software='Clean Service' where status='Reserved' and expirationDate<now()",nativeQuery = true)
+    int cleanExpiredSctids();
+
+
+    @Transactional
+    @Modifying
+    @Query(value="Update schemeId set expirationDate=null,status='Available',software='Clean Service' where status='Reserved' and expirationDate<now()",nativeQuery = true)
+    int cleanExpiredSchemeids();
 }

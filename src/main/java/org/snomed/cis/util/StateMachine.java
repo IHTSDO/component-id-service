@@ -57,6 +57,7 @@ public class StateMachine {
 
     public String getNewStatus(String status, String action){
         String newStat=null;
+        status = status.substring(0,1).toUpperCase() + status.substring(1);
         if (!(state.get(status).isEmpty())){
             var actions=state.get(status);
             if(null!=actions.get(action))

@@ -66,14 +66,12 @@ public class BulkSchemeIdService {
                     } else if ("CTV3ID".equalsIgnoreCase(schemeName.toString().toUpperCase())) {
                         isValidScheme = CTV3ID.validSchemeId(schemeId);
                     }
-                   /* if (!isValidScheme) {
-                        throw new APIException(HttpStatus.BAD_REQUEST, "Not a valid schemeId");
-                    }*/
 
-
+                    if (!isValidScheme) {
+                        throw new CisException(HttpStatus.BAD_REQUEST, "Not a valid schemeId"+" "+schemeId);
+                    }
                 }
             }//validate schemeId
-
             ArrayList<String> schemeIdsArrayList = new ArrayList<String>(Arrays.asList(schemedIdArray));
             resSchemeArrayList = bulkSchemeIdRepository.findBySchemeAndSchemeIdIn(schemeName.toString().toUpperCase(), List.of(schemedIdArray));
             // resSchemeArrayList push
@@ -202,7 +200,7 @@ public class BulkSchemeIdService {
         schemeIdRecord.put("sequence", sctIdHelper.getSequence(diffSchemeId));
         schemeIdRecord.put("checkDigit", sctIdHelper.getCheckDigit(diffSchemeId));
 
-        if (systemId != "null") {
+        if (systemId != null) {
             schemeIdRecord.put("systemId", systemId);
         } else {
             schemeIdRecord.put("systemId", sctIdHelper.guid());
