@@ -19,6 +19,8 @@ public interface BulkSchemeIdRepository extends JpaRepository<SchemeId, SchemeId
 
     List<SchemeId> findBySchemeAndSystemId(String schemeName, String systemid);
 
+    List<SchemeId> findBySchemeAndSystemIdIn(String schemeName, List<String> systemid);
+
     @Query(value="Select * from schemeid order by schemeId",nativeQuery = true)
     List<SchemeId> findBySchemeid();
 

@@ -738,7 +738,7 @@ public class BackendJobService {
                     boolean allExisting = false;
                     String[] sysIdToCreate = converttoArray(sysIdInChunk);
                     if (!record.getBoolean("autoSysId")) {
-                        List<SchemeId> existingSystemId = schemeIdRepository.findBySchemeAndSchemeIdIn(record.getString("scheme"), List.of(sysIdToCreate));
+                        List<SchemeId> existingSystemId = schemeIdRepository.findBySchemeAndSystemIdIn(record.getString("scheme"), List.of(sysIdToCreate));
 
                         if (existingSystemId.size() > 0) {
                             //update

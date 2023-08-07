@@ -70,27 +70,29 @@ public class BulkSchemeIdService {
                         throw new APIException(HttpStatus.BAD_REQUEST, "Not a valid schemeId");
                     }*/
 
-                    ArrayList<String> schemeIdsArrayList = new ArrayList<String>(Arrays.asList(schemedIdArray));
-                    resSchemeArrayList = bulkSchemeIdRepository.findBySchemeAndSchemeIdIn(schemeName.toString().toUpperCase(), List.of(schemedIdArray));
-                    // resSchemeArrayList push
-                    List<String> respSchemeIdArray = new ArrayList<>();
-                    for (int i = 0; i < resSchemeArrayList.size(); i++) {
-                        SchemeId schemeIdBulkObj = resSchemeArrayList.get(i);
-                        respSchemeIdArray.add(schemeIdBulkObj.getSchemeId());
-                    }
-                    Set<String> rqSet = new HashSet<>(respSchemeIdArray);
-                    Set<String> respSet = new HashSet<>(schemeIdsArrayList);
-                    Set<String> resultDiff = new HashSet<>(rqSet);
-                    respSet.removeAll(resultDiff);
-                    if (respSet.size() > 0) {
-                        for (String diffSchemeId :
-                                respSet) {
-                            SchemeId schemeIdBulkObj = getFreeRecord(String.valueOf(schemeName)/*.toString()*/, diffSchemeId, null, "true");
-                            resSchemeArrayList.add(schemeIdBulkObj);
-                        }
-                    }
+
                 }
             }//validate schemeId
+
+            ArrayList<String> schemeIdsArrayList = new ArrayList<String>(Arrays.asList(schemedIdArray));
+            resSchemeArrayList = bulkSchemeIdRepository.findBySchemeAndSchemeIdIn(schemeName.toString().toUpperCase(), List.of(schemedIdArray));
+            // resSchemeArrayList push
+            List<String> respSchemeIdArray = new ArrayList<>();
+            for (int i = 0; i < resSchemeArrayList.size(); i++) {
+                SchemeId schemeIdBulkObj = resSchemeArrayList.get(i);
+                respSchemeIdArray.add(schemeIdBulkObj.getSchemeId());
+            }
+            Set<String> rqSet = new HashSet<>(respSchemeIdArray);
+            Set<String> respSet = new HashSet<>(schemeIdsArrayList);
+            Set<String> resultDiff = new HashSet<>(rqSet);
+            respSet.removeAll(resultDiff);
+            if (respSet.size() > 0) {
+                for (String diffSchemeId :
+                        respSet) {
+                    SchemeId schemeIdBulkObj = getFreeRecord(String.valueOf(schemeName)/*.toString()*/, diffSchemeId, null, "true");
+                    resSchemeArrayList.add(schemeIdBulkObj);
+                }
+            }
         } else {
             logger.error("error getSchemeIds():: user : {} has neither admin access nor scheme permission for the selected operation.",token.getName());
             throw new CisException(HttpStatus.BAD_REQUEST, "No permission for the selected operation");
