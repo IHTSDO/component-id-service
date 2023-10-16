@@ -17,7 +17,7 @@
     <description>Snomed Component Identifier Service</description>
 
     <properties>
-        <java.version>11</java.version>
+        <java.version>17</java.version>
         <profile>dev</profile>
         <packageName>cis</packageName>
         <execFinalName>${packageName}.jar</execFinalName>
