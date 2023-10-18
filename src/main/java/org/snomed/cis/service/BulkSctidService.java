@@ -207,14 +207,14 @@ public class BulkSctidService {
     }
 
     public BulkJob registerSctids(AuthenticateResponseDto token, RegistrationDataDTO request) throws CisException {
-        logger.debug("BulkSctidService.registerSctids() token-{} :: request-{} ", token, request);
+        logger.debug("BulkSctidService.registerSctids() token-{} :: request-{} ", token.getDisplayName(), request);
         BulkJob bulk = this.registerScts(token, request);
         logger.debug("BulkSctidService.registerSctids() - Response :: {}", bulk);
         return bulk;
     }
 
     public BulkJob registerScts(AuthenticateResponseDto token, RegistrationDataDTO registrationData) throws CisException {
-        logger.debug("BulkSctidService.registerScts() token-{} :: registrationData - {} ", token, registrationData);
+        logger.debug("BulkSctidService.registerScts() token-{} :: registrationData - {} ", token.getDisplayName(), registrationData);
         BulkJob resultJob = new BulkJob();
         if (this.isAbleUser(registrationData.getNamespace().toString(), token)) {
             SctidBulkRegister sctidBulkRegister = new SctidBulkRegister();
@@ -263,14 +263,14 @@ public class BulkSctidService {
                 }
             }
         } else {
-            logger.error("error registerScts():: User: {} has neither admin access nor namespace Permission for namespace: {} for the selected operation.",token.getName(),registrationData.getNamespace().toString());
+            logger.error("error registerScts():: User: {} has neither admin access nor namespace Permission for namespace: {} for the selected operation.",token.getDisplayName(),registrationData.getNamespace().toString());
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation.");
         }
         return resultJob;
     }
 
     public boolean isAbleUser(String namespace, AuthenticateResponseDto authenticateResponseDto) {
-        logger.debug("BulkSctidService.isAbleUser() namespace - {} :: authenticateResponseDto - {} :: schemeIds -{}", namespace, authenticateResponseDto);
+        logger.debug("BulkSctidService.isAbleUser() namespace - {} :: authenticateResponseDto - {} :: schemeIds -{}", namespace, authenticateResponseDto.getDisplayName());
         List<String> groups = authenticateResponseDto.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
         boolean isAble = false;
         if (groups.contains("component-identifier-service-admin") || hasNamespacePermission(namespace, authenticateResponseDto)) {
@@ -281,7 +281,7 @@ public class BulkSctidService {
     }
 
     public boolean hasNamespacePermission(String namespace, AuthenticateResponseDto authenticateResponseDto) {
-        logger.debug("BulkSctidService.hasNamespacePermission() namespace - {} :: authenticateResponseDto - {} ", namespace, authenticateResponseDto);
+        logger.debug("BulkSctidService.hasNamespacePermission() namespace - {} :: authenticateResponseDto - {} ", namespace, authenticateResponseDto.getDisplayName());
         boolean able = false;
         if (!"false".equalsIgnoreCase(namespace)) {
             List<PermissionsNamespace> permissionsNamespaceList = permissionsNamespaceRepository.findByNamespace(Integer.valueOf(namespace));
@@ -323,7 +323,7 @@ public class BulkSctidService {
 
         boolean able = isAbleUser(sctidBulkGenerationRequestDto.getNamespace().toString(), token);
         if (!able) {
-            logger.error("error generateSctids():: User: {} has neither admin access nor namespace permission for namespace: {} for the selected operation.",token.getName(),sctidBulkGenerationRequestDto.getNamespace().toString());
+            logger.error("error generateSctids():: User: {} has neither admin access nor namespace permission for namespace: {} for the selected operation.",token.getDisplayName(),sctidBulkGenerationRequestDto.getNamespace().toString());
             throw new CisException(HttpStatus.UNAUTHORIZED, "user has no permission for the selected operation.");
         }
         if(null!=sctidBulkGenerationRequestDto.getQuantity() && sctidBulkGenerationRequestDto.getQuantity() <= 0)
@@ -444,7 +444,7 @@ public class BulkSctidService {
     }
 
     public boolean isSchemeAbleUser(String schemeName, AuthenticateResponseDto authToken) {
-        logger.debug("BulkSctidService.isSchemeAbleUser() schemeName-{} :: authToken -{}", schemeName, authToken);
+        logger.debug("BulkSctidService.isSchemeAbleUser() schemeName-{} :: authToken -{}", schemeName, authToken.getDisplayName());
         List<String> groups = authToken.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
         boolean isAble = false;
         if (groups.contains("component-identifier-service-admin") || hasSchemePermission(schemeName, authToken)) {
@@ -455,7 +455,7 @@ public class BulkSctidService {
     }
 
     public boolean hasSchemePermission(String schemeName, AuthenticateResponseDto authToken) {
-        logger.debug("BulkSctidService.hasSchemePermission() tauthTokenoken-{} :: schemeName-{} ", authToken, schemeName);
+        logger.debug("BulkSctidService.hasSchemePermission() tauthTokenoken-{} :: schemeName-{} ", authToken.getDisplayName(), schemeName);
         boolean able = false;
         if (!"false".equalsIgnoreCase(schemeName)) {
             List<PermissionsScheme> permissionsSchemesList = permissionsSchemeRepository.findByScheme(schemeName);
@@ -481,7 +481,7 @@ public class BulkSctidService {
 
     //Deprecate API
     public BulkJob deprecateSctid(AuthenticateResponseDto token, BulkSctRequestDTO deprecateBulkSctRequestDTO) throws CisException {
-        logger.debug("BulkSctidService.deprecateSctid() token-{} :: deprecateBulkSctRequestDTO-{} ", token, deprecateBulkSctRequestDTO);
+        logger.debug("BulkSctidService.deprecateSctid() token-{} :: deprecateBulkSctRequestDTO-{} ", token.getDisplayName(), deprecateBulkSctRequestDTO);
         BulkJob resultJob = new BulkJob();
         BulkSctRequest bulkSctRequest = new BulkSctRequest();
         bulkSctRequest.setSctids(deprecateBulkSctRequestDTO.getSctids());
@@ -491,7 +491,7 @@ public class BulkSctidService {
 
         boolean able = isAbleUser(deprecateBulkSctRequestDTO.getNamespace().toString(), token);
         if (!able) {
-            logger.error("error deprecateSctid():: User: {} has neither admin access nor namespace permission for namespace: {} for the selected operation.",token.getName(),deprecateBulkSctRequestDTO.getNamespace().toString());
+            logger.error("error deprecateSctid():: User: {} has neither admin access nor namespace permission for namespace: {} for the selected operation.",token.getDisplayName(),deprecateBulkSctRequestDTO.getNamespace().toString());
             throw new CisException(HttpStatus.UNAUTHORIZED, "user has no permission for the selected operation.");
         } else {
             if (null == deprecateBulkSctRequestDTO.getSctids() || deprecateBulkSctRequestDTO.getSctids().length < 1) {
@@ -538,7 +538,7 @@ public class BulkSctidService {
 
     //Publish API
     public BulkJob publishSctid(AuthenticateResponseDto token, BulkSctRequestDTO publishBulkSctRequestDTO) throws CisException {
-        logger.debug("BulkSctidService.publishSctid() token-{} :: publishBulkSctRequestDTO-{} ", token, publishBulkSctRequestDTO);
+        logger.debug("BulkSctidService.publishSctid() token-{} :: publishBulkSctRequestDTO-{} ", token.getDisplayName(), publishBulkSctRequestDTO);
         BulkJob resultJob = new BulkJob();
         BulkSctRequest bulkSctRequest = new BulkSctRequest();
         bulkSctRequest.setSctids(publishBulkSctRequestDTO.getSctids());
@@ -547,7 +547,7 @@ public class BulkSctidService {
         bulkSctRequest.setComment(publishBulkSctRequestDTO.getComment());
         boolean able = isAbleUser(publishBulkSctRequestDTO.getNamespace().toString(), token);
         if (!able) {
-            logger.error("error publishSctid():: User: {} has neither admin access nor namespace Permission for namespace: {} for the selected operation.",token.getName(),publishBulkSctRequestDTO.getNamespace().toString());
+            logger.error("error publishSctid():: User: {} has neither admin access nor namespace Permission for namespace: {} for the selected operation.",token.getDisplayName(),publishBulkSctRequestDTO.getNamespace().toString());
             throw new CisException(HttpStatus.UNAUTHORIZED, "user has no permission for the selected operation.");
         } else {
             if (null == publishBulkSctRequestDTO.getSctids() || publishBulkSctRequestDTO.getSctids().length < 1) {
@@ -595,7 +595,7 @@ public class BulkSctidService {
 
     //Release Sctid API
     public BulkJob releaseSctid(AuthenticateResponseDto token, BulkSctRequestDTO releaseBulkSctRequestDTO) throws CisException {
-        logger.debug("BulkSctidService.releaseSctid() token-{} :: releaseBulkSctRequestDTO-{} ", token, releaseBulkSctRequestDTO);
+        logger.debug("BulkSctidService.releaseSctid() token-{} :: releaseBulkSctRequestDTO-{} ", token.getDisplayName(), releaseBulkSctRequestDTO);
         BulkJob resultJob = new BulkJob();
         BulkSctRequest bulkSctRequest = new BulkSctRequest();
         bulkSctRequest.setSctids(releaseBulkSctRequestDTO.getSctids());
@@ -652,7 +652,7 @@ public class BulkSctidService {
     }
 
     public BulkJob reserveSctids(AuthenticateResponseDto authToken, SCTIDBulkReservationRequestDto sctidBulkReservationRequestDto) throws CisException {
-        logger.debug("BulkSctidService.reserveSctids() token-{} :: sctidBulkReservationRequestDto - {} ", authToken, sctidBulkReservationRequestDto);
+        logger.debug("BulkSctidService.reserveSctids() token-{} :: sctidBulkReservationRequestDto - {} ", authToken.getDisplayName(), sctidBulkReservationRequestDto);
         BulkJob output = new BulkJob();
         boolean able = isAbleUser(sctidBulkReservationRequestDto.getNamespace().toString(), authToken);
         if (able)

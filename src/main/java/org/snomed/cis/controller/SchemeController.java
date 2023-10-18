@@ -40,7 +40,7 @@ public class SchemeController {
     @GetMapping("/users/{username}/schemes/")
     public ResponseEntity<List<Scheme>> getSchemesForUser(@RequestParam String token, @PathVariable String username, @ApiIgnore Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        logger.info("Request received for - username :: {} - authenticateResponseDto :: {}", username,authToken.getAuthenticateResponseDto());
+        logger.info("Request received for - username :: {} - authenticateResponseDto :: {}", username,authToken.getAuthenticateResponseDto().getDisplayName());
         return ResponseEntity.ok(schemeService.getSchemesForUser(authToken.getAuthenticateResponseDto(),username));
     }
 
@@ -61,7 +61,7 @@ public class SchemeController {
     @PutMapping("/schemes/{schemeName}")
     public ResponseEntity<String> updateScheme(@PathVariable SchemeName schemeName, @RequestParam String schemeSeq,@ApiIgnore Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        logger.info("Request received for - schemeName :: {} - schemeSeq :: {} - authenticateResponseDto :: {}", schemeName,schemeSeq,authToken.getAuthenticateResponseDto());
+        logger.info("Request received for - schemeName :: {} - schemeSeq :: {} - authenticateResponseDto :: {}", schemeName,schemeSeq,authToken.getAuthenticateResponseDto().getDisplayName());
         return ResponseEntity.ok(schemeService.updateScheme(authToken.getAuthenticateResponseDto(),schemeName,schemeSeq));
     }
 }

@@ -99,12 +99,12 @@ public class NamespaceService {
     }
 
     public String createNamespace(AuthenticateResponseDto authenticateResponseDto, NamespaceDto namespace) throws CisException, ParseException {
-        logger.debug("NamespaceService.createNamespace() authenticateResponseDto-{} :: NamespaceDto-{} ", authenticateResponseDto, namespace);
+        logger.debug("NamespaceService.createNamespace() authenticateResponseDto-{} :: NamespaceDto-{} ", authenticateResponseDto.getDisplayName(), namespace);
         return this.createNamespaces(authenticateResponseDto, namespace);
     }
 
     public String createNamespaces(AuthenticateResponseDto authenticateResponseDto, NamespaceDto namespace) throws CisException, ParseException {
-        logger.debug("NamespaceService.createNamespaces() AuthenticateResponseDto-{} :: NamespaceDto-{} ", authenticateResponseDto, namespace);
+        logger.debug("NamespaceService.createNamespaces() AuthenticateResponseDto-{} :: NamespaceDto-{} ", authenticateResponseDto.getDisplayName(), namespace);
         String namespaceString = namespace.getNamespace() + "";
         NamespaceDto output = new NamespaceDto();
         if (this.isAbleToEdit(namespace.getNamespace(), authenticateResponseDto)) {
@@ -186,7 +186,7 @@ public class NamespaceService {
     }
 
     private boolean isAbleToEdit(Integer namespace, AuthenticateResponseDto authenticateResponseDto) {
-        logger.debug("NamespaceService.isAbleToEdit() namespace-{} :: AuthenticateResponseDto-{} ", namespace, authenticateResponseDto);
+        logger.debug("NamespaceService.isAbleToEdit() namespace-{} :: AuthenticateResponseDto-{} ", namespace, authenticateResponseDto.getDisplayName());
         List<String> groups = authenticateResponseDto.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
         boolean isAble = false;
         if (groups.contains("component-identifier-service-admin") || hasNamespacePermission(namespace, authenticateResponseDto.getName())) {
@@ -213,14 +213,14 @@ public class NamespaceService {
     }
 
     public String updateNamespace(AuthenticateResponseDto authenticateResponseDto, NamespaceDto namespace) throws CisException {
-        logger.debug("NamespaceService.updateNamespace() authenticateResponseDto-{} :: namespace-{} ", authenticateResponseDto, namespace);
+        logger.debug("NamespaceService.updateNamespace() authenticateResponseDto-{} :: namespace-{} ", authenticateResponseDto.getDisplayName(), namespace);
         String result = this.updateNamespaces(authenticateResponseDto, namespace);
         logger.debug("updateNamespace() Response-{} ", result);
         return result;
     }
 
     public String updateNamespaces(AuthenticateResponseDto authenticateResponseDto, NamespaceDto namespace) throws CisException {
-        logger.debug("NamespaceService.updateNamespaces() AuthenticateResponseDto-{} :: NamespaceDto-{} ", authenticateResponseDto, namespace);
+        logger.debug("NamespaceService.updateNamespaces() AuthenticateResponseDto-{} :: NamespaceDto-{} ", authenticateResponseDto.getDisplayName(), namespace);
         if (this.isAbleToEdit(namespace.getNamespace(), authenticateResponseDto)) {
             String result = (editNamespace(namespace.getNamespace(), namespace));
             logger.debug("updateNamespaces() Response-{} ", result);
@@ -374,14 +374,14 @@ public class NamespaceService {
 
 
     public String deleteNamespace(AuthenticateResponseDto authenticateResponseDto, String namespaceId) throws CisException {
-        logger.debug("NamespaceService.deleteNamespace() AuthenticateResponseDto-{} :: namespaceId-{} ", authenticateResponseDto, namespaceId);
+        logger.debug("NamespaceService.deleteNamespace() AuthenticateResponseDto-{} :: namespaceId-{} ", authenticateResponseDto.getDisplayName(), namespaceId);
         String value = this.deleteNamespaces(authenticateResponseDto, namespaceId);
         logger.debug(" deleteNamespace() Response :: {}", value);
         return value;
     }
 
     public String deleteNamespaces(AuthenticateResponseDto authenticateResponseDto, String namespaceId) throws CisException {
-        logger.debug("NamespaceService.deleteNamespaces() authenticateResponseDto-{} :: namespaceId-{} ", authenticateResponseDto, namespaceId);
+        logger.debug("NamespaceService.deleteNamespaces() authenticateResponseDto-{} :: namespaceId-{} ", authenticateResponseDto.getDisplayName(), namespaceId);
         JSONObject response = new JSONObject();
         if (namespaceId.length() != 7 && namespaceId != "0")
             response.put("message", "Invalid Namespace");
@@ -397,7 +397,7 @@ public class NamespaceService {
                     partitionsRepository.deleteAll(partNamespace);
                 response.put("message", "Success");
             } else {
-                logger.error("error getSchemeIds():: user:{} has neither admin access nor namespace permission for the selected operation.namespace:{}",authenticateResponseDto.getName(),namespaceId);
+                logger.error("error getSchemeIds():: user:{} has neither admin access nor namespace permission for the selected operation.namespace:{}",authenticateResponseDto.getDisplayName(),namespaceId);
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
             }
@@ -408,14 +408,14 @@ public class NamespaceService {
 
 
     public String updatePartitionSequence(AuthenticateResponseDto authenticateResponseDto, String namespaceId, String partitionId, String value) throws CisException {
-        logger.debug("NamespaceService.updatePartitionSequence() authenticateResponseDto-{} :: namespaceId-{} :: partitionId - {} :: value - {} ", authenticateResponseDto, namespaceId, partitionId, value);
+        logger.debug("NamespaceService.updatePartitionSequence() authenticateResponseDto-{} :: namespaceId-{} :: partitionId - {} :: value - {} ", authenticateResponseDto.getDisplayName(), namespaceId, partitionId, value);
         String updatedValue = this.updatePartitionSequences(authenticateResponseDto, namespaceId, partitionId, value);
         logger.debug("updatePartitionSequence() Response :: {}", updatedValue);
         return updatedValue;
     }
 
     public String updatePartitionSequences(AuthenticateResponseDto authenticateResponseDto, String namespaceId, String partitionId, String value) throws CisException {
-        logger.debug("NamespaceService.updatePartitionSequences() authenticateResponseDto-{} :: namespaceId -{} :: partitionId - {} :: value-{} ", authenticateResponseDto, namespaceId, partitionId, value);
+        logger.debug("NamespaceService.updatePartitionSequences() authenticateResponseDto-{} :: namespaceId -{} :: partitionId - {} :: value-{} ", authenticateResponseDto.getDisplayName(), namespaceId, partitionId, value);
         String out = "";
         Integer namespaceIdint = Integer.valueOf(namespaceId);
         JSONObject response = new JSONObject();
@@ -428,7 +428,7 @@ public class NamespaceService {
             if ((partResult.getSequence()).equals(Integer.parseInt(value)))
                 response.put("message", "Success");
         } else {
-            logger.error("error getSchemeIds():: user:{} has neither admin access nor namespace permission for the selected operation. namespace:{}",authenticateResponseDto.getName(),namespaceId);
+            logger.error("error getSchemeIds():: user:{} has neither admin access nor namespace permission for the selected operation. namespace:{}",authenticateResponseDto.getDisplayName(),namespaceId);
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -454,7 +454,7 @@ public class NamespaceService {
     }
 
     public String deleteNamespacePermissionsOfUser(String namespaceId, String username, AuthenticateResponseDto authenticateResponseDto) throws CisException {
-        logger.debug("NamespaceService.deleteNamespacePermissionsOfUser() namespaceId-{} :: AuthenticateResponseDto-{} ", namespaceId, authenticateResponseDto);
+        logger.debug("NamespaceService.deleteNamespacePermissionsOfUser() namespaceId-{} :: AuthenticateResponseDto-{} ", namespaceId, authenticateResponseDto.getDisplayName());
         if (isAbleToEdit(Integer.valueOf(namespaceId), authenticateResponseDto)) {
             JSONObject response = new JSONObject();
             permissionsNamespaceRepository.deleteByNamespaceAndUsername(Integer.valueOf(namespaceId), username);
@@ -468,7 +468,7 @@ public class NamespaceService {
     }
 
     public String createNamespacePermissionsOfUser(String namespaceId, String username, String role, AuthenticateResponseDto authenticateResponseDto) throws CisException {
-        logger.debug("NamespaceService.createNamespacePermissionsOfUser() namespaceId-{} :: username - {} :: role - {} :: AuthenticateResponseDto-{} ", namespaceId, username, role, authenticateResponseDto);
+        logger.debug("NamespaceService.createNamespacePermissionsOfUser() namespaceId-{} :: username - {} :: role - {} :: AuthenticateResponseDto-{} ", namespaceId, username, role, authenticateResponseDto.getDisplayName());
         if (isAbleToEdit(Integer.valueOf(namespaceId), authenticateResponseDto)) {
             PermissionsNamespace permissionsNamespace = new PermissionsNamespace(Integer.valueOf(namespaceId), username, role);
             Optional<PermissionsNamespace> result = permissionsNamespaceRepository.findByNamespaceAndUsernameAndRole(Integer.valueOf(namespaceId), username, role);

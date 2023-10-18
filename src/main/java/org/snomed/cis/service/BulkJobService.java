@@ -249,7 +249,7 @@ public class BulkJobService {
 
     @Transactional
     public List<CleanUpServiceResponse> cleanUpExpiredIds(AuthenticateResponseDto token) throws CisException {
-        logger.debug("BulkJobService.cleanUpExpiredIds() AuthenticateResponseDto :: {}", token);
+        logger.debug("BulkJobService.cleanUpExpiredIds() AuthenticateResponseDto :: {}", token.getDisplayName());
         List<CleanUpServiceResponse> result = new ArrayList<>();
 
 
@@ -310,7 +310,7 @@ public class BulkJobService {
                 throw new CisException(HttpStatus.UNAUTHORIZED, " [Error] in clean up service - SctId expiration date: " + e.getMessage());
             }
         } else {
-            logger.error("error cleanUpExpiredIds():: user:{} has neither admin access nor permission for the selected operation.",token.getName());
+            logger.error("error cleanUpExpiredIds():: user:{} has neither admin access nor permission for the selected operation.",token.getDisplayName());
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
         logger.debug("BulkJobService.cleanUpExpiredIds() - Response size:: {}", (null==result?"0":result.size()));
@@ -318,7 +318,7 @@ public class BulkJobService {
     }
 
     public boolean isAbleUser(AuthenticateResponseDto authenticateResponseDto) throws CisException {
-        logger.debug("BulkJobService.isAbleUser() {} :: {}", authenticateResponseDto);
+        logger.debug("BulkJobService.isAbleUser() {} :: {}", authenticateResponseDto.getDisplayName());
         List<String> groups = authenticateResponseDto.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
         boolean isAble = false;
         if (groups.contains("component-identifier-service-admin")) {

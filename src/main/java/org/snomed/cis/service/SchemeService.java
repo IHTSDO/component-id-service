@@ -39,7 +39,7 @@ public class SchemeService {
 
 
     private boolean isAbleToEdit(String schemeName, AuthenticateResponseDto authenticateResponseDto) {
-        logger.debug("Request Received : schemeName-{} :: authToken - {} ", schemeName, authenticateResponseDto);
+        logger.debug("Request Received : schemeName-{} :: authToken - {} ", schemeName, authenticateResponseDto.getDisplayName());
         List<String> groups = authenticateResponseDto.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
         boolean isAble = false;
         if (groups.contains("component-identifier-service-admin") || hasSchemePermission(schemeName, authenticateResponseDto.getName())) {
@@ -66,12 +66,12 @@ public class SchemeService {
     }
 
     public List<Scheme> getSchemesForUser(AuthenticateResponseDto token, String user) throws CisException {
-        logger.debug("Request Received : authToken - {} , user - {}", token, user);
+        logger.debug("Request Received : authToken - {} , user - {}", token.getDisplayName(), user);
         return this.getSchemesForUsers(token, user);
     }
 
     public List<Scheme> getSchemesForUsers(AuthenticateResponseDto token, String user) throws CisException {
-        logger.debug("Request Received : AuthenticateResponseDto-{} :: user - {} ", token, user);
+        logger.debug("Request Received : AuthenticateResponseDto-{} :: user - {} ", token.getDisplayName(), user);
         List<PermissionsScheme> permissionsSchemes = null;
         List<Scheme> scheme = new ArrayList<>();
         Scheme schemeObj = null;
@@ -133,12 +133,12 @@ public class SchemeService {
 
     //updateScheme
     public String updateScheme(AuthenticateResponseDto token, SchemeName schemeName, String schemeSeq) throws CisException {
-        logger.debug("Request Received : AuthenticateResponseDto-{} :: SchemeName - {} ::schemeSeq - {}  ", token, schemeName, schemeSeq);
+        logger.debug("Request Received : AuthenticateResponseDto-{} :: SchemeName - {} ::schemeSeq - {}  ", token.getDisplayName(), schemeName, schemeSeq);
         return this.updateSchemes(token, schemeName, schemeSeq);
     }
 
     public String updateSchemes(AuthenticateResponseDto token, SchemeName schemeName, String schemeSeq) throws CisException {
-        logger.debug("Request Received :AuthenticateResponseDto- {} :: schemeName-{} :: schemeSeq - {} ", token, schemeName, schemeSeq);
+        logger.debug("Request Received :AuthenticateResponseDto- {} :: schemeName-{} :: schemeSeq - {} ", token.getDisplayName(), schemeName, schemeSeq);
         Scheme schemeObj = null;
 
         if (this.isAbleToEdit(String.valueOf(schemeName), token)) {
@@ -160,7 +160,7 @@ public class SchemeService {
             }
 
         } else {
-            logger.error("error updateSchemes():: user:{} has neither admin access nor scheme permission for the selected operation. Scheme:{}",token.getName(),schemeName);
+            logger.error("error updateSchemes():: user:{} has neither admin access nor scheme permission for the selected operation. Scheme:{}",token.getDisplayName(),schemeName);
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -175,7 +175,7 @@ public class SchemeService {
     }
 
     public String deleteSchemePermissions(String schemeName, String username, AuthenticateResponseDto authenticateResponseDto) throws CisException {
-        logger.debug("Request Received : schemeName-{} :: username - {} :: authToken - {} ", schemeName, username, authenticateResponseDto);
+        logger.debug("Request Received : schemeName-{} :: username - {} :: authToken - {} ", schemeName, username, authenticateResponseDto.getDisplayName());
         if (isAbleToEdit(schemeName, authenticateResponseDto)) {
             permissionsSchemeRepository.deleteBySchemeAndUsername(schemeName, username);
             JSONObject response = new JSONObject();
@@ -190,7 +190,7 @@ public class SchemeService {
     }
 
     public String createSchemePermissions(String schemeName, String userName, String role, AuthenticateResponseDto authenticateResponseDto) throws CisException {
-        logger.debug("Request Received : schemeName-{} :: role-{} :: authToken - {} ", schemeName, role, authenticateResponseDto);
+        logger.debug("Request Received : schemeName-{} :: role-{} :: authToken - {} ", schemeName, role, authenticateResponseDto.getDisplayName());
         if (isAbleToEdit(schemeName, authenticateResponseDto)) {
             JSONObject response = new JSONObject();
             PermissionsScheme permissionsScheme = PermissionsScheme.builder().scheme(schemeName)

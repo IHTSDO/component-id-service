@@ -50,7 +50,7 @@ public class BulkSchemeIdService {
     private SNOMEDID snomedid;
 
     public List<SchemeId> getSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, String schemeIds) throws CisException {
-        logger.debug("BulkSchemeIdService.getSchemeIds() token-{} :: schemeName-{} :: schemeIds -{}", token, schemeName, schemeIds);
+        logger.debug("BulkSchemeIdService.getSchemeIds() token-{} :: schemeName-{} :: schemeIds -{}", token.getDisplayName(), schemeName, schemeIds);
         String[] schemedIdArray = schemeIds.replaceAll("\\s+", "").split(",");
         List<SchemeId> resSchemeArrayList = new ArrayList<>();
         boolean able = schemeIdService.isAbleUser(String.valueOf(schemeName), token);
@@ -92,7 +92,7 @@ public class BulkSchemeIdService {
                 }
             }
         } else {
-            logger.error("error getSchemeIds():: user : {} has neither admin access nor scheme permission for the selected operation.",token.getName());
+            logger.error("error getSchemeIds():: user : {} has neither admin access nor scheme permission for the selected operation.",token.getDisplayName());
             throw new CisException(HttpStatus.BAD_REQUEST, "No permission for the selected operation");
         }
         logger.debug("BulkSchemeIdService.getSchemeIds() - Response size-:: {}", (null==resSchemeArrayList?"0":resSchemeArrayList.size()));
@@ -211,7 +211,7 @@ public class BulkSchemeIdService {
 
 
     public BulkJob generateSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkGenerationRequestDto schemeIdBulkDto) throws CisException {
-        logger.debug("BulkSchemeIdService.generateSchemeIds() token - {} :: schemeName - {} :: schemeIdBulkDto - {}", token, schemeName, schemeIdBulkDto);
+        logger.debug("BulkSchemeIdService.generateSchemeIds() token - {} :: schemeName - {} :: schemeIdBulkDto - {}", token.getDisplayName(), schemeName, schemeIdBulkDto);
         SchemeIdBulkGenerate bulkGenerate = new SchemeIdBulkGenerate();
         bulkGenerate.setQuantity(schemeIdBulkDto.getQuantity());
         bulkGenerate.setSystemIds(schemeIdBulkDto.getSystemIds());
@@ -221,7 +221,7 @@ public class BulkSchemeIdService {
 
         boolean able = schemeIdService.isAbleUser(String.valueOf(schemeName), token);
         if (!able) {
-            logger.error("error generateSchemeIds():: user: {} has neither admin access nor scheme permission for the selected operation. schemeName:{}",token.getName(), schemeName);
+            logger.error("error generateSchemeIds():: user: {} has neither admin access nor scheme permission for the selected operation. schemeName:{}",token.getDisplayName(), schemeName);
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
         if ((schemeIdBulkDto.getSystemIds() != null && schemeIdBulkDto.getSystemIds().length != 0 && (schemeIdBulkDto.getSystemIds().length != schemeIdBulkDto.getQuantity()))) {
@@ -257,14 +257,14 @@ public class BulkSchemeIdService {
     // Register SchemeId
 
     public BulkJob registerSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkRegisterRequestDto request) throws CisException {
-        logger.debug("BulkSchemeIdService.registerSchemeIds() token - {} :: schemeName - {} :: request - {}", token, schemeName, request);
+        logger.debug("BulkSchemeIdService.registerSchemeIds() token - {} :: schemeName - {} :: request - {}", token.getDisplayName(), schemeName, request);
         BulkJob bulk = this.registerBulkSchemeIds(token, schemeName, request);
         logger.debug("BulkSchemeIdService.registerSchemeIds() - Response :: {}", bulk);
         return bulk;
     }
 
     public BulkJob registerBulkSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkRegisterRequestDto schemeIdBulkRegisterDto) throws CisException {
-        logger.debug("BulkSchemeIdService.registerBulkSchemeIds() token - {} ::schemeName- {} :: schemeIdBulkRegisterDto - {}", token, schemeName, schemeIdBulkRegisterDto);
+        logger.debug("BulkSchemeIdService.registerBulkSchemeIds() token - {} ::schemeName- {} :: schemeIdBulkRegisterDto - {}", token.getDisplayName(), schemeName, schemeIdBulkRegisterDto);
         BulkJob bulkJob = new BulkJob();
         if (schemeIdService.isAbleUser(String.valueOf(schemeName), token)) {
             SchemeIdBulkRegister bulkRegister = new SchemeIdBulkRegister();
@@ -299,7 +299,7 @@ public class BulkSchemeIdService {
             return resultJob;
 
         } else {
-            logger.error("error registerBulkSchemeIds():: user :{} has neither admin access nor scheme permission for the selected operation.scheme:{}",token.getName(),schemeName);
+            logger.error("error registerBulkSchemeIds():: user :{} has neither admin access nor scheme permission for the selected operation.scheme:{}",token.getDisplayName(),schemeName);
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -309,14 +309,14 @@ public class BulkSchemeIdService {
 
 
     public BulkJob reserveSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkReserveRequestDto request) throws CisException {
-        logger.debug("BulkSchemeIdService.reserveSchemeIds() token - {} :: schemeName - {} :: request - {}", token, schemeName, request);
+        logger.debug("BulkSchemeIdService.reserveSchemeIds() token - {} :: schemeName - {} :: request - {}", token.getDisplayName(), schemeName, request);
         BulkJob bulkJob = this.reserveBulkSchemeIds(token, schemeName, request);
         logger.debug("BulkSchemeIdService.reserveSchemeIds() - Response :: {}", bulkJob);
         return bulkJob;
     }
 
     public BulkJob reserveBulkSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkReserveRequestDto request) throws CisException {
-        logger.debug("BulkSchemeIdService.reserveBulkSchemeIds() token - {} ::schemeName -  {} :: request - {}", token, schemeName, request);
+        logger.debug("BulkSchemeIdService.reserveBulkSchemeIds() token - {} ::schemeName -  {} :: request - {}", token.getDisplayName(), schemeName, request);
         BulkJob bulkJob = new BulkJob();
         if (schemeIdService.isAbleUser(String.valueOf(schemeName), token)) {
 
@@ -353,7 +353,7 @@ public class BulkSchemeIdService {
             return resultJob;
 
         } else {
-            logger.error("error reserveBulkSchemeIds():: user: {} has neither admin access nor scheme permission for the selected operation.scheme:{}",token.getName(),schemeName);
+            logger.error("error reserveBulkSchemeIds():: user: {} has neither admin access nor scheme permission for the selected operation.scheme:{}",token.getDisplayName(),schemeName);
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -362,14 +362,14 @@ public class BulkSchemeIdService {
     //deprecateSchemeIds
 
     public BulkJob deprecateSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
-        logger.debug("BulkSchemeIdService.deprecateSchemeIds() token - {} ::schemeName- {} :: request - {}", token, schemeName, request);
+        logger.debug("BulkSchemeIdService.deprecateSchemeIds() token - {} ::schemeName- {} :: request - {}", token.getDisplayName(), schemeName, request);
         BulkJob bulk = this.deprecateBulkSchemeIds(token, schemeName, request);
         logger.debug("BulkSchemeIdService.deprecateSchemeIds() - Response :: {}", bulk);
         return bulk;
     }
 
     public BulkJob deprecateBulkSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
-        logger.debug("BulkSchemeIdService.deprecateBulkSchemeIds() token - {} :: schemeName - {} :: request - {} ", token, schemeName, request);
+        logger.debug("BulkSchemeIdService.deprecateBulkSchemeIds() token - {} :: schemeName - {} :: request - {} ", token.getDisplayName(), schemeName, request);
         BulkJob bulkJob = new BulkJob();
         if (schemeIdService.isAbleUser(String.valueOf(schemeName), token)) {
             BulkSchemeIdUpdate bulkSchemeIdUpdate = new BulkSchemeIdUpdate();
@@ -424,14 +424,14 @@ public class BulkSchemeIdService {
 //releaseSchemeIds
 
     public BulkJob releaseSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
-        logger.debug("BulkSchemeIdService.releaseSchemeIds() token - {} ::schemeName- {} :: request -{}", token, schemeName, request);
+        logger.debug("BulkSchemeIdService.releaseSchemeIds() token - {} ::schemeName- {} :: request -{}", token.getDisplayName(), schemeName, request);
         BulkJob bulkJob = this.releaseBulkSchemeIds(token, schemeName, request);
         logger.debug("BulkSchemeIdService.releaseSchemeIds() - Response :: {}", bulkJob);
         return bulkJob;
     }
 
     public BulkJob releaseBulkSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
-        logger.debug("BulkSchemeIdService.releaseBulkSchemeIds() token - {} ::schemeName- {} :: request - {}", token, schemeName, request);
+        logger.debug("BulkSchemeIdService.releaseBulkSchemeIds() token - {} ::schemeName- {} :: request - {}", token.getDisplayName(), schemeName, request);
         BulkJob bulkJob = new BulkJob();
 
         if (schemeIdService.isAbleUser(String.valueOf(schemeName), token)) {
@@ -457,7 +457,7 @@ public class BulkSchemeIdService {
 
 
         } else {
-            logger.error("error releaseBulkSchemeIds():: user:{} has neither admin access nor scheme permission for the selected operation.scheme:{}", token.getName(),schemeName);
+            logger.error("error releaseBulkSchemeIds():: user:{} has neither admin access nor scheme permission for the selected operation.scheme:{}", token.getDisplayName(),schemeName);
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -465,14 +465,14 @@ public class BulkSchemeIdService {
 
     //publishSchemeIds
     public BulkJob publishSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
-        logger.debug("BulkSchemeIdService.publishSchemeIds() token-{} ::schemeName- {} :: request -{}", token, schemeName, request);
+        logger.debug("BulkSchemeIdService.publishSchemeIds() token-{} ::schemeName- {} :: request -{}", token.getDisplayName(), schemeName, request);
         BulkJob bulk = this.publishBulkSchemeIds(token, schemeName, request);
         logger.debug("BulkSchemeIdService.publishSchemeIds() - Response :: {}", bulk);
         return bulk;
     }
 
     public BulkJob publishBulkSchemeIds(AuthenticateResponseDto token, SchemeName schemeName, SchemeIdBulkDeprecateRequestDto request) throws CisException {
-        logger.debug("BulkSchemeIdService.publishBulkSchemeIds() token-{} ::schemeName- {} :: request -{}", token, schemeName, request);
+        logger.debug("BulkSchemeIdService.publishBulkSchemeIds() token-{} ::schemeName- {} :: request -{}", token.getDisplayName(), schemeName, request);
         BulkJob bulkJob = new BulkJob();
         if (schemeIdService.isAbleUser(String.valueOf(schemeName), token)) {
 
@@ -496,7 +496,7 @@ public class BulkSchemeIdService {
             return bulk;
 
         } else {
-            logger.error("error publishBulkSchemeIds():: user : {} has neither admin access nor scheme permission for the selected operation.scheme:{}", token.getName(),schemeName);
+            logger.error("error publishBulkSchemeIds():: user : {} has neither admin access nor scheme permission for the selected operation.scheme:{}", token.getDisplayName(),schemeName);
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }

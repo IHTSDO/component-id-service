@@ -143,14 +143,14 @@ public class SctidService {
                 return Collections.EMPTY_LIST;
             }
         } else {
-            logger.error("error getSct():: user:{} has neither admin access nor namespace permission for the selected operation.Namespace value:{}",authToken.getName(),"false");
+            logger.error("error getSct():: user:{} has neither admin access nor namespace permission for the selected operation.Namespace value:{}",authToken.getDisplayName(),"false");
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
 
     }
 
     public SctWithSchemeResponseDTO getSctWithId(AuthenticateResponseDto authToken, String sctid, String includeAdditionalIds) throws CisException {
-        logger.debug("Request Received :authToken - {} :: sctid-{} :: includeAdditionalIds - {} ", authToken, sctid, includeAdditionalIds);
+        logger.debug("Request Received :authToken - {} :: sctid-{} :: includeAdditionalIds - {} ", authToken.getDisplayName(), sctid, includeAdditionalIds);
         Sctid sctResult = new Sctid();
         SctWithSchemeResponseDTO output = new SctWithSchemeResponseDTO();
         SctWithSchemeResponseDTO sctWithSchemeResponseDTO = new SctWithSchemeResponseDTO();
@@ -160,7 +160,7 @@ public class SctidService {
             if (bulkSctidService.isAbleUser(String.valueOf(namespace), authToken)) {
                 sctWithSchemeResponseDTO = this.getSctCommon(output, sctid, includeAdditionalIds);
             } else {
-                logger.error("error getSctWithId():: user :{} has neither admin access no namespace permission for the selected operation. namespace:{}",authToken.getName(),namespace);
+                logger.error("error getSctWithId():: user :{} has neither admin access no namespace permission for the selected operation. namespace:{}",authToken.getDisplayName(),namespace);
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
         } else {
@@ -276,13 +276,13 @@ public class SctidService {
     }
 
     public Sctid getSctWithSystemId(AuthenticateResponseDto authToken, Integer namespaceId, String systemId) throws CisException {
-        logger.debug("Request Received : AuthenticateResponseDto-{} :: namespaceId - {} :: systemId - {}", authToken, namespaceId, systemId);
+        logger.debug("Request Received : AuthenticateResponseDto-{} :: namespaceId - {} :: systemId - {}", authToken.getDisplayName(), namespaceId, systemId);
         Sctid sct = null;
         if (bulkSctidService.isAbleUser(String.valueOf(namespaceId), authToken)) {
             List<Sctid> result = sctidRepository.findBySystemIdAndNamespace(systemId, namespaceId);
             sct = result.size() > 0 ? result.get(0) : null;
         } else {
-            logger.error("error getSctWithSystemId():: user :{} has neither admin access nor namespace permission for the selected operation. namespace:{}",authToken.getName(),namespaceId);
+            logger.error("error getSctWithSystemId():: user :{} has neither admin access nor namespace permission for the selected operation. namespace:{}",authToken.getDisplayName(),namespaceId);
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
         logger.debug("getSctWithSystemId() - Response :: {}", sct);
@@ -290,7 +290,7 @@ public class SctidService {
     }
 
     public Sctid deprecateSct(AuthenticateResponseDto authToken, DeprecateSctRequestDTO request) throws CisException {
-        logger.debug("Request Received : AuthenticateResponseDto-{} :: DeprecateSctRequestDTO - {} ", authToken, request);
+        logger.debug("Request Received : AuthenticateResponseDto-{} :: DeprecateSctRequestDTO - {} ", authToken.getDisplayName(), request);
         Sctid output = new Sctid();
         DeprecateSctRequest deprecateSctRequest = new DeprecateSctRequest();
         deprecateSctRequest.setSctid(request.getSctid());
@@ -327,7 +327,7 @@ public class SctidService {
                 }
 
             } else {
-                logger.error("error deprecateSct():: user:{} has neither admin access nor namespace permission for the selected operation. namespace:{}",authToken.getName(),returnedNamespace);
+                logger.error("error deprecateSct():: user:{} has neither admin access nor namespace permission for the selected operation. namespace:{}",authToken.getDisplayName(),returnedNamespace);
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
         }
@@ -336,7 +336,7 @@ public class SctidService {
     }
 
     public Sctid releaseSct(AuthenticateResponseDto authToken, DeprecateSctRequestDTO request) throws CisException {
-        logger.debug("Request Received : AuthenticateResponseDto-{} :: DeprecateSctRequestDTO - {} ", authToken, request);
+        logger.debug("Request Received : AuthenticateResponseDto-{} :: DeprecateSctRequestDTO - {} ", authToken.getDisplayName(), request);
         Sctid output = new Sctid();
         DeprecateSctRequest deprecateSctRequest = new DeprecateSctRequest();
         deprecateSctRequest.setSctid(request.getSctid());
@@ -374,7 +374,7 @@ public class SctidService {
                 }
 
             } else {
-                logger.error("error releaseSct()::user:{} has neither admin access nor namespace permission for the selected operation. namespace:{}",authToken.getName(),returnedNamespace);
+                logger.error("error releaseSct()::user:{} has neither admin access nor namespace permission for the selected operation. namespace:{}",authToken.getDisplayName(),returnedNamespace);
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
         }
@@ -383,7 +383,7 @@ public class SctidService {
     }
 
     public Sctid publishSct(AuthenticateResponseDto authToken, DeprecateSctRequestDTO request) throws CisException {
-        logger.debug("Request Received : AuthenticateResponseDto-{} :: DeprecateSctRequestDTO - {} ", authToken, request);
+        logger.debug("Request Received : AuthenticateResponseDto-{} :: DeprecateSctRequestDTO - {} ", authToken.getDisplayName(), request);
         Sctid output = new Sctid();
         DeprecateSctRequest deprecateSctRequest = new DeprecateSctRequest();
         deprecateSctRequest.setSctid(request.getSctid());
@@ -421,7 +421,7 @@ public class SctidService {
                 }
 
             } else {
-                logger.error("error publishSct()::user:{} has neither admin access nor namespace permission for the selected operation. namespace:{}",authToken.getName(),returnedNamespace);
+                logger.error("error publishSct()::user:{} has neither admin access nor namespace permission for the selected operation. namespace:{}",authToken.getDisplayName(),returnedNamespace);
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
         }
@@ -430,7 +430,7 @@ public class SctidService {
     }
 
     public SctWithSchemeResponseDTO generateSctid(AuthenticateResponseDto authToken, SctidsGenerateRequestDto generationData) throws CisException {
-        logger.debug("Request Received : AuthenticateResponseDto-{} :: SctidsGenerateRequestDto - {} ", authToken, generationData);
+        logger.debug("Request Received : AuthenticateResponseDto-{} :: SctidsGenerateRequestDto - {} ", authToken.getDisplayName(), generationData);
         SctWithSchemeResponseDTO sctResponse = new SctWithSchemeResponseDTO();
 
         SctidGenerate generate = new SctidGenerate();
@@ -485,7 +485,7 @@ public class SctidService {
             sctResponse.setComment(sctRec1.getComment());
             sctResponse.setAdditionalIds(sctIdRecordArray);
         } else {
-            logger.error("error generateSctid()::user:{} has neither admin access nor namespace permission for the selected operation.namespace:{}",authToken.getName(),generationData.getNamespace());
+            logger.error("error generateSctid()::user:{} has neither admin access nor namespace permission for the selected operation.namespace:{}",authToken.getDisplayName(),generationData.getNamespace());
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
         logger.debug("generateSctid() - Response :: {}", sctResponse);
@@ -754,7 +754,7 @@ public class SctidService {
     }
 
     public Sctid registerSctid(AuthenticateResponseDto authToken, SCTIDRegistrationRequest registrationData) throws CisException {
-        logger.debug("Request Received : SCTIDRegistrationRequest-{} :: authToken - {} ", registrationData, authToken);
+        logger.debug("Request Received : SCTIDRegistrationRequest-{} :: authToken - {} ", registrationData, authToken.getDisplayName());
         Sctid result = new Sctid();
         SCTIDRegisterRequest registerRequest = new SCTIDRegisterRequest();
         registerRequest.setSctid(registrationData.getSctid());
@@ -778,7 +778,7 @@ public class SctidService {
                 if (null != (sct))
                     result = sct;
             } else {
-                logger.error("error registerSctid()::user:{} has neither admin access nor namespace permission for the selected operation. namespace:{}",authToken.getName(),registrationData.getNamespace());
+                logger.error("error registerSctid()::user:{} has neither admin access nor namespace permission for the selected operation. namespace:{}",authToken.getDisplayName(),registrationData.getNamespace());
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
             }
         }
@@ -787,7 +787,7 @@ public class SctidService {
     }
 
     public Sctid reserveSctid(AuthenticateResponseDto token, SCTIDReservationRequest reservationData) throws CisException {
-        logger.debug("Request Received : SCTIDReservationRequest-{} :: authToken - {} ", reservationData, token);
+        logger.debug("Request Received : SCTIDReservationRequest-{} :: authToken - {} ", reservationData, token.getDisplayName());
         Sctid result = null;
         SCTIDReserveRequest reserveRequest = new SCTIDReserveRequest();
         reserveRequest.setNamespace(reservationData.getNamespace());
@@ -807,7 +807,7 @@ public class SctidService {
             if (null != (sct))
                 result = sct;
         } else {
-            logger.error("error reserveSctid()::user:{} has neither admin access nor namespace permission for the selected operation.namespace:{}",token.getName(),reservationData.getNamespace());
+            logger.error("error reserveSctid()::user:{} has neither admin access nor namespace permission for the selected operation.namespace:{}",token.getDisplayName(),reservationData.getNamespace());
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
         logger.debug("reserveSctid() - Response :: {}", result);
