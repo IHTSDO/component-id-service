@@ -41,10 +41,11 @@ public class AuthenticationService {
             imsResponse = requestManager.postRequest(url, null, payload.toString());
         } catch (CisException e) {
             if (e.getStatus().is4xxClientError()) {
-                logger.error("call to IMS returned 4xx while trying to login for user '{}'", loginRequestDto.getUsername());
-                throw new CisException(HttpStatus.UNAUTHORIZED, "username/password incorrect for input user '"+loginRequestDto.getPassword()+"'");
+                logger.error("call to IMS returned "+e.getStatus()+" while trying to login for user '{}'", loginRequestDto.getUsername());
+                throw new CisException(HttpStatus.UNAUTHORIZED, "username/password incorrect for user input '" +
+                        loginRequestDto.getPassword().substring(0,2)+"*".repeat((loginRequestDto.getPassword().length())-2)+"'");
             } else if (e.getStatus().is5xxServerError()) {
-                logger.error("call to IMS returned 5xx while trying to login for user '{}'", loginRequestDto.getUsername());
+                logger.error("call to IMS returned "+e.getStatus()+" while trying to login for user '{}'", loginRequestDto.getUsername());
                 throw new CisException(e.getStatus(), "unknown error");
             } else {
                 logger.error("call to IMS returned unknown error while trying to login for user '{}'", loginRequestDto.getUsername(), e);
