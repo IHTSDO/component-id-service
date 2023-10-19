@@ -41,18 +41,18 @@ public class AuthenticationService {
             imsResponse = requestManager.postRequest(url, null, payload.toString());
         } catch (CisException e) {
             if (e.getStatus().is4xxClientError()) {
-                logger.error("call to IMS returned "+e.getStatus()+" while trying to login for user '{}'", loginRequestDto.getUsername());
-                throw new CisException(HttpStatus.UNAUTHORIZED, "username/password incorrect for user input '" +
-                        loginRequestDto.getPassword().substring(0,2)+"*".repeat((loginRequestDto.getPassword().length())-2)+"'");
+                logger.error("call to IMS returned '{}' while trying to login for user '{}'", e.getStatus(), loginRequestDto.getUsername());
+                String hidePassword = loginRequestDto.getPassword().length() >= 3 ? loginRequestDto.getPassword().substring(0,2)+"*".repeat((loginRequestDto.getPassword().length())-2) : loginRequestDto.getPassword()+"*";
+                throw new CisException(HttpStatus.UNAUTHORIZED, "username/password incorrect for user input '" + hidePassword +"'");
             } else if (e.getStatus().is5xxServerError()) {
-                logger.error("call to IMS returned "+e.getStatus()+" while trying to login for user '{}'", loginRequestDto.getUsername());
-                throw new CisException(e.getStatus(), "unknown error");
+                logger.error("call to IMS returned '{}' while trying to login for user '{}'", e.getStatus(), loginRequestDto.getUsername());
+                throw new CisException(e.getStatus(), e.getErrorMessage());
             } else {
                 logger.error("call to IMS returned unknown error while trying to login for user '{}'", loginRequestDto.getUsername(), e);
-                throw new CisException(e.getStatus(), "unknown error");
+                throw new CisException(e.getStatus(), e.getErrorMessage());
             }
         }
-        logger.info("user '"+loginRequestDto.getUsername()+"'successfully logged in");
+        logger.info("user '{}' successfully logged in", loginRequestDto.getUsername());
 
         //token response value
         String token = cookieUtil.fetchTokenCookieValue(imsResponse);
