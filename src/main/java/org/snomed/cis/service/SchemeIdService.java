@@ -57,7 +57,7 @@ public class SchemeIdService {
     StateMachine stateMachine;
 
     public boolean isAbleUser(String schemeName, AuthenticateResponseDto authToken) throws CisException {
-        logger.debug("Request Received : schemeName-{} :: authToken - {} ", schemeName, authToken.getDisplayName());
+        logger.debug("Request Received : schemeName-{} :: authToken - {} ", schemeName, authToken.toString());
         List<String> groups = authToken.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
         boolean isAble = false;
         if (groups.contains("component-identifier-service-admin") || hasSchemePermission(schemeName, authToken)) {
@@ -68,7 +68,7 @@ public class SchemeIdService {
     }
 
     public boolean hasSchemePermission(String schemeName, AuthenticateResponseDto authToken) throws CisException {
-        logger.debug("Request Received : schemeName-{} :: authToken - {} ", schemeName, authToken.getDisplayName());
+        logger.debug("Request Received : schemeName-{} :: authToken - {} ", schemeName, authToken.toString());
         boolean able = false;
         if (!"false".equalsIgnoreCase(schemeName.toString())) {
             List<PermissionsScheme> permissionsSchemeList = permissionsSchemeRepository.findByScheme(schemeName.toString());
@@ -85,7 +85,7 @@ public class SchemeIdService {
                 try {
                     roleAsGroups = authToken.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
                 } catch (Exception e) {
-                    logger.error("error hasSchemePermission():: Error while fetching groups from Roles in authToken:{}.Exception:{}",authToken.getDisplayName().toString(), e);
+                    logger.error("error hasSchemePermission():: Error while fetching groups from Roles in authToken:{}.Exception:{}",authToken.toString(), e);
                     throw new CisException(HttpStatus.BAD_REQUEST, "Error while fetching groups from authToken.");
                 }
                 for (String group : roleAsGroups) {
@@ -99,12 +99,12 @@ public class SchemeIdService {
     }
 
     public List<SchemeId> getSchemeIds(AuthenticateResponseDto authToken, String limit, String skip, SchemeName schemeName) throws CisException {
-        logger.debug("Request Received :authToken - {} ::limit - {} :: skip - {}:: schemeName-{} :: ", authToken.getDisplayName(), limit, skip, schemeName);
+        logger.debug("Request Received :authToken - {} ::limit - {} :: skip - {}:: schemeName-{} :: ", authToken.toString(), limit, skip, schemeName);
         return this.getSchemeIdsList(limit, skip, schemeName, authToken);
     }
 
     private List<SchemeId> getSchemeIdsList(String limit, String skip, SchemeName schemeName, AuthenticateResponseDto authToken) throws CisException {
-        logger.debug("Request Received : limit - {} :: skip - {} :: schemeName-{} :: authToken - {} ", limit, skip, schemeName, authToken.getDisplayName());
+        logger.debug("Request Received : limit - {} :: skip - {} :: schemeName-{} :: authToken - {} ", limit, skip, schemeName, authToken.toString());
         List<SchemeId> schemeidList = new ArrayList<>();
         if (this.isAbleUser("false", authToken)) {
             var limitR = 100;
@@ -158,7 +158,7 @@ public class SchemeIdService {
                 schemeidList = newRows;
             }
         } else {
-            logger.error("error getSchemeIdsList():: user:{} has neither admin access nor scheme permission for the selected operation. scheme:{}",authToken.getDisplayName(),schemeName);
+            logger.error("error getSchemeIdsList():: user:{} has neither admin access nor scheme permission for the selected operation. scheme:{}",authToken.toString(),schemeName);
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -167,7 +167,7 @@ public class SchemeIdService {
     }
 
     public SchemeId getSchemeId(AuthenticateResponseDto authToken, SchemeName scheme, String schemeid) throws CisException {
-        logger.debug("Request Received : schemeName-{} :: authToken - {} :: schemeid - {}", scheme, authToken.getDisplayName(), schemeid);
+        logger.debug("Request Received : schemeName-{} :: authToken - {} :: schemeid - {}", scheme, authToken.toString(), schemeid);
         return this.getSchemeIdsByschemeIdList(scheme.toString(), schemeid);
     }
 
@@ -295,12 +295,12 @@ public class SchemeIdService {
 
 
     public SchemeId getSchemeIdsBySystemId(AuthenticateResponseDto authToken, SchemeName scheme, String systemid) throws CisException {
-        logger.debug("Request Received : schemeName-{} :: authToken - {} :: systemid - {}", scheme, authToken.getDisplayName(), systemid);
+        logger.debug("Request Received : schemeName-{} :: authToken - {} :: systemid - {}", scheme, authToken.toString(), systemid);
         return this.getSchemeIdsBysystemList(scheme.toString(), systemid, authToken);
     }
 
     private SchemeId getSchemeIdsBysystemList(String scheme, String systemid, AuthenticateResponseDto authToken) throws CisException {
-        logger.debug("Request Received : schemeName-{} ::systemid - {} :: authToken - {} ", scheme, systemid, authToken.getDisplayName());
+        logger.debug("Request Received : schemeName-{} ::systemid - {} :: authToken - {} ", scheme, systemid, authToken.toString());
         if (isAbleUser(scheme, authToken)) {
             List<SchemeId> schemeIdList = bulkSchemeIdRepository.findBySchemeAndSystemId(scheme, systemid);
 
@@ -312,7 +312,7 @@ public class SchemeIdService {
                 throw new CisException(HttpStatus.UNAUTHORIZED, "No schemeid for scheme: "+scheme+"and systemId: "+systemid);
             }
         } else {
-            logger.error("error getSchemeIdsBysystemList():: user:{} has neither admin access nor scheme permission for the selected operation.scheme:{}",authToken.getDisplayName(),scheme);
+            logger.error("error getSchemeIdsBysystemList():: user:{} has neither admin access nor scheme permission for the selected operation.scheme:{}",authToken.toString(),scheme);
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
 
@@ -320,12 +320,12 @@ public class SchemeIdService {
     }
 
     public SchemeId deprecateSchemeIds(AuthenticateResponseDto authToken, SchemeName schemeName, SchemeIdUpdateRequestDto request) throws CisException {
-        logger.debug("Request Received :authToken - {} :: schemeName-{} :: SchemeIdUpdateRequestDto - {} ", authToken.getDisplayName(), schemeName, request);
+        logger.debug("Request Received :authToken - {} :: schemeName-{} :: SchemeIdUpdateRequestDto - {} ", authToken.toString(), schemeName, request);
         return this.deprecateSchemeIdList(schemeName, request, authToken);
     }
 
     private SchemeId deprecateSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request, AuthenticateResponseDto authToken) throws CisException {
-        logger.debug("Request Received : schemeName-{} ::SchemeIdUpdateRequestDto-{} :: authToken - {} ", schemeName, request, authToken.getDisplayName());
+        logger.debug("Request Received : schemeName-{} ::SchemeIdUpdateRequestDto-{} :: authToken - {} ", schemeName, request, authToken.toString());
         SchemeId schemeId = new SchemeId();
         if (isAbleUser(schemeName.toString(), authToken)) {
             SchemeIdUpdateRequest updateRequest = new SchemeIdUpdateRequest();
@@ -352,7 +352,7 @@ public class SchemeIdService {
                 }
             }
         } else {
-            logger.error("error deprecateSchemeIdList():: user :{} has neither admin access nor scheme permission for the selected operation.Scheme:{}",authToken.getDisplayName(),schemeName);
+            logger.error("error deprecateSchemeIdList():: user :{} has neither admin access nor scheme permission for the selected operation.Scheme:{}",authToken.toString(),schemeName);
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
         }
         logger.debug("deprecateSchemeIdList()-Response: {}", schemeId);
@@ -362,12 +362,12 @@ public class SchemeIdService {
     //releaseSchmeId
 
     public SchemeId releaseSchemeIds(AuthenticateResponseDto authToken, SchemeName schemeName, SchemeIdUpdateRequestDto request) throws CisException {
-        logger.debug("Request Received :AuthenticateResponseDto - {} :: schemeName-{} :: SchemeIdUpdateRequestDto - {} ", authToken.getDisplayName(), schemeName, request);
+        logger.debug("Request Received :AuthenticateResponseDto - {} :: schemeName-{} :: SchemeIdUpdateRequestDto - {} ", authToken.toString(), schemeName, request);
         return this.releaseSchemeIdList(schemeName, request, authToken);
     }
 
     private SchemeId releaseSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request, AuthenticateResponseDto authToken) throws CisException {
-        logger.debug("Request Received : schemeName-{} ::SchemeIdUpdateRequestDto - {}:: authToken - {} ", schemeName, request, authToken.getDisplayName());
+        logger.debug("Request Received : schemeName-{} ::SchemeIdUpdateRequestDto - {}:: authToken - {} ", schemeName, request, authToken.toString());
         SchemeId schemeId = new SchemeId();
         if (isAbleUser(schemeName.toString(), authToken)) {
 
@@ -397,7 +397,7 @@ public class SchemeIdService {
                 }
             }
         } else {
-            logger.error("error releaseSchemeIdList():: user:{} has neither admin access nor scheme permission for the selected operation. Scheme:{}",authToken.getDisplayName(),schemeName);
+            logger.error("error releaseSchemeIdList():: user:{} has neither admin access nor scheme permission for the selected operation. Scheme:{}",authToken.toString(),schemeName);
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -408,13 +408,13 @@ public class SchemeIdService {
     //publish
 
     public SchemeId publishSchemeId(AuthenticateResponseDto authToken, SchemeName schemeName, SchemeIdUpdateRequestDto request) throws CisException {
-        logger.debug("Request Received : AuthenticateResponseDto - {}:: schemeName-{} :: SchemeIdUpdateRequestDto - {} ", authToken.getDisplayName(), schemeName, request);
+        logger.debug("Request Received : AuthenticateResponseDto - {}:: schemeName-{} :: SchemeIdUpdateRequestDto - {} ", authToken.toString(), schemeName, request);
         return this.publishSchemeIdList(schemeName, request, authToken);
 
     }
 
     private SchemeId publishSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request, AuthenticateResponseDto authToken) throws CisException {
-        logger.debug("Request Received : schemeName-{} :: SchemeIdUpdateRequestDto-{}:: authToken - {} ", schemeName, request, authToken.getDisplayName());
+        logger.debug("Request Received : schemeName-{} :: SchemeIdUpdateRequestDto-{}:: authToken - {} ", schemeName, request, authToken.toString());
         SchemeId schemeId = new SchemeId();
         if (isAbleUser(schemeName.toString(), authToken)) {
             SchemeIdUpdateRequest updateRequest = new SchemeIdUpdateRequest();
@@ -443,7 +443,7 @@ public class SchemeIdService {
                 }
             }
         } else {
-            logger.error("error publishSchemeIdList():: user : {} has neither admin access nor scheme permission for the selected operation. Scheme:{}",authToken.getDisplayName(),schemeName);
+            logger.error("error publishSchemeIdList():: user : {} has neither admin access nor scheme permission for the selected operation. Scheme:{}",authToken.toString(),schemeName);
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -452,14 +452,14 @@ public class SchemeIdService {
     }
 
     public SchemeId reserveSchemeId(AuthenticateResponseDto authToken, SchemeName schemeName, SchemeIdReserveRequestDto request) throws CisException {
-        logger.debug("Request Received :AuthenticateResponseDto - {} :: schemeName-{} :: SchemeIdReserveRequestDto - {} ", authToken.getDisplayName(), schemeName, request);
+        logger.debug("Request Received :AuthenticateResponseDto - {} :: schemeName-{} :: SchemeIdReserveRequestDto - {} ", authToken.toString(), schemeName, request);
         SchemeId schemeId = this.reserveSchemeIdList(schemeName, request, authToken);
         logger.debug("reserveSchemeId() - Response: {}", schemeId);
         return schemeId;
     }
 
     private SchemeId reserveSchemeIdList(SchemeName schemeName, SchemeIdReserveRequestDto request, AuthenticateResponseDto authToken) throws CisException {
-        logger.debug("Request Received : schemeName-{} :: SchemeIdReserveRequestDto - {} :: AuthenticateResponseDto - {}", schemeName, request, authToken.getDisplayName());
+        logger.debug("Request Received : schemeName-{} :: SchemeIdReserveRequestDto - {} :: AuthenticateResponseDto - {}", schemeName, request, authToken.toString());
         SchemeId schemeId = null;
         if (this.isAbleUser(schemeName.toString(), authToken)) {
             SchemeIdReserveRequest reserveRequest = new SchemeIdReserveRequest();
@@ -469,7 +469,7 @@ public class SchemeIdService {
             reserveRequest.setAuthor(authToken.getName());
             schemeId = setNewSchemeIdRecord(schemeName, reserveRequest, stateMachine.actions.get("reserve"));
         } else {
-            logger.error("error reserveSchemeIdList():: user : {} has neither admin access nor scheme permission for the selected operation. Scheme:{}",authToken.getDisplayName(),schemeName);
+            logger.error("error reserveSchemeIdList():: user : {} has neither admin access nor scheme permission for the selected operation. Scheme:{}",authToken.toString(),schemeName);
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -645,14 +645,14 @@ public class SchemeIdService {
 
 
     public SchemeId generateSchemeId(AuthenticateResponseDto authToken, SchemeName schemeName, SchemeIdGenerateRequestDto request) throws CisException {
-        logger.debug("Request Received : authToken - {} :: schemeName-{} :: SchemeIdGenerateRequestDto - {}", authToken.getDisplayName(), schemeName, request);
+        logger.debug("Request Received : authToken - {} :: schemeName-{} :: SchemeIdGenerateRequestDto - {}", authToken.toString(), schemeName, request);
         SchemeId schemeId = this.generateSchemeIds(schemeName.toString(), request, authToken);
         logger.debug("generateSchemeId() - Response::{}", schemeId);
         return schemeId;
     }
 
     public SchemeId generateSchemeIds(String schemeName, SchemeIdGenerateRequestDto request, AuthenticateResponseDto authToken) throws CisException {
-        logger.debug("Request Received : schemeName-{} ::SchemeIdGenerateRequestDto-{}:: authToken - {} ", schemeName, request, authToken.getDisplayName());
+        logger.debug("Request Received : schemeName-{} ::SchemeIdGenerateRequestDto-{}:: authToken - {} ", schemeName, request, authToken.toString());
         SchemeId schemeIdRec = new SchemeId();
         if (this.isAbleUser(schemeName, authToken)) {
             SchemeIdGenerateRequest generateRequest = new SchemeIdGenerateRequest();
@@ -680,7 +680,7 @@ public class SchemeIdService {
             }
 
         } else {
-            logger.error("error generateSchemeIds():: user: {} has neither admin access nor scheme permission for the selected operation. Scheme:{}",authToken.getDisplayName(),schemeName);
+            logger.error("error generateSchemeIds():: user: {} has neither admin access nor scheme permission for the selected operation. Scheme:{}",authToken.toString(),schemeName);
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }
@@ -825,14 +825,14 @@ public class SchemeIdService {
 
     //registerSchemeId
     public SchemeId registerSchemeId(AuthenticateResponseDto authToken, SchemeName schemeName, SchemeIdRegisterRequestDto request) throws CisException {
-        logger.debug("Request Received : schemeName-{} :: authToken - {} :: SchemeIdRegisterRequestDto - {} ", schemeName, authToken.getDisplayName(), request);
+        logger.debug("Request Received : schemeName-{} :: authToken - {} :: SchemeIdRegisterRequestDto - {} ", schemeName, authToken.toString(), request);
         SchemeId schemeId = this.registerSchemeIds(schemeName, request, authToken);
         logger.debug("registerSchemeIds() - Response::{}", schemeId);
         return schemeId;
     }
 
     public SchemeId registerSchemeIds(SchemeName schemeName, SchemeIdRegisterRequestDto request, AuthenticateResponseDto authToken) throws CisException {
-        logger.debug("Request Received : schemeName-{} :: SchemeIdRegisterRequestDto -{} :: authToken - {} ", schemeName, request, authToken.getDisplayName());
+        logger.debug("Request Received : schemeName-{} :: SchemeIdRegisterRequestDto -{} :: authToken - {} ", schemeName, request, authToken.toString());
         SchemeId schemeIdRec = null;
         if (this.isAbleUser(schemeName.toString(), authToken)) {
             SchemeIdRegisterRequest registerRequest = new SchemeIdRegisterRequest();
@@ -865,7 +865,7 @@ public class SchemeIdService {
                 }
            // }
         } else {
-            logger.error("error registerSchemeIds():: user:{} has neither admin access nor scheme permission for the selected operation.Scheme is:{}",authToken.getDisplayName(),schemeName);
+            logger.error("error registerSchemeIds():: user:{} has neither admin access nor scheme permission for the selected operation.Scheme is:{}",authToken.toString(),schemeName);
             throw new CisException(HttpStatus.UNAUTHORIZED, "No permission for the selected operation");
 
         }

@@ -35,13 +35,7 @@ public class AuthenticateResponseDto {
     @Override
     public String toString() {
         return "{" +
-                "name='" + name + '\'' +
-                ", firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", displayName='" + displayName + '\'' +
-                ", email='" + email + '\'' +
-                ", langKey='" + langKey + '\'' +
-                ", roles=" + (null==roles?"0":roles.size()) +
+                "displayName='" + displayName + '\'' +
                 '}';
     }
 }

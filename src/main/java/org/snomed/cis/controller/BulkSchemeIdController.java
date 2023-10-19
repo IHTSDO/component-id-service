@@ -43,48 +43,48 @@ public class BulkSchemeIdController {
     @GetMapping("scheme/{schemeName}/bulk")
     public ResponseEntity<List<SchemeId>> getSchemeIds(@RequestParam String token, @PathVariable SchemeName schemeName, @RequestParam String schemeIds,@ApiIgnore Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        logger.info("Request received for - schemeName :: {} - schemeIds :: {} - authenticateResponseDto :: {}", schemeName,schemeIds,authToken.getAuthenticateResponseDto().getDisplayName());
+        logger.info("Request received for - schemeName :: {} - schemeIds :: {} - authenticateResponseDto :: {}", schemeName,schemeIds,authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(bulkSchemeIdService.getSchemeIds(authToken.getAuthenticateResponseDto(),schemeName,schemeIds));
     }
 
     @PostMapping("scheme/{schemeName}/bulk/generate")
     public ResponseEntity<BulkJob> generateSchemeIds(@RequestParam String token, @PathVariable SchemeName schemeName, @RequestBody SchemeIdBulkGenerationRequestDto schemeIdBulkDto,@ApiIgnore Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        logger.info("Request received for - schemeName :: {} - schemeIdBulkDto :: {} - authenticateResponseDto :: {}", schemeName,schemeIdBulkDto,authToken.getAuthenticateResponseDto().getDisplayName());
+        logger.info("Request received for - schemeName :: {} - schemeIdBulkDto :: {} - authenticateResponseDto :: {}", schemeName,schemeIdBulkDto,authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(bulkSchemeIdService.generateSchemeIds(authToken.getAuthenticateResponseDto(),schemeName,schemeIdBulkDto));
     }
 
     @PostMapping("scheme/{schemeName}/bulk/register")
     public ResponseEntity<BulkJob> registerSchemeIds(@RequestParam String token, @PathVariable SchemeName schemeName,@RequestBody SchemeIdBulkRegisterRequestDto schemeIdBulkRegisterDto,@ApiIgnore Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        logger.info("Request received for - schemeName :: {} - schemeIdBulkRegisterDto :: {} - authenticateResponseDto :: {}", schemeName,schemeIdBulkRegisterDto,authToken.getAuthenticateResponseDto().getDisplayName());
+        logger.info("Request received for - schemeName :: {} - schemeIdBulkRegisterDto :: {} - authenticateResponseDto :: {}", schemeName,schemeIdBulkRegisterDto,authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(bulkSchemeIdService.registerSchemeIds(authToken.getAuthenticateResponseDto(),schemeName,schemeIdBulkRegisterDto));
     }
 
         @PostMapping("scheme/{schemeName}/bulk/reserve")
     public ResponseEntity<BulkJob> reserveSchemeIds(@RequestParam String token, @PathVariable SchemeName schemeName,@RequestBody SchemeIdBulkReserveRequestDto schemeIdBulkReserveRequestDto,@ApiIgnore Authentication authentication) throws CisException {
             Token authToken = (Token) authentication;
-            logger.info("Request received for - schemeName :: {} - schemeIdBulkRegisterDto :: {} - authenticateResponseDto :: {}", schemeName,schemeIdBulkReserveRequestDto,authToken.getAuthenticateResponseDto().getDisplayName());
+            logger.info("Request received for - schemeName :: {} - schemeIdBulkRegisterDto :: {} - authenticateResponseDto :: {}", schemeName,schemeIdBulkReserveRequestDto,authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(bulkSchemeIdService.reserveSchemeIds(authToken.getAuthenticateResponseDto(),schemeName, schemeIdBulkReserveRequestDto));
     }
     @PutMapping("scheme/{schemeName}/bulk/deprecate")
     public ResponseEntity<BulkJob> deprecateSchemeIds(@RequestParam String token, @PathVariable SchemeName schemeName, @RequestBody SchemeIdBulkDeprecateRequestDto schemeIdBulkDeprecateRequestDto,@ApiIgnore Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        logger.info("Request received for - schemeName :: {} - schemeIdBulkDeprecateRequestDto :: {} - authenticateResponseDto :: {}", schemeName,schemeIdBulkDeprecateRequestDto,authToken.getAuthenticateResponseDto().getDisplayName());
+        logger.info("Request received for - schemeName :: {} - schemeIdBulkDeprecateRequestDto :: {} - authenticateResponseDto :: {}", schemeName,schemeIdBulkDeprecateRequestDto,authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(bulkSchemeIdService.deprecateSchemeIds(authToken.getAuthenticateResponseDto(),schemeName, schemeIdBulkDeprecateRequestDto));
     }
 
     @PutMapping("scheme/{schemeName}/bulk/release")
     public ResponseEntity<BulkJob> releaseSchemeIds(@RequestParam String token, @PathVariable SchemeName schemeName, @RequestBody SchemeIdBulkDeprecateRequestDto schemeIdBulkDeprecateRequestDto,@ApiIgnore Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        logger.info("Request received for - schemeName :: {} - schemeIdBulkReleaseRequestDto :: {} - authenticateResponseDto :: {}", schemeName,schemeIdBulkDeprecateRequestDto,authToken.getAuthenticateResponseDto().getDisplayName());
+        logger.info("Request received for - schemeName :: {} - schemeIdBulkReleaseRequestDto :: {} - authenticateResponseDto :: {}", schemeName,schemeIdBulkDeprecateRequestDto,authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(bulkSchemeIdService.releaseSchemeIds(authToken.getAuthenticateResponseDto(),schemeName, schemeIdBulkDeprecateRequestDto));
     }
 
     @PutMapping("scheme/{schemeName}/bulk/publish")
     public ResponseEntity<BulkJob> publishSchemeIds(@RequestParam String token, @PathVariable SchemeName schemeName, @RequestBody SchemeIdBulkDeprecateRequestDto schemeIdBulkDeprecateRequestDto, @ApiIgnore Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        logger.info("Request received for - schemeName :: {} - schemeIdBulkPublishRequestDto :: {} - authenticateResponseDto :: {}", schemeName,schemeIdBulkDeprecateRequestDto,authToken.getAuthenticateResponseDto().getDisplayName());
+        logger.info("Request received for - schemeName :: {} - schemeIdBulkPublishRequestDto :: {} - authenticateResponseDto :: {}", schemeName,schemeIdBulkDeprecateRequestDto,authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(bulkSchemeIdService.publishSchemeIds(authToken.getAuthenticateResponseDto(),schemeName, schemeIdBulkDeprecateRequestDto));
     }
 }

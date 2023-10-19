@@ -75,7 +75,7 @@ public class BulkSctidController {
     @PostMapping("/sct/bulk/register")
     public ResponseEntity<BulkJob> registerScts(@RequestParam String token, @RequestBody RegistrationDataDTO registrationData, @ApiIgnore Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        logger.info("Request received for - RegistrationDataDTO :: {} - AuthenticateResponseDTo :: {}", registrationData, authToken.getAuthenticateResponseDto().getDisplayName());
+        logger.info("Request received for - RegistrationDataDTO :: {} - AuthenticateResponseDTo :: {}", registrationData, authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(service.registerSctids(authToken.getAuthenticateResponseDto(), registrationData));
     }
 
@@ -93,28 +93,28 @@ public class BulkSctidController {
     @PutMapping("/sct/bulk/deprecate")
     public ResponseEntity<BulkJob> deprecateSctid(@RequestParam String token, @RequestBody BulkSctRequestDTO deprecationData, @ApiIgnore Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        logger.info("Request received for - BulkSctRequestDTO :: {} - AuthenticateResponseDTo :: {}", deprecationData, authToken.getAuthenticateResponseDto().getDisplayName());
+        logger.info("Request received for - BulkSctRequestDTO :: {} - AuthenticateResponseDTo :: {}", deprecationData, authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(service.deprecateSctid(authToken.getAuthenticateResponseDto(), deprecationData));
     }
 
     @PutMapping("/sct/bulk/publish")
     public ResponseEntity<BulkJob> publishSctid(@RequestParam String token, @RequestBody BulkSctRequestDTO publishData, @ApiIgnore Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        logger.info("Request received for - SCTIDBulkPublishRequestDto :: {} - AuthenticateResponseDTo :: {}", publishData, authToken.getAuthenticateResponseDto().getDisplayName());
+        logger.info("Request received for - SCTIDBulkPublishRequestDto :: {} - AuthenticateResponseDTo :: {}", publishData, authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(service.publishSctid(authToken.getAuthenticateResponseDto(), publishData));
     }
 
     @PutMapping("/sct/bulk/release")
     public ResponseEntity<BulkJob> releaseSctid(@RequestParam String token, @RequestBody BulkSctRequestDTO publishData, @ApiIgnore Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        logger.info("Request received for - SCTIDBulkReleaseRequestDto :: {} - AuthenticateResponseDTo :: {}", publishData, authToken.getAuthenticateResponseDto().getDisplayName());
+        logger.info("Request received for - SCTIDBulkReleaseRequestDto :: {} - AuthenticateResponseDTo :: {}", publishData, authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(service.releaseSctid(authToken.getAuthenticateResponseDto(), publishData));
     }
 
     @PostMapping("/sct/bulk/reserve")
     public ResponseEntity<BulkJob> reserveSctids(@RequestParam String token, @RequestBody @Valid SCTIDBulkReservationRequestDto sctidBulkReservationRequestDto, @ApiIgnore Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        logger.info("Request received for - SCTIDBulkReserveRequestDto :: {} - AuthenticateResponseDTo :: {}", sctidBulkReservationRequestDto, authToken.getAuthenticateResponseDto().getDisplayName());
+        logger.info("Request received for - SCTIDBulkReserveRequestDto :: {} - AuthenticateResponseDTo :: {}", sctidBulkReservationRequestDto, authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(service.reserveSctids(authToken.getAuthenticateResponseDto(), sctidBulkReservationRequestDto));
     }
 
