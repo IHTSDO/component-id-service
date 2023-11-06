@@ -9,7 +9,7 @@ Clone this project with:
 - Execute the MySQL scripts to create all necessary tables, indices and triggers:
     - Schema generator script: `config/db_script.sql`
     - Trigger generator script: `config/db_script_triggers.sql`
-- Configure Java 11 in your IDE.
+- Configure Java 17 in your IDE.
 - Import as a `maven` project.
 - This will add all essential dependencies to project.
 - Enter your DB username in `spring.datasource.username`
