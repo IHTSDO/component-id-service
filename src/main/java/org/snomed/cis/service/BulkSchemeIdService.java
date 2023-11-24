@@ -23,7 +23,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
-public class BulkSchemeIdService {
+public class BulkSchemeIdService implements CisConstants {
     private final Logger logger = LoggerFactory.getLogger(BulkSchemeIdService.class);
     @Autowired
     private BulkSchemeIdRepository bulkSchemeIdRepository;
@@ -103,7 +103,7 @@ public class BulkSchemeIdService {
     public SchemeId getFreeRecord(String schemeName, String diffSchemeId, String systemId, String autoSysId) throws CisException {
         logger.debug("BulkSchemeIdService.getFreeRecord() schemeName - {} :: diffSchemeId - {}:: systemId - {} :: autoSysId - {}", schemeName, diffSchemeId, systemId, autoSysId);
         Map<String, Object> schemeIdRecord = getNewRecord(schemeName, diffSchemeId, systemId);
-        schemeIdRecord.put("status", "available");
+        schemeIdRecord.put("status", AVAILABLE);
         SchemeId SchemeId = insertSchemeIdRecord(schemeIdRecord);
         logger.debug("BulkSchemeIdService.getFreeRecord() - Response :: {}", SchemeId);
         return SchemeId;

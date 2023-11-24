@@ -27,7 +27,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class BulkSctidService {
+public class BulkSctidService implements CisConstants {
     private final Logger logger = LoggerFactory.getLogger(BulkSctidService.class);
     @Autowired
     private SctidRepository repo;
@@ -135,7 +135,7 @@ public class BulkSctidService {
     public Sctid getFreeRecord(String sctId, String systemId) {
         logger.debug("BulkSctidService.getFreeRecord() sctId :: {} , systemId :: {} ", sctId, systemId);
         Map<String, Object> sctIdRecord = getNewRecord(sctId, systemId);
-        sctIdRecord.put("status", "available");
+        sctIdRecord.put("status", AVAILABLE);
         var newRecord = insertSCTIDRecord(sctIdRecord);
         logger.debug("BulkSctidService.getFreeRecord() - Response :: {}", newRecord);
         return newRecord;

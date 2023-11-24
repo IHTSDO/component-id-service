@@ -25,7 +25,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class SchemeIdService {
+public class SchemeIdService implements CisConstants {
     private final Logger logger = LoggerFactory.getLogger(SchemeIdService.class);
     @Autowired
     private SecurityController securityController;
@@ -508,7 +508,7 @@ public class SchemeIdService {
         SchemeId updatedrecord = null;
         if (null != schemeName) {
             objQuery.put("scheme", schemeName.toString());
-            objQuery.put("status", "available");
+            objQuery.put("status", AVAILABLE);
         }
 
         List<SchemeId> schemeIdRecords = findschemeRecord(objQuery, "1", null);

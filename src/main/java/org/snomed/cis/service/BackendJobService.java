@@ -27,6 +27,8 @@ import java.util.stream.Collectors;
 @Service
 public class BackendJobService {
 
+    public static String AVAILABLE = "Available";
+
     @Autowired
     SchemeIdService schemeIdService;
 
