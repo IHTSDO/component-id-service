@@ -71,6 +71,7 @@ public class SctIdHelper {
 
     public static int verhoeffCompute(String idAsString)
     {
+        init();
         int check = 0;
         for (int i = (idAsString.length()- 1); i >= 0; i--) {
             int ct = Character.getNumericValue (idAsString.charAt(i));
