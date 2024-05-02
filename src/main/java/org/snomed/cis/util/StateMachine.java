@@ -45,7 +45,9 @@ public class StateMachine {
             entry(actions.get("deprecate"),statuses.get("deprecated"))
     );
 
-    Map<?,?> map5 = new HashMap<>();
+    public Map<String,String> map5 = Map.ofEntries(
+            entry(actions.get("publish"),statuses.get("published"))
+    );
     public Map<String,Map> state = Map.ofEntries(
             entry(statuses.get("available"),map1),
             entry(statuses.get("assigned"),map2),
