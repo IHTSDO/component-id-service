@@ -3,7 +3,7 @@ package org.snomed.cis.repository;
 import org.snomed.cis.domain.PermissionsNamespace;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import javax.transaction.Transactional;
+import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 
