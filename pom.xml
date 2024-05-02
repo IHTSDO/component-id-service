@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.10</version>
+        <version>3.2.1</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -22,21 +22,22 @@
         <packageName>cis</packageName>
         <execFinalName>${packageName}.jar</execFinalName>
 
-        <dependency-check-maven.version>8.1.1</dependency-check-maven.version>
-        <snomed-parent-owasp.version>1.0.1</snomed-parent-owasp.version>
+        <dependency-check-maven.version>8.3.1</dependency-check-maven.version>
+        <snomed-parent-owasp.version>1.0.3</snomed-parent-owasp.version>
 
-        <spring.version>5.3.27</spring.version> <!-- Note anything v6* needs Java 17+, https://github.com/spring-projects/spring-framework/wiki/Spring-Framework-Versions -->
-        <spring-cloud-starter.version>3.1.2</spring-cloud-starter.version>
-        <spring.security.version>5.7.8</spring.security.version>
+        <spring.version>6.1.6</spring.version> <!-- Note anything v6* needs Java 17+, https://github.com/spring-projects/spring-framework/wiki/Spring-Framework-Versions -->
+        <spring-cloud-starter.version>4.0.4</spring-cloud-starter.version>
+        <spring-cloud-starter-vault.version>4.1.1</spring-cloud-starter-vault.version>
+        <spring.security.version>6.1.8</spring.security.version>
         <springfox-boot-starter.version>3.0.0</springfox-boot-starter.version>
 
         <jknack.version>4.3.1</jknack.version>
-        <mysql-connector-java.version>8.0.32</mysql-connector-java.version>
-        <json.version>20211205</json.version>
+        <mysql-connector-java.version>8.2.0</mysql-connector-java.version>
+        <json.version>20231013</json.version>
         <lombok.version>1.18.24</lombok.version>
         <commons-text.version>1.10.0</commons-text.version>
         <httpclient.version>4.5.13</httpclient.version>
-        <crowd-integration-client-rest.version>5.1.0-QR20220616150658</crowd-integration-client-rest.version>
+        <crowd-integration-client-rest.version>5.3.0-QR20240130120105</crowd-integration-client-rest.version>
         <snakeyaml.version>2.0</snakeyaml.version>
         <jdeb.version>1.1.1</jdeb.version>
     </properties>
@@ -51,8 +52,8 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
             <version>${mysql-connector-java.version}</version>
             <scope>runtime</scope>
         </dependency>
@@ -85,10 +86,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-cache</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>net.sf.ehcache</groupId>
-            <artifactId>ehcache</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -161,7 +158,7 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-vault-config</artifactId>
-            <version>${spring-cloud-starter.version}</version>
+            <version>${spring-cloud-starter-vault.version}</version>
         </dependency>
         <dependency>
             <groupId>org.yaml</groupId>
