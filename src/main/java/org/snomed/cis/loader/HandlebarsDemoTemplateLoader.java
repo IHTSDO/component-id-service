@@ -3,7 +3,7 @@ package org.snomed.cis.loader;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 import org.springframework.stereotype.Component;
 
