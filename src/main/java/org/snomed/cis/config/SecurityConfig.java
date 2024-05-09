@@ -8,16 +8,16 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 
 import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+public class SecurityConfig {
 
     @Autowired
     private TokenAuthenticationProvider tokenAuthenticationProvider;
@@ -46,24 +46,25 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             "/testService"
     };
 
-    @Override
-    public void configure(WebSecurity web) throws Exception {
-        web.ignoring().antMatchers(AUTH_WHITELIST);
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return web -> web.ignoring().requestMatchers(AUTH_WHITELIST);
     }
 
 
-    @Override
-    protected void configure(HttpSecurity httpSecurity) throws Exception {
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
-                .authorizeRequests()
-                .anyRequest().authenticated()
-                .and()
-                .addFilterBefore(
-                        new TokenAuthenticationFilter(authenticationManager()),
+                .authorizeHttpRequests(authz -> authz
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(new TokenAuthenticationFilter(authenticationManager()),
                         AnonymousAuthenticationFilter.class)
-                /*.logout(logout -> logout.permitAll()
-                        .logoutSuccessHandler((request, response, authentication) -> response.setStatus(HttpServletResponse.SC_OK)))*/;
-        httpSecurity.cors().and().csrf().disable();
+                .cors(cors -> cors.disable())
+                .csrf(csrf -> csrf.disable());
+        return httpSecurity.build();
+
     }
 
     @Bean
