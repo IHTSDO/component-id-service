@@ -1,7 +1,7 @@
 package org.snomed.cis.controller;
 
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.cis.config.ImsConfig;
@@ -34,9 +34,9 @@ public class SecurityController {
     @Autowired
     private ImsConfig imsConfig;
 
-    @ApiOperation(
-            value = "Authentication & Authorization",
-            notes = "Returns authentication & authorization operations"
+    @Operation(
+            summary = "Authentication & Authorization",
+            description = "Returns authentication & authorization operations"
                     + "<p>The following properties can be expanded:"
                     + "<p>"
                     + "&bull;  &ndash; the list of descendants of the concept<br>", tags = {"Authentication & Authorization"})

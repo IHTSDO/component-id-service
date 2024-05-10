@@ -1,6 +1,6 @@
 package org.snomed.cis.controller;
 
-import io.swagger.annotations.Api;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.cis.domain.Namespace;
@@ -12,12 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import springfox.documentation.annotations.ApiIgnore;
+import io.swagger.v3.oas.annotations.Parameter;
 
 import java.text.ParseException;
 import java.util.List;
 
-@Api(tags = "Namespaces", value = "Namespaces")
+@Tag(name = "Namespaces" , description = "Namespaces Controller")
 @RestController
 public class NamespaceController {
     private final Logger logger = LoggerFactory.getLogger(NamespaceController.class);
@@ -38,14 +38,14 @@ public class NamespaceController {
     }
 
     @PostMapping("/sct/namespaces")
-    public ResponseEntity<String> createNamespace(@RequestParam String token, @RequestBody NamespaceDto namespace,@ApiIgnore Authentication authentication) throws CisException,ParseException {
+    public ResponseEntity<String> createNamespace(@RequestParam String token, @RequestBody NamespaceDto namespace,@Parameter(hidden = true) Authentication authentication) throws CisException,ParseException {
         Token authToken = (Token) authentication;
         logger.info("Request received for - NamespaceDto :: {} - authenticateResponseDto :: {}", namespace,authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(namespaceService.createNamespace(authToken.getAuthenticateResponseDto(),namespace));
     }
 
     @PutMapping("/sct/namespaces")
-    public ResponseEntity<String> updateNamespace(@RequestParam String token, @RequestBody NamespaceDto namespace, @ApiIgnore Authentication authentication) throws CisException {
+    public ResponseEntity<String> updateNamespace(@RequestParam String token, @RequestBody NamespaceDto namespace, @Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
         logger.info("Request received for - NamespaceDto :: {} - authenticateResponseDto :: {}", namespace,authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(namespaceService.updateNamespace(authToken.getAuthenticateResponseDto(),namespace));
@@ -58,7 +58,7 @@ public class NamespaceController {
     }
 
     @DeleteMapping("/sct/namespaces/{namespaceId}")
-    public ResponseEntity<String> deleteNamespace(@RequestParam String token, @PathVariable String namespaceId,@ApiIgnore Authentication authentication) throws CisException {
+    public ResponseEntity<String> deleteNamespace(@RequestParam String token, @PathVariable String namespaceId,@Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
         logger.info("Request received for - NamespaceDto :: {} - authenticateResponseDto :: {}", namespaceId,authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(namespaceService.deleteNamespace(authToken.getAuthenticateResponseDto(),namespaceId));
@@ -66,7 +66,7 @@ public class NamespaceController {
 
 
     @PutMapping("/sct/namespaces/{namespaceId}/partition/{partitionId}")
-    public ResponseEntity<String> updatePartitionSequence(@RequestParam String token, @PathVariable String namespaceId,@PathVariable String partitionId, @RequestParam String value,@ApiIgnore Authentication authentication ) throws CisException {
+    public ResponseEntity<String> updatePartitionSequence(@RequestParam String token, @PathVariable String namespaceId,@PathVariable String partitionId, @RequestParam String value,@Parameter(hidden = true) Authentication authentication ) throws CisException {
         Token authToken = (Token) authentication;
         logger.info("Request received for - namespaceId :: {} - partitionId :: {} - value :: {} - authenticateResponseDto :: {}", namespaceId,partitionId,value,authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(namespaceService.updatePartitionSequence(authToken.getAuthenticateResponseDto(),namespaceId,partitionId,value));

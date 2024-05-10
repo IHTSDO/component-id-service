@@ -1,8 +1,8 @@
 package org.snomed.cis.controller;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.cis.domain.BulkJob;
@@ -14,10 +14,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import springfox.documentation.annotations.ApiIgnore;
+import io.swagger.v3.oas.annotations.Parameter;
 
 import java.util.List;
-@Api(tags = "Bulk Jobs", value = "Bulk Jobs")
+@Tag(name = "Bulk Jobs" , description = "Bulk Jobs Controller")
 @RestController
 public class BulkJobsController {
 
@@ -26,9 +26,9 @@ public class BulkJobsController {
     @Autowired
     BulkJobService bulkJobService;
 
-    @ApiOperation(
-            value="Bulk Job Service",
-            notes="Returns a list bulk jobs"
+    @Operation(
+            summary="Bulk Job Service",
+            description="Returns a list bulk jobs"
                     + "<p>The following properties can be expanded:"
                     + "<p>"
                     + "&bull; bullJobService &ndash; the list of descendants of the concept<br>",tags = { "Bulk Job Operations" })
@@ -56,7 +56,7 @@ public class BulkJobsController {
     }
 
     @GetMapping("/bulk/jobs/cleanupExpired")
-    public ResponseEntity<List<CleanUpServiceResponse>> cleanUpExpiredIds(@RequestParam String token, @ApiIgnore Authentication authentication) throws CisException {
+    public ResponseEntity<List<CleanUpServiceResponse>> cleanUpExpiredIds(@RequestParam String token, @Parameter(hidden = true) Authentication authentication) throws CisException {
         logger.info("Request received - authentication :: {}", authentication);
         Token authToken = (Token)authentication;
         return ResponseEntity.ok(bulkJobService.cleanUpExpiredIds(authToken.getAuthenticateResponseDto()));

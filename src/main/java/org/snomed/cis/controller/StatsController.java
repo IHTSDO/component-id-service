@@ -1,6 +1,6 @@
 package org.snomed.cis.controller;
 
-import io.swagger.annotations.Api;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.cis.dto.GetStatsResponseDto;
@@ -13,9 +13,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import springfox.documentation.annotations.ApiIgnore;
+import io.swagger.v3.oas.annotations.Parameter;
 
-@Api(tags = "Stats", value = "Stats")
+@Tag(name = "Stats" , description = "Stats Controller")
 @RestController
 public class StatsController {
     private final Logger logger = LoggerFactory.getLogger(StatsController.class);
@@ -23,7 +23,7 @@ public class StatsController {
     StatsService statsService;
 
     @GetMapping("/stats")
-    public ResponseEntity<GetStatsResponseDto> getStats(@RequestParam String token, @RequestParam String username, @ApiIgnore Authentication authentication) throws CisException {
+    public ResponseEntity<GetStatsResponseDto> getStats(@RequestParam String token, @RequestParam String username, @Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
         return ResponseEntity.ok(statsService.getStats(username, authToken.getAuthenticateResponseDto()));
     }

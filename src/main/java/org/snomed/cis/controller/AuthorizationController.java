@@ -1,6 +1,6 @@
 package org.snomed.cis.controller;
 
-import io.swagger.annotations.Api;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.cis.domain.PermissionsNamespace;
@@ -15,11 +15,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import springfox.documentation.annotations.ApiIgnore;
+import io.swagger.v3.oas.annotations.Parameter;
 
 import java.util.List;
 
-@Api(tags = "Authorization", value = "Authorization")
+@Tag(name = "Authorization" , description = "Authorization Controller")
 @RestController
 public class AuthorizationController {
     private final Logger logger = LoggerFactory.getLogger(AuthorizationController.class);
@@ -39,18 +39,18 @@ public class AuthorizationController {
     }
 
     @GetMapping("/users/{username}/groups")
-    public ResponseEntity<List<String>> getUserGroups(@RequestParam String token, @ApiIgnore Authentication authentication, @PathVariable String username) throws CisException {
+    public ResponseEntity<List<String>> getUserGroups(@RequestParam String token, @Parameter(hidden = true) Authentication authentication, @PathVariable String username) throws CisException {
         return new ResponseEntity<>(authorizationService.getUserGroups(username), HttpStatus.OK);
     }
 
     @DeleteMapping("/users/{username}/groups/{groupName}")
-    public ResponseEntity<Void> removeMember(@RequestParam String token, @PathVariable String username, @PathVariable String groupName, @ApiIgnore Authentication authentication) throws CisException {
+    public ResponseEntity<Void> removeMember(@RequestParam String token, @PathVariable String username, @PathVariable String groupName, @Parameter(hidden = true) Authentication authentication) throws CisException {
         authorizationService.removeMember(username, groupName);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("/users/{username}/groups/{groupName}")
-    public ResponseEntity<Void> addMember(@RequestParam String token, @PathVariable String username, @PathVariable String groupName, @ApiIgnore Authentication authentication) throws CisException {
+    public ResponseEntity<Void> addMember(@RequestParam String token, @PathVariable String username, @PathVariable String groupName, @Parameter(hidden = true) Authentication authentication) throws CisException {
         authorizationService.addMember(username, groupName);
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -71,13 +71,13 @@ public class AuthorizationController {
     }
 
     @DeleteMapping("/sct/namespaces/{namespaceId}/permissions/{username}")
-    public ResponseEntity<String> deleteNamespacePermissionsOfUser(@RequestParam String token, @PathVariable String namespaceId, @PathVariable String username, @ApiIgnore Authentication authentication) throws CisException {
+    public ResponseEntity<String> deleteNamespacePermissionsOfUser(@RequestParam String token, @PathVariable String namespaceId, @PathVariable String username, @Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
         return new ResponseEntity<>(namespaceService.deleteNamespacePermissionsOfUser(namespaceId, username, authToken.getAuthenticateResponseDto()), HttpStatus.OK);
     }
 
     @PostMapping("/sct/namespaces/{namespaceId}/permissions/{username}")
-    public ResponseEntity<String> createNamespacePermissionsOfUser(@RequestParam String token, @PathVariable String namespaceId, @PathVariable String username, @RequestParam String role, @ApiIgnore Authentication authentication) throws CisException {
+    public ResponseEntity<String> createNamespacePermissionsOfUser(@RequestParam String token, @PathVariable String namespaceId, @PathVariable String username, @RequestParam String role, @Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
         return new ResponseEntity<>(namespaceService.createNamespacePermissionsOfUser(namespaceId, username, role, authToken.getAuthenticateResponseDto()), HttpStatus.OK);
     }
@@ -89,13 +89,13 @@ public class AuthorizationController {
 
 
     @DeleteMapping("/schemes/{schemeName}/permissions/{username}")
-    public ResponseEntity<String> deleteSchemePermissions(@RequestParam String token, @PathVariable String schemeName, @PathVariable String username, @ApiIgnore Authentication authentication) throws CisException {
+    public ResponseEntity<String> deleteSchemePermissions(@RequestParam String token, @PathVariable String schemeName, @PathVariable String username, @Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
         return new ResponseEntity<>(schemeService.deleteSchemePermissions(schemeName, username, authToken.getAuthenticateResponseDto()), HttpStatus.OK);
     }
 
     @PostMapping("/schemes/{schemeName}/permissions/{username}")
-    public ResponseEntity<String> createSchemePermissions(@RequestParam String token, @PathVariable String schemeName, @PathVariable String username, @RequestParam String role, @ApiIgnore Authentication authentication) throws CisException {
+    public ResponseEntity<String> createSchemePermissions(@RequestParam String token, @PathVariable String schemeName, @PathVariable String username, @RequestParam String role, @Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
         return new ResponseEntity<>(schemeService.createSchemePermissions(schemeName, username, role, authToken.getAuthenticateResponseDto()), HttpStatus.OK);
     }
