@@ -31,13 +31,13 @@
         <spring.security.version>6.1.8</spring.security.version>
 
         <jknack.version>4.4.0</jknack.version>
-        <mysql-connector-java.version>8.2.0</mysql-connector-java.version>
-        <json.version>20231013</json.version>
-        <lombok.version>1.18.24</lombok.version>
-        <commons-text.version>1.10.0</commons-text.version>
-        <httpclient.version>4.5.13</httpclient.version>
+        <mysql-connector-java.version>8.4.0</mysql-connector-java.version>
+        <json.version>20240303</json.version>
+        <lombok.version>1.18.32</lombok.version>
+        <commons-text.version>1.12.0</commons-text.version>
+        <httpclient.version>4.5.14</httpclient.version>
         <crowd-integration-client-rest.version>5.3.0-QR20240130120105</crowd-integration-client-rest.version>
-        <snakeyaml.version>2.0</snakeyaml.version>
+        <snakeyaml.version>2.2</snakeyaml.version>
         <jdeb.version>1.1.1</jdeb.version>
     </properties>
 
@@ -172,7 +172,7 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-core</artifactId>
-            <version>1.12.452</version>
+            <version>1.12.718</version>
         </dependency>
         <dependency>
             <groupId>jakarta.xml.bind</groupId>
@@ -192,12 +192,12 @@
         <dependency>
             <groupId>com.sun.xml.bind</groupId>
             <artifactId>jaxb-core</artifactId>
-            <version>2.3.0.1</version>
+            <version>4.0.5</version>
         </dependency>
         <dependency>
             <groupId>com.sun.xml.bind</groupId>
             <artifactId>jaxb-impl</artifactId>
-            <version>2.3.1</version>
+            <version>2.3.3</version>
         </dependency>
     </dependencies>
 
