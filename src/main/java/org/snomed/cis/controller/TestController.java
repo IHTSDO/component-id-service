@@ -1,21 +1,21 @@
 package org.snomed.cis.controller;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.security.Token;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import springfox.documentation.annotations.ApiIgnore;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.security.core.Authentication;
 
 import java.util.List;
 
 
-@Api(tags = "TestService", value = "TestService")
+@Tag(name = "TestService" , description = "Test Controller")
 @RestController
 public class TestController {
 

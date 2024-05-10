@@ -1,8 +1,8 @@
 package org.snomed.cis.controller;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.cis.dto.CheckSctidResponseDTO;
@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-@Api(tags = "Public SCTID Info API", value = "Public SCTID Info API")
+@Tag(name = "Public SCTID Info API")
 //@RestController
 //@RequestMapping("/public")
 public class PublicSCTIDInfoAPIController {

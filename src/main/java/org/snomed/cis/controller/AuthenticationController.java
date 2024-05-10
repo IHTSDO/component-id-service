@@ -1,6 +1,6 @@
 package org.snomed.cis.controller;
 
-import io.swagger.annotations.Api;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.slf4j.Logger;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import springfox.documentation.annotations.ApiIgnore;
+import io.swagger.v3.oas.annotations.Parameter;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-@Api(tags = "Authentication", value = "Authentication")
+@Tag(name = "Authentication" , description = "Authentication Controller")
 @RestController
 public class AuthenticationController {
     private final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
@@ -65,7 +65,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<AuthenticateResponseDto> authenticate(@RequestParam(required = false) String token, @ApiIgnore Authentication authentication) throws CisException {
+    public ResponseEntity<AuthenticateResponseDto> authenticate(@RequestParam(required = false) String token, @Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
         return new ResponseEntity<>(authToken.getAuthenticateResponseDto(), HttpStatus.OK);
     }
