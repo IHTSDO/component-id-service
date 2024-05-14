@@ -3,6 +3,7 @@ package org.snomed.cis.controller;
 import com.github.jknack.handlebars.io.ClassPathTemplateLoader;
 import com.github.jknack.handlebars.io.TemplateLoader;
 import com.github.jknack.handlebars.io.TemplateSource;
+import io.swagger.v3.oas.annotations.Operation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -29,6 +30,7 @@ public class ViewsController {
 
     public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
+    @Operation(summary = "formToFillHbs")
     @GetMapping("/api/views/searchIds/formToFill.hbs")
     @ResponseBody
     public String formToFillHbs() throws IOException {
@@ -37,6 +39,7 @@ public class ViewsController {
         return source.content(DEFAULT_CHARSET);
     }
 
+    @Operation(summary = "searchIdsMainHbs")
     @GetMapping("/api/views/searchIds/main.hbs")
     @ResponseBody
     public String searchIdsMainHbs() throws IOException {
@@ -45,6 +48,7 @@ public class ViewsController {
         return source.content(DEFAULT_CHARSET);
     }
 
+    @Operation(summary = "reportsBodyHbs")
     @GetMapping("/api/views/reports/body.hbs")
     @ResponseBody
     public String reportsBodyHbs() throws IOException {
@@ -53,6 +57,7 @@ public class ViewsController {
         return source.content(DEFAULT_CHARSET);
     }
 
+    @Operation(summary = "reportsMainHbs")
     @GetMapping("/api/views/reports/main.hbs")
     @ResponseBody
     public String reportsMainHbs() throws IOException {
@@ -61,6 +66,7 @@ public class ViewsController {
         return source.content(DEFAULT_CHARSET);
     }
 
+    @Operation(summary = "adminDetailsListHbs")
     @GetMapping("/api/views/admin/detailsList.hbs")
     @ResponseBody
     public String adminDetailsListHbs() throws IOException {
@@ -69,6 +75,7 @@ public class ViewsController {
         return source.content(DEFAULT_CHARSET);
     }
 
+    @Operation(summary = "adminMainHbs")
     @GetMapping("/api/views/admin/main.hbs")
     @ResponseBody
     public String adminMainHbs() throws IOException {
@@ -77,6 +84,7 @@ public class ViewsController {
         return source.content(DEFAULT_CHARSET);
     }
 
+    @Operation(summary = "adminModalBodyHbs")
     @GetMapping("/api/views/admin/modalBody.hbs")
     @ResponseBody
     public String adminModalBodyHbs() throws IOException {
@@ -85,6 +93,7 @@ public class ViewsController {
         return source.content(DEFAULT_CHARSET);
     }
 
+    @Operation(summary = "detailsHbs")
     @GetMapping("/api/views/bulk/details.hbs")
     @ResponseBody
     public String detailsHbs() throws IOException {
@@ -93,6 +102,7 @@ public class ViewsController {
         return source.content(DEFAULT_CHARSET);
     }
 
+    @Operation(summary = "bulkListHbs")
     @GetMapping("/api/views/bulk/list.hbs")
     @ResponseBody
     public String bulkListHbs() throws IOException {
@@ -101,6 +111,7 @@ public class ViewsController {
         return source.content(DEFAULT_CHARSET);
     }
 
+    @Operation(summary = "bulkMainHbs")
     @GetMapping("/api/views/bulk/main.hbs")
     @ResponseBody
     public String bulkMainHbs() throws IOException {
@@ -109,6 +120,7 @@ public class ViewsController {
         return source.content(DEFAULT_CHARSET);
     }
 
+    @Operation(summary = "bulkRecordsHbs")
     @GetMapping("/api/views/bulk/records.hbs")
     @ResponseBody
     public String bulkRecordsHbs() throws IOException {
@@ -117,6 +129,7 @@ public class ViewsController {
         return source.content(DEFAULT_CHARSET);
     }
 
+    @Operation(summary = "generateIdsMainHbs")
     @GetMapping("/api/views/generateIds/main.hbs")
     @ResponseBody
     public String generateIdsMainHbs() throws IOException {
@@ -125,6 +138,7 @@ public class ViewsController {
         return source.content(DEFAULT_CHARSET);
     }
 
+    @Operation(summary = "profileHbs")
     @GetMapping("/api/views/home/profile.hbs")
     @ResponseBody
     public String profileHbs() throws IOException {
@@ -133,6 +147,7 @@ public class ViewsController {
         return source.content(DEFAULT_CHARSET);
     }
 
+    @Operation(summary = "mainHbs")
     @GetMapping("/api/views/items/main.hbs")
     @ResponseBody
     public String mainHbs() throws IOException {
@@ -141,6 +156,7 @@ public class ViewsController {
         return source.content(DEFAULT_CHARSET);
     }
 
+    @Operation(summary = "listSchemesHbs")
     @GetMapping("/api/views/items/list-schemes.hbs")
     @ResponseBody
     public String listSchemesHbs() throws IOException {
@@ -149,6 +165,7 @@ public class ViewsController {
         return source.content(DEFAULT_CHARSET);
     }
 
+    @Operation(summary = "testView")
     @GetMapping("/api/views/items/list-namespaces.hbs")
     @ResponseBody
     public String testView() throws IOException {
@@ -157,6 +174,7 @@ public class ViewsController {
         return source.content(DEFAULT_CHARSET);
     }
 
+    @Operation(summary = "permissionsHbs")
     @GetMapping("/api/views/items/permissions.hbs")
     @ResponseBody
     public String permissionsHbs() throws IOException {
@@ -165,6 +183,7 @@ public class ViewsController {
         return source.content(DEFAULT_CHARSET);
     }
 
+    @Operation(summary = "groupPermissionsHbs")
     @GetMapping("/api/views/items/groupPermissions.hbs")
     @ResponseBody
     public String groupPermissionsHbs() throws IOException {
@@ -173,6 +192,7 @@ public class ViewsController {
         return source.content(DEFAULT_CHARSET);
     }
 
+    @Operation(summary = "detailsSchemesHbs")
     @GetMapping("/api/views/items/details-schemes.hbs")
     @ResponseBody
     public String detailsSchemesHbs() throws IOException {
@@ -181,6 +201,7 @@ public class ViewsController {
         return source.content(DEFAULT_CHARSET);
     }
 
+    @Operation(summary = "detailsNamespacesHbs")
     @GetMapping("/api/views/items/details-namespaces.hbs")
     @ResponseBody
     public String detailsNamespacesHbs() throws IOException {
@@ -189,6 +210,7 @@ public class ViewsController {
         return source.content(DEFAULT_CHARSET);
     }
 
+    @Operation(summary = "addPermissionHbs")
     @GetMapping("/api/views/items/addPermission.hbs")
     @ResponseBody
     public String addPermissionHbs() throws IOException {
@@ -197,14 +219,17 @@ public class ViewsController {
         return source.content(DEFAULT_CHARSET);
     }
 
+    @Operation(summary = "redirectInfo")
     @RequestMapping(value = "/info", method = RequestMethod.GET)
     public String redirectInfo() {
         return "redirect:/info/index.html";
     }
+    @Operation(summary = "redirectAdmin")
     @RequestMapping(value = "/admin", method = RequestMethod.GET)
     public String redirectAdmin() {
         return "redirect:/admin/index.html";
     }
+    @Operation(summary = "redirectSwagger")
     @RequestMapping(value = "/docs", method = RequestMethod.GET)
     public String redirectSwagger() {
         return "redirect:/swagger-ui/index.html";

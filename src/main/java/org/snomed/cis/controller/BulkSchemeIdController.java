@@ -47,6 +47,7 @@ public class BulkSchemeIdController {
         return ResponseEntity.ok(bulkSchemeIdService.getSchemeIds(authToken.getAuthenticateResponseDto(),schemeName,schemeIds));
     }
 
+    @Operation(summary = "generateSchemeIds")
     @PostMapping("scheme/{schemeName}/bulk/generate")
     public ResponseEntity<BulkJob> generateSchemeIds(@RequestParam String token, @PathVariable SchemeName schemeName, @RequestBody SchemeIdBulkGenerationRequestDto schemeIdBulkDto,@Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
@@ -54,6 +55,7 @@ public class BulkSchemeIdController {
         return ResponseEntity.ok(bulkSchemeIdService.generateSchemeIds(authToken.getAuthenticateResponseDto(),schemeName,schemeIdBulkDto));
     }
 
+    @Operation(summary = "registerSchemeIds")
     @PostMapping("scheme/{schemeName}/bulk/register")
     public ResponseEntity<BulkJob> registerSchemeIds(@RequestParam String token, @PathVariable SchemeName schemeName,@RequestBody SchemeIdBulkRegisterRequestDto schemeIdBulkRegisterDto,@Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
@@ -61,12 +63,14 @@ public class BulkSchemeIdController {
         return ResponseEntity.ok(bulkSchemeIdService.registerSchemeIds(authToken.getAuthenticateResponseDto(),schemeName,schemeIdBulkRegisterDto));
     }
 
-        @PostMapping("scheme/{schemeName}/bulk/reserve")
+    @Operation(summary = "reserveSchemeIds")
+    @PostMapping("scheme/{schemeName}/bulk/reserve")
     public ResponseEntity<BulkJob> reserveSchemeIds(@RequestParam String token, @PathVariable SchemeName schemeName,@RequestBody SchemeIdBulkReserveRequestDto schemeIdBulkReserveRequestDto,@Parameter(hidden = true) Authentication authentication) throws CisException {
             Token authToken = (Token) authentication;
             logger.info("Request received for - schemeName :: {} - schemeIdBulkRegisterDto :: {} - authenticateResponseDto :: {}", schemeName,schemeIdBulkReserveRequestDto,authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(bulkSchemeIdService.reserveSchemeIds(authToken.getAuthenticateResponseDto(),schemeName, schemeIdBulkReserveRequestDto));
     }
+    @Operation(summary = "deprecateSchemeIds")
     @PutMapping("scheme/{schemeName}/bulk/deprecate")
     public ResponseEntity<BulkJob> deprecateSchemeIds(@RequestParam String token, @PathVariable SchemeName schemeName, @RequestBody SchemeIdBulkDeprecateRequestDto schemeIdBulkDeprecateRequestDto,@Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
@@ -74,6 +78,7 @@ public class BulkSchemeIdController {
         return ResponseEntity.ok(bulkSchemeIdService.deprecateSchemeIds(authToken.getAuthenticateResponseDto(),schemeName, schemeIdBulkDeprecateRequestDto));
     }
 
+    @Operation(summary = "releaseSchemeIds")
     @PutMapping("scheme/{schemeName}/bulk/release")
     public ResponseEntity<BulkJob> releaseSchemeIds(@RequestParam String token, @PathVariable SchemeName schemeName, @RequestBody SchemeIdBulkDeprecateRequestDto schemeIdBulkDeprecateRequestDto,@Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
@@ -81,6 +86,7 @@ public class BulkSchemeIdController {
         return ResponseEntity.ok(bulkSchemeIdService.releaseSchemeIds(authToken.getAuthenticateResponseDto(),schemeName, schemeIdBulkDeprecateRequestDto));
     }
 
+    @Operation(summary = "publishSchemeIds")
     @PutMapping("scheme/{schemeName}/bulk/publish")
     public ResponseEntity<BulkJob> publishSchemeIds(@RequestParam String token, @PathVariable SchemeName schemeName, @RequestBody SchemeIdBulkDeprecateRequestDto schemeIdBulkDeprecateRequestDto, @Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;

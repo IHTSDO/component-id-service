@@ -1,5 +1,6 @@
 package org.snomed.cis.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,7 @@ public class StatsController {
     @Autowired
     StatsService statsService;
 
+    @Operation(summary = "getStats")
     @GetMapping("/stats")
     public ResponseEntity<GetStatsResponseDto> getStats(@RequestParam String token, @RequestParam String username, @Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
