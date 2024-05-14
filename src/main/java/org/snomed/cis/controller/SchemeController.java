@@ -44,12 +44,14 @@ public class SchemeController {
         return ResponseEntity.ok(schemeService.getSchemesForUser(authToken.getAuthenticateResponseDto(),username));
     }
 
+    @Operation(summary = "getSchemes")
     @GetMapping("/schemes")
     public ResponseEntity<List<SchemeIdBase>> getSchemes(@RequestParam String token) throws CisException {
         logger.info("Request received for getSchemes() - No Params");
         return ResponseEntity.ok(schemeService.getSchemes());
     }
 
+    @Operation(summary = "getScheme")
     @GetMapping("/schemes/{schemeName}")
     public ResponseEntity<SchemeIdBase> getScheme(@RequestParam String token, @PathVariable String schemeName) throws CisException {
         logger.info("Request received for - schemeName :: {}", schemeName);
@@ -58,6 +60,7 @@ public class SchemeController {
 
    // @PutMapping
 
+    @Operation(summary = "updateScheme")
     @PutMapping("/schemes/{schemeName}")
     public ResponseEntity<String> updateScheme(@PathVariable SchemeName schemeName, @RequestParam String schemeSeq,@Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;

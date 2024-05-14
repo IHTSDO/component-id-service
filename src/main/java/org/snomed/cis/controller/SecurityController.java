@@ -163,6 +163,7 @@ public class SecurityController {
         return responseDto;
     }*/
 
+    @Operation(summary = "isValidUser")
     @CacheEvict(value = "account-cache", key = "'AccountCache'+#request.getCookies()[0]", condition = "request.getCookies()[0]==''")
     @Cacheable(value = "account-cache", key = "'AccountCache'+#request.getCookies()[0]", condition = "request.getCookies()[0]!=''")
     @GetMapping("/isValidUser")
@@ -183,6 +184,7 @@ public class SecurityController {
         return response;
     }
 
+    @Operation(summary = "logoutUser")
     @GetMapping("/logout")
     @ResponseBody
     public String logoutUser(HttpServletRequest request, HttpServletResponse logoutResp) {

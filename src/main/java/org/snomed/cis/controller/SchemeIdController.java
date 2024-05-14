@@ -1,5 +1,6 @@
 package org.snomed.cis.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,7 @@ public class SchemeIdController {
     @Autowired
     private SchemeIdService schemeIdService;
 
+    @Operation(summary = "getSchemeIds")
     @GetMapping("/scheme/ids")
     public ResponseEntity<List<SchemeId>> getSchemeIds(@RequestParam String token, @RequestParam(name="limit",required = false) String limit, @RequestParam(name="skip",required = false) String skip, @RequestParam(name="scheme",required = false) SchemeName scheme,@Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
@@ -34,6 +36,7 @@ public class SchemeIdController {
         return ResponseEntity.ok(schemeIdService.getSchemeIds(authToken.getAuthenticateResponseDto(),limit, skip, scheme));
     }
 
+    @Operation(summary = "getSchemeId")
     @GetMapping("/scheme/{schemeName}/ids/{schemeId}")
     public ResponseEntity<SchemeId> getSchemeId(@RequestParam String token, @PathVariable SchemeName schemeName, @PathVariable String schemeId,@Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
@@ -41,6 +44,7 @@ public class SchemeIdController {
         return ResponseEntity.ok(schemeIdService.getSchemeId(authToken.getAuthenticateResponseDto(),schemeName,schemeId));
     }
 
+    @Operation(summary = "getSchemeIdBySystemId")
     @GetMapping("/scheme/{schemeName}/systemids/{systemId}")
     public ResponseEntity<SchemeId> getSchemeIdBySystemId(@RequestParam String token, @PathVariable SchemeName schemeName, @PathVariable String systemId,@Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
@@ -48,18 +52,21 @@ public class SchemeIdController {
         return ResponseEntity.ok(schemeIdService.getSchemeIdsBySystemId(authToken.getAuthenticateResponseDto(),schemeName,systemId));
     }
 
+    @Operation(summary = "deprecateSchemeId")
     @PutMapping("/scheme/{schemeName}/deprecate")
     public ResponseEntity<SchemeId> deprecateSchemeId(@RequestParam String token, @PathVariable SchemeName schemeName, @RequestBody SchemeIdUpdateRequestDto schemeIdUpdateRequestDto,@Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
         logger.info("Request received for - schemeName :: {} - schemeIdUpdateRequestDto :: {} - authenticateResponseDto :: {}", schemeName,schemeIdUpdateRequestDto,authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(schemeIdService.deprecateSchemeIds(authToken.getAuthenticateResponseDto(),schemeName, schemeIdUpdateRequestDto));
     }
+    @Operation(summary = "releaseSchemeId")
     @PutMapping("/scheme/{schemeName}/release")
     public ResponseEntity<SchemeId> releaseSchemeId(@RequestParam String token, @PathVariable SchemeName schemeName, @RequestBody SchemeIdUpdateRequestDto schemeIdUpdateRequestDto,@Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
         logger.info("Request received for - schemeName :: {} - schemeIdUpdateRequestDto :: {} - authenticateResponseDto :: {}", schemeName,schemeIdUpdateRequestDto,authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(schemeIdService.releaseSchemeIds(authToken.getAuthenticateResponseDto(),schemeName, schemeIdUpdateRequestDto));
     }
+    @Operation(summary = "publishSchemeId")
     @PutMapping("/scheme/{schemeName}/publish")
     public ResponseEntity<SchemeId> publishSchemeId(@RequestParam String token, @PathVariable SchemeName schemeName, @RequestBody SchemeIdUpdateRequestDto schemeIdUpdateRequestDto,@Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
@@ -67,6 +74,7 @@ public class SchemeIdController {
         return ResponseEntity.ok(schemeIdService.publishSchemeId(authToken.getAuthenticateResponseDto(),schemeName, schemeIdUpdateRequestDto));
     }
 
+    @Operation(summary = "reserveSchemeId")
     @PostMapping("/scheme/{schemeName}/reserve")
     public ResponseEntity<SchemeId>   reserveSchemeId(@RequestParam String token, @PathVariable SchemeName schemeName,@RequestBody SchemeIdReserveRequestDto schemeIdReserveRequestDto,@Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
@@ -74,6 +82,7 @@ public class SchemeIdController {
         return ResponseEntity.ok(schemeIdService.reserveSchemeId(authToken.getAuthenticateResponseDto(),schemeName,schemeIdReserveRequestDto));
     }
 
+    @Operation(summary = "generateSchemeId")
     @PostMapping("/scheme/{schemeName}/generate")
     public ResponseEntity<SchemeId> generateSchemeId(@RequestParam String token, @PathVariable SchemeName schemeName, @RequestBody SchemeIdGenerateRequestDto schemeIdGenerateRequestDto,@Parameter(hidden = true) Authentication authentication) throws CisException
     {
@@ -81,6 +90,7 @@ public class SchemeIdController {
         logger.info("Request received for - schemeName :: {} - SchemeIdGenerateRequestDto :: {} - authenticateResponseDto :: {}", schemeName,schemeIdGenerateRequestDto,authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(schemeIdService.generateSchemeId(authToken.getAuthenticateResponseDto(),schemeName, schemeIdGenerateRequestDto));
     }
+    @Operation(summary = "registerSchemeId")
     @PostMapping("/scheme/{schemeName}/register")
     public ResponseEntity<SchemeId>   registerSchemeId(@RequestParam String token, @PathVariable SchemeName schemeName, @RequestBody SchemeIdRegisterRequestDto schemeIdRegisterRequestDto, @Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;

@@ -21,6 +21,7 @@ public class TestController {
 
     private Object authentication;
 
+    @Operation(summary = "testService")
     @ApiResponses({
             // @ApiResponse(code = 200, message = "OK", response = PageableCollectionResource.class),
             // @ApiResponse(code = 400, message = "Invalid filter config", response = RestApiError.class),

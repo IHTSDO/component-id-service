@@ -43,18 +43,21 @@ public class BulkJobsController {
         return ResponseEntity.ok(bulkJobService.getJobs());
     }
 
+    @Operation(summary = "getJob")
     @GetMapping("/bulk/jobs/{jobId}")
     public ResponseEntity<BulkJob> getJob(@RequestParam String token, @PathVariable Integer jobId) throws CisException {
         logger.info("Request received - jobId :: {}", jobId);
         return ResponseEntity.ok(bulkJobService.getJob(jobId));
     }
 
+    @Operation(summary = "getJobRecords")
     @GetMapping("/bulk/jobs/{jobId}/records")
     public ResponseEntity<List<Object>> getJobRecords(@RequestParam String token, @PathVariable Integer jobId) {
         logger.info("Request received for - jobId :: {}", jobId);
         return ResponseEntity.ok(bulkJobService.getJobRecords(jobId));
     }
 
+    @Operation(summary = "cleanUpExpiredIds")
     @GetMapping("/bulk/jobs/cleanupExpired")
     public ResponseEntity<List<CleanUpServiceResponse>> cleanUpExpiredIds(@RequestParam String token, @Parameter(hidden = true) Authentication authentication) throws CisException {
         logger.info("Request received - authentication :: {}", authentication);

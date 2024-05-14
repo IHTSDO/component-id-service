@@ -1,5 +1,6 @@
 package org.snomed.cis.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -34,11 +35,13 @@ public class AuthenticationController {
     @Autowired
     private AuthenticationService authenticationService;
 
+    @Operation(summary = "login")
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@RequestBody @Valid LoginRequestDto loginRequestDto, HttpServletRequest httpRequest) throws CisException {
         return authenticationService.login(loginRequestDto, httpRequest);
     }
 
+    @Operation(summary = "loginUI")
     @PostMapping(path = "/loginUI", consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE})
     public ResponseEntity<LoginResponseDto> loginUI(HttpServletRequest httpRequest) throws CisException {
         String formStr = "";
@@ -59,11 +62,13 @@ public class AuthenticationController {
         return authenticationService.login(loginRequestDto, httpRequest);
     }
 
+    @Operation(summary = "logout")
     @PostMapping("/users/logout")
     public ResponseEntity<EmptyDto> logout(@RequestParam String token, @RequestBody @Valid LogoutRequestDto logoutRequestDto) throws CisException {
         return authenticationService.logout(logoutRequestDto);
     }
 
+    @Operation(summary = "authenticate")
     @PostMapping("/authenticate")
     public ResponseEntity<AuthenticateResponseDto> authenticate(@RequestParam(required = false) String token, @Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;

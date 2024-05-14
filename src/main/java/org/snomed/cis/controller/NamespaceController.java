@@ -1,5 +1,6 @@
 package org.snomed.cis.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,18 +26,21 @@ public class NamespaceController {
     public NamespaceService namespaceService;
 
 
+    @Operation(summary = "getNamespacesForUser")
     @GetMapping("/users/{username}/namespaces/")
     public ResponseEntity<List<Namespace>> getNamespacesForUser(@RequestParam String token, @PathVariable String username) throws CisException {
         logger.info("Request received for - username :: {}", username);
         return ResponseEntity.ok(namespaceService.getNamespacesForUser(username));
     }
 
+    @Operation(summary = "getNamespaces")
     @GetMapping("/sct/namespaces")
     public ResponseEntity<List<NamespaceDto>> getNamespaces(@RequestParam(required = false) String token) throws CisException {
         logger.info("Request received for - No ReqParam");
         return ResponseEntity.ok(namespaceService.getNamespaces());
     }
 
+    @Operation(summary = "createNamespace")
     @PostMapping("/sct/namespaces")
     public ResponseEntity<String> createNamespace(@RequestParam String token, @RequestBody NamespaceDto namespace,@Parameter(hidden = true) Authentication authentication) throws CisException,ParseException {
         Token authToken = (Token) authentication;
@@ -44,6 +48,7 @@ public class NamespaceController {
         return ResponseEntity.ok(namespaceService.createNamespace(authToken.getAuthenticateResponseDto(),namespace));
     }
 
+    @Operation(summary = "updateNamespace")
     @PutMapping("/sct/namespaces")
     public ResponseEntity<String> updateNamespace(@RequestParam String token, @RequestBody NamespaceDto namespace, @Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
@@ -51,12 +56,14 @@ public class NamespaceController {
         return ResponseEntity.ok(namespaceService.updateNamespace(authToken.getAuthenticateResponseDto(),namespace));
     }
 
+    @Operation(summary = "getNamespace")
     @GetMapping("/sct/namespaces/{namespaceId}")
     public ResponseEntity<NamespaceDto> getNamespace(@RequestParam String token, @PathVariable String namespaceId) throws CisException {
         logger.info("Request received for - namespaceId :: {}", namespaceId);
         return ResponseEntity.ok(namespaceService.getNamespace(namespaceId));
     }
 
+    @Operation(summary = "deleteNamespace")
     @DeleteMapping("/sct/namespaces/{namespaceId}")
     public ResponseEntity<String> deleteNamespace(@RequestParam String token, @PathVariable String namespaceId,@Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
@@ -65,6 +72,7 @@ public class NamespaceController {
     }
 
 
+    @Operation(summary = "updatePartitionSequence")
     @PutMapping("/sct/namespaces/{namespaceId}/partition/{partitionId}")
     public ResponseEntity<String> updatePartitionSequence(@RequestParam String token, @PathVariable String namespaceId,@PathVariable String partitionId, @RequestParam String value,@Parameter(hidden = true) Authentication authentication ) throws CisException {
         Token authToken = (Token) authentication;
