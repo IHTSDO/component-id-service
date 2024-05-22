@@ -148,7 +148,7 @@ public class BulkJobService {
         BulkJob result = null;
         BulkJob bulkJob = (bulkJobRepository.findById(jobId).isPresent()) ? bulkJobRepository.findById(jobId).get() : null;
         if (null != bulkJob) {
-            if (bulkJob.getId() == jobId)
+            if (Objects.equals(bulkJob.getId(), jobId))
                 result = bulkJob;
         } else {
             logger.error("error getJob():: There is no result from Database for jobId {}", jobId);
