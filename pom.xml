@@ -4,10 +4,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.1</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <groupId>org.snomed</groupId>
+        <artifactId>snomed-parent-bom</artifactId>
+        <version>3.6.0-SNAPSHOT</version>
     </parent>
 
     <groupId>org.snomed</groupId>
@@ -21,27 +20,14 @@
         <profile>dev</profile>
         <packageName>cis</packageName>
         <execFinalName>${packageName}.jar</execFinalName>
-
-        <dependency-check-maven.version>8.3.1</dependency-check-maven.version>
-        <snomed-parent-owasp.version>1.0.3</snomed-parent-owasp.version>
-
-        <spring.version>6.1.6</spring.version> <!-- Note anything v6* needs Java 17+, https://github.com/spring-projects/spring-framework/wiki/Spring-Framework-Versions -->
-        <spring-cloud-starter.version>4.1.1</spring-cloud-starter.version>
-        <spring-cloud-starter-vault.version>4.1.1</spring-cloud-starter-vault.version>
-        <spring.security.version>6.1.8</spring.security.version>
-
-        <jknack.version>4.4.0</jknack.version>
-        <mysql-connector-java.version>8.4.0</mysql-connector-java.version>
-        <json.version>20240303</json.version>
-        <lombok.version>1.18.32</lombok.version>
-        <commons-text.version>1.12.0</commons-text.version>
-        <httpclient.version>4.5.14</httpclient.version>
-        <crowd-integration-client-rest.version>5.3.0-QR20240130120105</crowd-integration-client-rest.version>
-        <snakeyaml.version>2.2</snakeyaml.version>
-        <jdeb.version>1.1.1</jdeb.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
+            <version>4.13.0</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -53,7 +39,6 @@
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
-            <version>${mysql-connector-java.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -68,7 +53,6 @@
         <dependency>
             <groupId>com.github.jknack</groupId>
             <artifactId>handlebars-springmvc</artifactId>
-            <version>${jknack.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -93,38 +77,31 @@
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.5.0</version>
         </dependency>
         <dependency>
             <groupId>com.github.jknack</groupId>
             <artifactId>handlebars-guava-cache</artifactId>
-            <version>${jknack.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.jknack</groupId>
             <artifactId>handlebars-jackson2</artifactId>
-            <version>4.3.1</version>
         </dependency>
         <dependency>
             <groupId>com.github.jknack</groupId>
             <artifactId>handlebars</artifactId>
-            <version>${jknack.version}</version>
         </dependency>
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>${json.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-text</artifactId>
-            <version>${commons-text.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -137,67 +114,54 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>${httpclient.version}</version>
         </dependency>
         <dependency>
             <groupId>com.atlassian.crowd</groupId>
             <artifactId>crowd-integration-client-rest</artifactId>
-            <version>${crowd-integration-client-rest.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-consul-discovery</artifactId>
-            <version>${spring-cloud-starter.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-consul-config</artifactId>
-            <version>${spring-cloud-starter.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-vault-config</artifactId>
-            <version>${spring-cloud-starter-vault.version}</version>
         </dependency>
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
-            <version>${snakeyaml.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-expression</artifactId>
-            <version>${spring.version}</version>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-core</artifactId>
-            <version>1.12.718</version>
         </dependency>
         <dependency>
             <groupId>jakarta.xml.bind</groupId>
             <artifactId>jakarta.xml.bind-api</artifactId>
-            <version>4.0.2</version>
         </dependency>
         <dependency>
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
-            <version>2.3.1</version>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jaxb</groupId>
             <artifactId>jaxb-runtime</artifactId>
-            <version>4.0.5</version>
         </dependency>
         <dependency>
             <groupId>com.sun.xml.bind</groupId>
             <artifactId>jaxb-core</artifactId>
-            <version>4.0.5</version>
         </dependency>
         <dependency>
             <groupId>com.sun.xml.bind</groupId>
             <artifactId>jaxb-impl</artifactId>
-            <version>2.3.3</version>
         </dependency>
     </dependencies>
 
@@ -229,7 +193,6 @@
             <plugin>
                 <groupId>org.vafer</groupId>
                 <artifactId>jdeb</artifactId>
-                <version>${jdeb.version}</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -267,7 +230,6 @@
             <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
-                <version>${dependency-check-maven.version}</version>
                 <configuration>
                     <suppressionFiles>
                         <suppressionFile>owasp-suppressions.xml</suppressionFile>
@@ -280,7 +242,6 @@
                     <dependency>
                         <groupId>org.snomed</groupId>
                         <artifactId>snomed-parent-owasp</artifactId>
-                        <version>${snomed-parent-owasp.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>
