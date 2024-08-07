@@ -1,19 +1,12 @@
 package org.snomed.cis.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snomed.cis.dto.CheckSctidResponseDTO;
-import org.snomed.cis.dto.NamespaceDto;
-import org.snomed.cis.exception.CisException;
 import org.snomed.cis.service.NamespaceService;
 import org.snomed.cis.service.SctidService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 @Tag(name = "Public SCTID Info API")
 //@RestController
 //@RequestMapping("/public")

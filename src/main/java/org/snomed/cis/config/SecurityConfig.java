@@ -18,10 +18,6 @@ import java.util.Collections;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
-    @Autowired
-    private TokenAuthenticationProvider tokenAuthenticationProvider;
-
     private static final String[] AUTH_WHITELIST = {
             // -- Swagger UI v2
             "/v2/api-docs",
@@ -46,6 +42,11 @@ public class SecurityConfig {
             "/testService"
     };
 
+    private final TokenAuthenticationProvider tokenAuthenticationProvider;
+
+    public SecurityConfig(TokenAuthenticationProvider tokenAuthenticationProvider) {
+        this.tokenAuthenticationProvider = tokenAuthenticationProvider;
+    }
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
