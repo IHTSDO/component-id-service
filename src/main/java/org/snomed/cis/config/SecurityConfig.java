@@ -2,7 +2,6 @@ package org.snomed.cis.config;
 
 import org.snomed.cis.security.TokenAuthenticationFilter;
 import org.snomed.cis.security.TokenAuthenticationProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
