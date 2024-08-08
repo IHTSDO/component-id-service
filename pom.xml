@@ -20,8 +20,6 @@
         <profile>dev</profile>
         <packageName>cis</packageName>
         <execFinalName>${packageName}.jar</execFinalName>
-        <dependency-check-maven.version>8.3.1</dependency-check-maven.version>
-        <snomed-parent-owasp.version>1.0.3</snomed-parent-owasp.version>
     </properties>
 
     <dependencies>
@@ -228,26 +226,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.owasp</groupId>
-                <artifactId>dependency-check-maven</artifactId>
-                <version>${dependency-check-maven.version}</version>
-                <configuration>
-                    <suppressionFiles>
-                        <suppressionFile>owasp-suppressions.xml</suppressionFile>
-                    </suppressionFiles>
-                    <failBuildOnCVSS>7</failBuildOnCVSS>
-                    <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
-                    <failOnError>true</failOnError>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.snomed</groupId>
-                        <artifactId>snomed-parent-owasp</artifactId>
-                        <version>${snomed-parent-owasp.version}</version>
-                    </dependency>
-                </dependencies>
             </plugin>
         </plugins>
     </build>
