@@ -140,8 +140,9 @@
             <artifactId>spring-expression</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-core</artifactId>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>aws-sdk-java</artifactId>
+            <version>2.29.1</version>
         </dependency>
         <dependency>
             <groupId>jakarta.xml.bind</groupId>
