@@ -1,6 +1,7 @@
 package org.snomed.cis.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -98,6 +99,7 @@ public class AuthenticationService {
         ImsGetAccountResponseDto imsGetAccountResponseDto = null;
         try {
             ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             imsGetAccountResponseDto = objectMapper.readValue(imsResponse.getBody(), ImsGetAccountResponseDto.class);
         } catch (JsonProcessingException e) {
             throw new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "error while parsing ims get account response");
