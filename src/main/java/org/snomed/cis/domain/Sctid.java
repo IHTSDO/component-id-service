@@ -27,6 +27,7 @@ public class Sctid {
 
     private String partitionId;
 
+    @Column(name = "checkDigit", columnDefinition = "TINYINT")
     private Integer checkDigit;
 
     @NotNull
