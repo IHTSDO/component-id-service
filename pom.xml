@@ -18,7 +18,7 @@
     <properties>
         <java.version>17</java.version>
         <profile>dev</profile>
-        <packageName>cis</packageName>
+        <packageName>component-id-service</packageName>
         <execFinalName>${packageName}.jar</execFinalName>
     </properties>
 
@@ -211,7 +211,7 @@
                             <dataSet>
                                 <data>
                                     <src>${project.build.directory}/${execFinalName}</src>
-                                    <dst>cis.jar</dst>
+                                    <dst>component-id-service.jar</dst>
                                     <type>file</type>
                                     <mapper>
                                         <type>perm</type>
