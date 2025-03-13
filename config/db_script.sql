@@ -151,3 +151,5 @@ CREATE TABLE `pwi_deleted_ids` (
     `sctid`                                        VARCHAR(18)                    DEFAULT NULL,
     KEY `idx_del_id` (`sctid`)
 ) DEFAULT CHARSET = `latin1`;
+
+DROP TABLE IF EXISTS `testtbl`;
