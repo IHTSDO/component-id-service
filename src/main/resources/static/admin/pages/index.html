@@ -112,13 +112,16 @@
                 return(text.toLowerCase());
             });
             Handlebars.registerHelper("emptyCheck", function(text){
-                if (!text || typeof text == "undefined" || text == null || text.Window)
+                if (!text || typeof text == "undefined" || text == null || text.Window || JSON.stringify(text) === "{}")
                     return "";
                 else
                     return text;
             });
             Handlebars.registerHelper("fieldOfObject", function(obj, field){
-                return obj[field];
+                if(obj && obj.hasOwnProperty(field)){
+                    return obj[field];
+                }
+                return "";
             });
             Handlebars.registerHelper("time", function(dateData){
                 var string = new Date(dateData);
@@ -1944,7 +1947,7 @@
     <script src="../js/authentication.js"></script>
     <script src="../js/notify.js"></script>
     <script src="../js/variables.js"></script>
-    <script src="../js/handlebars-v1.3.0.js"></script>
+    <script src="../js/handlebars-v4.7.7.js"></script>
 </body>
 
 </html>

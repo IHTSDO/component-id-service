@@ -11,12 +11,12 @@
         {{#each ../fields}}
             <td>
                 {{#if_eq this "schemeId"}}
-                    <a class="schemeLink" data-scheme="{{../../scheme}}" href="javascript:void(0);" data-id="{{../../schemeId}}">{{../../schemeId}}</a>
+                    <a class="schemeLink" data-scheme="{{../this.scheme}}" href="javascript:void(0);" data-id="{{../this.schemeId}}">{{../this.schemeId}}</a>
                 {{else}}
                     {{#if_eq this "sctid"}}
-                        <a class="sctidLink" href="javascript:void(0);" data-id="{{../../../sctid}}">{{../../../sctid}}</a>
+                        <a class="sctidLink" href="javascript:void(0);" data-id="{{../this.sctid}}">{{../this.sctid}}</a>
                     {{else}}
-                        {{fieldOfObject ../../../this ../../this}}
+                        {{fieldOfObject ../this this}}
                     {{/if_eq}}
                 {{/if_eq}}
             </td>
