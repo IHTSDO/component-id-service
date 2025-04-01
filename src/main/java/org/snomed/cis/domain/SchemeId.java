@@ -19,36 +19,49 @@ import java.time.LocalDateTime;
 public class SchemeId implements Serializable {
     @Id
     @NotNull
+    @Column(name = "scheme", columnDefinition = "VARCHAR(18)")
     private String scheme;
 
     @NotNull
     @Id
+    @Column(name = "schemeId", columnDefinition = "VARCHAR(18)")
     private String schemeId;
 
+    @Column(name = "sequence", columnDefinition = "INT")
     private Integer sequence;
 
+    @Column(name = "checkDigit", columnDefinition = "INT")
     private Integer checkDigit;
 
     @NotNull
+    @Column(name = "systemId", columnDefinition = "VARCHAR(255)")
     private String systemId;
 
+    @Column(name = "status", columnDefinition = "VARCHAR(20)")
     private String status;
 
+    @Column(name = "author", columnDefinition = "VARCHAR(255)")
     private String author;
 
+    @Column(name = "software", columnDefinition = "VARCHAR(255)")
     private String software;
 
+    @Column(name = "expirationDate", columnDefinition = "DATETIME(6)")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime expirationDate;
 
+    @Column(name = "jobId", columnDefinition = "INT")
     private Integer jobId;
 
+    @Column(name = "created_at", columnDefinition = "DATETIME")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime created_at;
 
+    @Column(name = "modified_at", columnDefinition = "DATETIME")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime modified_at;
 
+    @Column(name = "comment", columnDefinition = "VARCHAR(255)")
     private String comment;
 
     public SchemeId(String scheme, String schemeId, Integer sequence, Integer checkDigit, String systemId, String status, String author, String software, LocalDateTime expirationDate, Integer jobId, LocalDateTime created_at, LocalDateTime modified_at) {

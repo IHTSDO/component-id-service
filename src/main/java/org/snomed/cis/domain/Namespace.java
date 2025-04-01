@@ -16,20 +16,26 @@ import java.time.LocalDateTime;
 public class Namespace {
 
     @Id
+    @Column(name = "namespace", columnDefinition = "INT")
     private Integer namespace;
 
+    @Column(name = "organizationName", columnDefinition = "VARCHAR(255)")
     private String organizationName;
 
+    @Column(name = "organizationAndContactDetails", columnDefinition = "VARCHAR(2000)")
     private String organizationAndContactDetails;
 
-    @Column(name = "dateIssued")
+    @Column(name = "dateIssued", columnDefinition = "DATETIME")
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
     private LocalDateTime dateIssued;
 
+    @Column(name = "email", columnDefinition = "VARCHAR(255)")
     private String email;
 
+    @Column(name = "notes", columnDefinition = "VARCHAR(2000)")
     private String notes;
 
+    @Column(name = "idPregenerate", columnDefinition = "VARCHAR(1)")
     private String idPregenerate;
 
     public Namespace(Integer namespace, String organizationName, String organizationAndContactDetails, LocalDateTime dateIssued, String email, String notes, String idPregenerate

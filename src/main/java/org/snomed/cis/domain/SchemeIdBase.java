@@ -18,8 +18,10 @@ public class SchemeIdBase {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @NotNull
+    @Column(name = "scheme", columnDefinition = "VARCHAR(18)")
     private String scheme;
 
+    @Column(name = "idBase", columnDefinition = "VARCHAR(18)")
     private String idBase;
 
     @Override

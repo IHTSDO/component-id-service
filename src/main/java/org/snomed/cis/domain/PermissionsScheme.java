@@ -1,11 +1,8 @@
 package org.snomed.cis.domain;
 
+import jakarta.persistence.*;
 import lombok.*;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
-import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 
@@ -21,12 +18,15 @@ public class PermissionsScheme implements Serializable {
 
     @Id
     @NotNull
+    @Column(name = "scheme", columnDefinition = "VARCHAR(160)")
     private String scheme;
 
     @Id
     @NotNull
+    @Column(name = "username", columnDefinition = "VARCHAR(160)")
     private String username;
 
+    @Column(name = "role", columnDefinition = "VARCHAR(255)")
     private String role;
 
     @Override

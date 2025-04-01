@@ -1,15 +1,12 @@
 package org.snomed.cis.domain;
 
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
-import jakarta.persistence.Table;
 import java.io.Serializable;
 
 @Entity
@@ -22,13 +19,16 @@ import java.io.Serializable;
 public class PermissionsNamespace implements Serializable {
 
     @Id
+    @Column(name = "namespace", columnDefinition = "INT")
     private Integer namespace;
 
     @Id
     @NotNull
+    @Column(name = "username", columnDefinition = "VARCHAR(255)")
     private String username;
 
     @NotNull
+    @Column(name = "role", columnDefinition = "VARCHAR(255)")
     private String role;
 
     @Override

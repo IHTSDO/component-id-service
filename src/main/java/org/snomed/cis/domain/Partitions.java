@@ -16,11 +16,14 @@ import java.io.Serializable;
 public class Partitions implements Serializable {
 
     @Id
+    @Column(name = "namespace", columnDefinition = "INT")
     private Integer namespace;
 
     @Id
+    @Column(name = "partitionId", columnDefinition = "VARCHAR(2)")
     private String partitionId;
 
+    @Column(name = "sequence", columnDefinition = "INT")
     private Integer sequence;
 
     @Override
