@@ -2,7 +2,8 @@
     <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
         <target>System.err</target>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>WARN</level>
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
         </filter>
         <encoder>
             <pattern>%d{dd-MM-yyyy HH:mm:ss.SSS} [%thread] %-5level %logger{36}.%M - %msg%n</pattern>
@@ -24,11 +25,11 @@
         </filter>
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <level>WARN</level>
-            <onMatch>DENY</onMatch>
+            <onMatch>ACCEPT</onMatch>
         </filter>
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <level>ERROR</level>
-            <onMatch>DENY</onMatch>
+            <onMatch>ACCEPT</onMatch>
         </filter>
         <encoder>
             <pattern>%d{dd-MM-yyyy HH:mm:ss.SSS} [%thread] %-5level %logger{36}.%M - %msg%n</pattern>
