@@ -38,4 +38,7 @@ public interface SctidRepository extends JpaRepository<Sctid, String> {
     int updateSctid(@Param("sctids") List<String> sctids, @Param("jobId")Integer jobId);
 
     List<Sctid> findByNamespaceAndPartitionId(Integer namespace, String partitionId);
+
+    boolean existsBySctidAndNamespaceAndPartitionIdAndStatusNot(String sctid, Integer namespace, String partitionId, String status);
+
 }

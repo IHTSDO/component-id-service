@@ -1208,8 +1208,15 @@ public class BackendJobService {
                         var createAt = LocalDateTime.now();
 
                         for (String systemId : sysIdToCreate) {
-                            seq++;
-                            String newSctid = computeSctId(record, seq);
+                            String newSctid;
+                            while (true) {
+                                seq++;
+                                newSctid = computeSctId(record, seq);
+                                boolean exists = sctidRepository.existsBySctidAndNamespaceAndPartitionIdAndStatusNot(newSctid, part.get().getNamespace(), part.get().getPartitionId(), "Available");
+                                if (!exists) {
+                                    break;
+                                }
+                            }
                             LocalDateTime expirationDateTime = null;
                             String comment = null;
                             String software = null;
@@ -1246,6 +1253,8 @@ public class BackendJobService {
                                     build();
                             records.add(rec);
                         }
+                        part.get().setSequence(seq);
+                        partitionsRepository.save(part.get());
                         insertedCount += records.size();
                         insertedRecords = sctidRepository.saveAll(records);
                     }
