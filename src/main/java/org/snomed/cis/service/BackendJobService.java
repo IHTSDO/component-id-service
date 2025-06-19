@@ -3,6 +3,8 @@ package org.snomed.cis.service;
 import com.google.common.collect.Sets;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snomed.cis.domain.*;
 import org.snomed.cis.dto.BulkJobResponseDto;
 import org.snomed.cis.exception.CisException;
@@ -18,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
+
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -26,7 +30,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class BackendJobService {
-
+    private static final Logger logger = LoggerFactory.getLogger(BackendJobService.class);
     public static String AVAILABLE = "Available";
 
     @Autowired
@@ -1127,6 +1131,8 @@ public class BackendJobService {
     }
 
     private String generateSctids(JSONObject record) throws CisException {
+        LocalDateTime startTime = LocalDateTime.now();
+        logger.info("generateSctids() started at {}", startTime);
         List<Sctid> insertedRecords = new ArrayList<>();
         Map<String, Object> obj = new HashMap<String, Object>();
         obj.put("namespace", record.get("namespace"));
@@ -1250,10 +1256,22 @@ public class BackendJobService {
                 throw new CisException(HttpStatus.BAD_REQUEST, "generateSctids error:" + e.getMessage());
             }
         }//for
+        LocalDateTime endTime = LocalDateTime.now();
+        logger.info("generateSctids() completed at {}", endTime);
+        Duration duration = Duration.between(startTime, endTime);
+        long hours = duration.toHours();
+        long minutes = duration.toMinutesPart();
+        long seconds = duration.toSecondsPart();
+
+        String formattedDuration = String.format("%02d:%02d:%02d", hours, minutes, seconds);
+        logger.info("generateSctids() completed SUCCESS: insertedCount = {}, expected = {}, duration = {}",
+                insertedCount, quantityToCreate, formattedDuration);
+
         if (insertedCount >= quantityToCreate)
             return "success";
         else
             return "failure";
+
     }
 
     private String[] converttoArray(Set<String> sysIdInChunk) {
