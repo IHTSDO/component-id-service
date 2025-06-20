@@ -1132,7 +1132,7 @@ public class BackendJobService {
 
     private String generateSctids(JSONObject record) throws CisException {
         LocalDateTime startTime = LocalDateTime.now();
-        logger.info("generateSctids() started at {}", startTime);
+        logger.info("updated code: generateSctids() started at {}", startTime);
         List<Sctid> insertedRecords = new ArrayList<>();
         Map<String, Object> obj = new HashMap<String, Object>();
         obj.put("namespace", record.get("namespace"));
@@ -1195,28 +1195,58 @@ public class BackendJobService {
                         }
                         if (part.isPresent()) {
                             seq = part.get().getSequence();
-                            int updatedSeq = seq + sysIdToCreate.length;
-                            part.get().setSequence(updatedSeq);
-                            Partitions partitions = Partitions.builder().namespace(part.get().getNamespace()).partitionId(part.get().getPartitionId()).sequence(updatedSeq).build();
-                            Partitions newPart = partitionsRepository.save(partitions);
                         }
                         if (seq == null || !(part.isPresent())) {
                             throw new CisException(HttpStatus.BAD_REQUEST, "Partition not found for partitionId:" + (String) record.get("partitionId") + " and namespace:" + (Integer) record.get("namespace"));
                         }
 
+                        List<String> validSctids = new ArrayList<>();
+                        List<Integer> validSequences = new ArrayList<>();
+                        int tempSeq = seq;
+
+                        while (validSctids.size() < sysIdToCreate.length) {
+                            int needed = sysIdToCreate.length - validSctids.size();
+                            List<String> candidates = new ArrayList<>();
+                            List<Integer> candidateSeqs = new ArrayList<>();
+
+                            for (int j = 0; j < needed; j++) {
+                                tempSeq++;
+                                candidates.add(computeSctId(record, tempSeq));
+                                candidateSeqs.add(tempSeq);
+                            }
+
+                            List<Sctid> existing = sctidRepository.findBySctidInAndNamespaceAndPartitionIdAndStatusNot(
+                                    candidates,
+                                    part.get().getNamespace(),
+                                    part.get().getPartitionId(),
+                                    "Available"
+                            );
+
+                            Set<String> usedSet = existing.stream()
+                                    .map(Sctid::getSctid)
+                                    .collect(Collectors.toSet());
+
+                            for (int m = 0; m < candidates.size(); m++) {
+                                String id = candidates.get(m);
+                                if (!usedSet.contains(id)) {
+                                    validSctids.add(id);
+                                    validSequences.add(candidateSeqs.get(m));
+                                }
+                            }
+                        }
+
+                        seq = tempSeq;
+                        part.get().setSequence(seq);
+                        partitionsRepository.save(part.get());
+
                         List<Sctid> records = new ArrayList<>();
                         var createAt = LocalDateTime.now();
 
-                        for (String systemId : sysIdToCreate) {
-                            String newSctid;
-                            while (true) {
-                                seq++;
-                                newSctid = computeSctId(record, seq);
-                                boolean exists = sctidRepository.existsBySctidAndNamespaceAndPartitionIdAndStatusNot(newSctid, part.get().getNamespace(), part.get().getPartitionId(), "Available");
-                                if (!exists) {
-                                    break;
-                                }
-                            }
+                        for (int k = 0; k < sysIdToCreate.length; k++) {
+                            String systemId = sysIdToCreate[k];
+                            String newSctid = validSctids.get(k);
+                            int idSeq = validSequences.get(k);
+
                             LocalDateTime expirationDateTime = null;
                             String comment = null;
                             String software = null;
@@ -1238,7 +1268,7 @@ public class BackendJobService {
                             {
                                 author = record.getString("author");
                             }
-                            Sctid rec = Sctid.builder().sctid(newSctid).sequence(seq).
+                            Sctid rec = Sctid.builder().sctid(newSctid).sequence(idSeq).
                                     namespace(record.getInt("namespace")).
                                     partitionId(record.getString("partitionId")).
                                     checkDigit(sctIdHelper.getCheckDigit(newSctid)).
@@ -1253,8 +1283,6 @@ public class BackendJobService {
                                     build();
                             records.add(rec);
                         }
-                        part.get().setSequence(seq);
-                        partitionsRepository.save(part.get());
                         insertedCount += records.size();
                         insertedRecords = sctidRepository.saveAll(records);
                     }
