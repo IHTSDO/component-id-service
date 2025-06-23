@@ -1039,6 +1039,9 @@ public class BackendJobService {
             systemId = (String) generationData.get("systemId");
         }
         Sctid sctIdRecord = getSctid(newSCTId, systemId);
+        if (sctIdRecord == null) {
+            throw new CisException(HttpStatus.BAD_REQUEST, "SCTID record not found");
+        }
 
         var newStatus = stateMachine.getNewStatus(sctIdRecord.getStatus(), action);
         if (newStatus != null) {
