@@ -29,6 +29,7 @@ class SecurityConfigTest {
         assertEquals(1, providers.size());
         assertSame(mockProvider, providers.get(0));
     }
+
     @Test
     void testWebSecurityCustomizer_shouldNotBeNull() {
         TokenAuthenticationProvider mockProvider = mock(TokenAuthenticationProvider.class);

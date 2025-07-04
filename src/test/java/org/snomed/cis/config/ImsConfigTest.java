@@ -8,15 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class ImsConfigTest {
 
-    private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-            .withUserConfiguration(ImsConfig.class)
-            .withPropertyValues(
-                    "ims.cookiename=ims-token",
-                    "ims.urls.base=http://localhost:8080/ims",
-                    "ims.urls.login=/login",
-                    "ims.urls.logout=/logout",
-                    "ims.urls.authenticate=/auth"
-            );
+    private final ApplicationContextRunner contextRunner = new ApplicationContextRunner().withUserConfiguration(ImsConfig.class).withPropertyValues("ims.cookiename=ims-token", "ims.urls.base=http://localhost:8080/ims", "ims.urls.login=/login", "ims.urls.logout=/logout", "ims.urls.authenticate=/auth");
 
     @Test
     void testImsConfigValues() {

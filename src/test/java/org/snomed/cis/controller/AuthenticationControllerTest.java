@@ -1,5 +1,7 @@
 package org.snomed.cis.controller;
 
+import jakarta.servlet.ReadListener;
+import jakarta.servlet.ServletInputStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -21,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @WebMvcTest(AuthenticationControllerTest.class)
-public class AuthenticationControllerTest {
+class AuthenticationControllerTest {
 
     @InjectMocks
     private AuthenticationController authenticationController;
@@ -38,7 +40,7 @@ public class AuthenticationControllerTest {
     private Authentication authentication;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         MockitoAnnotations.openMocks(this);
     }
 
@@ -50,8 +52,7 @@ public class AuthenticationControllerTest {
 
         LoginResponseDto response = LoginResponseDto.builder().token("token123").build();
 
-        when(authenticationService.login(eq(request), any(HttpServletRequest.class)))
-                .thenReturn(ResponseEntity.ok(response));
+        when(authenticationService.login(eq(request), any(HttpServletRequest.class))).thenReturn(ResponseEntity.ok(response));
 
         ResponseEntity<LoginResponseDto> result = authenticationController.login(request, httpServletRequest);
 
@@ -81,11 +82,9 @@ public class AuthenticationControllerTest {
 
         LoginResponseDto response = LoginResponseDto.builder().token("token123").build();
 
-        when(httpServletRequest.getInputStream())
-                .thenReturn(new DelegatingServletInputStream(new ByteArrayInputStream(formData.getBytes())));
+        when(httpServletRequest.getInputStream()).thenReturn(new DelegatingServletInputStream(new ByteArrayInputStream(formData.getBytes())));
 
-        when(authenticationService.login(any(LoginRequestDto.class), eq(httpServletRequest)))
-                .thenReturn(ResponseEntity.ok(response));
+        when(authenticationService.login(any(LoginRequestDto.class), eq(httpServletRequest))).thenReturn(ResponseEntity.ok(response));
 
         ResponseEntity<LoginResponseDto> result = authenticationController.loginUI(httpServletRequest);
 
@@ -125,8 +124,7 @@ public class AuthenticationControllerTest {
         LogoutRequestDto logoutRequestDto = new LogoutRequestDto();
         logoutRequestDto.setToken("invalid");
 
-        when(authenticationService.logout(logoutRequestDto))
-                .thenThrow(new CisException(HttpStatus.BAD_REQUEST, "Invalid token"));
+        when(authenticationService.logout(logoutRequestDto)).thenThrow(new CisException(HttpStatus.BAD_REQUEST, "Invalid token"));
 
         CisException ex = assertThrows(CisException.class, () -> {
             authenticationController.logout("invalid", logoutRequestDto);
@@ -138,11 +136,7 @@ public class AuthenticationControllerTest {
 
     @Test
     void testAuthenticate_success() {
-        AuthenticateResponseDto authDto = AuthenticateResponseDto.builder()
-                .name("testUser")
-                .email("user@example.com")
-                .displayName("Test User")
-                .build();
+        AuthenticateResponseDto authDto = AuthenticateResponseDto.builder().name("testUser").email("user@example.com").displayName("Test User").build();
 
         Token token = mock(Token.class);
         when(token.getAuthenticateResponseDto()).thenReturn(authDto);
@@ -153,7 +147,7 @@ public class AuthenticationControllerTest {
         assertEquals("testUser", response.getBody().getName());
     }
 
-    static class DelegatingServletInputStream extends jakarta.servlet.ServletInputStream {
+    static class DelegatingServletInputStream extends ServletInputStream {
         private final ByteArrayInputStream sourceStream;
 
         public DelegatingServletInputStream(ByteArrayInputStream sourceStream) {
@@ -176,28 +170,26 @@ public class AuthenticationControllerTest {
         }
 
         @Override
-        public void setReadListener(jakarta.servlet.ReadListener readListener) {
+        public void setReadListener(ReadListener readListener) {
+            // Intentionally left empty: Non-blocking I/O not used in this implementation.
         }
     }
 
     @Test
     void testLogin_emptyUsername_shouldFailValidation() {
         LoginRequestDto request = new LoginRequestDto();
-        request.setUsername(""); // invalid
+        request.setUsername("");
         request.setPassword("pass");
 
-        assertThrows(CisException.class, () -> {
-            ValidationUtil.validateLoginRequestDto(request);
-            authenticationController.login(request, httpRequest);
-        });
+        assertThrows(CisException.class, () -> ValidationUtil.validateLoginRequestDto(request));
     }
+
 
     @Test
     void testLoginUI_onlyUsernameProvided_shouldFailValidation() throws Exception {
         String formData = "username=user";
 
-        when(httpServletRequest.getInputStream())
-                .thenReturn(new DelegatingServletInputStream(new ByteArrayInputStream(formData.getBytes())));
+        when(httpServletRequest.getInputStream()).thenReturn(new DelegatingServletInputStream(new ByteArrayInputStream(formData.getBytes())));
 
         assertThrows(CisException.class, () -> {
             authenticationController.loginUI(httpServletRequest);
@@ -208,8 +200,7 @@ public class AuthenticationControllerTest {
     void testLoginUI_emptyFormData_shouldThrowValidationException() throws Exception {
         String formData = "";
 
-        when(httpServletRequest.getInputStream())
-                .thenReturn(new DelegatingServletInputStream(new ByteArrayInputStream(formData.getBytes())));
+        when(httpServletRequest.getInputStream()).thenReturn(new DelegatingServletInputStream(new ByteArrayInputStream(formData.getBytes())));
 
         assertThrows(CisException.class, () -> {
             authenticationController.loginUI(httpServletRequest);
