@@ -4,9 +4,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.Objects;
 
@@ -38,5 +43,44 @@ public class GlobalExceptionHandler {
         }
         return response;
     }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<?> handleMissingServletRequestParameterException(MissingServletRequestParameterException exception) {
+        logger.error("missing request parameter :: ", exception);
+        return new ResponseEntity<>(
+                ErrorResponse.builder()
+                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .message(exception.getMessage())
+                        .build(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex) {
+        logger.error("AccessDeniedException: {}", ex.getMessage());
+        ErrorResponse error = new ErrorResponse(403, ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+    }
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        return ResponseEntity.badRequest().body(
+                new ErrorResponse(400, "Invalid scheme name: " + ex.getValue())
+        );
+    }
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleBadRequest(HttpMessageNotReadableException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(400, "Invalid or missing request body"));
+    }
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotAllowed(HttpRequestMethodNotSupportedException ex) {
+        ErrorResponse error = new ErrorResponse(HttpStatus.METHOD_NOT_ALLOWED.value(),
+                "Request method '" + ex.getMethod() + "' is not supported");
+
+        error.setStatusCode(HttpStatus.METHOD_NOT_ALLOWED.value());
+        error.setMessage("Request method '" + ex.getMethod() + "' is not supported");
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(error);
+    }
+
 
 }
