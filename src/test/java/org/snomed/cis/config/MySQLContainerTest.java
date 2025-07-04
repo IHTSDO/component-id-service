@@ -19,10 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ContextConfiguration(initializers = MySQLContainerTest.Initializer.class)
 class MySQLContainerTest {
 
-    static final MySQLContainer<?> mysqlContainer = new MySQLContainer<>("mysql:8.0.26")
-            .withDatabaseName("cis")
-            .withUsername("cis")
-            .withPassword("testpass");
+    static final MySQLContainer<?> mysqlContainer = new MySQLContainer<>("mysql:8.0.26").withDatabaseName("cis").withUsername("cis").withPassword("testpass");
 
     static {
         mysqlContainer.start();
@@ -31,18 +28,10 @@ class MySQLContainerTest {
     static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
         @Override
         public void initialize(ConfigurableApplicationContext context) {
-            TestPropertyValues.of(
-                    "spring.datasource.url=" + mysqlContainer.getJdbcUrl(),
-                    "spring.datasource.username=" + mysqlContainer.getUsername(),
-                    "spring.datasource.password=" + mysqlContainer.getPassword(),
-                    "spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver",
-                    "spring.jpa.hibernate.ddl-auto=update",
+            TestPropertyValues.of("spring.datasource.url=" + mysqlContainer.getJdbcUrl(), "spring.datasource.username=" + mysqlContainer.getUsername(), "spring.datasource.password=" + mysqlContainer.getPassword(), "spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver", "spring.jpa.hibernate.ddl-auto=update",
 
                     // 👇 Required to avoid CrowdConfig failure
-                    "crowd.url=http://localhost:8095",
-                    "crowd.application=test-app",
-                    "crowd.password=test-pass"
-            ).applyTo(context.getEnvironment());
+                    "crowd.url=http://localhost:8095", "crowd.application=test-app", "crowd.password=test-pass").applyTo(context.getEnvironment());
         }
     }
 

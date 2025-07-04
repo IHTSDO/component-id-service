@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = BulkJobsController.class)
-public class BulkJobsControllerTest {
+class BulkJobsControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -42,10 +42,7 @@ public class BulkJobsControllerTest {
 
         Mockito.when(bulkJobService.getJobs()).thenReturn(mockJobs);
 
-        mockMvc.perform(get("/bulk/jobs")
-                        .param("token", "dummy-token"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+        mockMvc.perform(get("/bulk/jobs").param("token", "dummy-token")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2));
     }
 
     private BulkJob createBulkJob(int id, String name) throws Exception {
@@ -65,38 +62,29 @@ public class BulkJobsControllerTest {
     @Test
     @WithMockUser
     void testGetJobs_serviceThrowsException_shouldReturnInternalServerError() throws Exception {
-        Mockito.when(bulkJobService.getJobs())
-                .thenThrow(new RuntimeException("Failed to fetch jobs"));
+        Mockito.when(bulkJobService.getJobs()).thenThrow(new RuntimeException("Failed to fetch jobs"));
 
-        mockMvc.perform(get("/bulk/jobs")
-                        .param("token", "dummy-token"))
-                .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.statusCode").value(500))
-                .andExpect(jsonPath("$.message").value("java.lang.RuntimeException: Failed to fetch jobs"));
+        mockMvc.perform(get("/bulk/jobs").param("token", "dummy-token")).andExpect(status().isInternalServerError()).andExpect(jsonPath("$.statusCode").value(500)).andExpect(jsonPath("$.message").value("java.lang.RuntimeException: Failed to fetch jobs"));
     }
 
     @Test
     @WithMockUser
     void testGetJobs_missingToken_shouldReturnBadRequest() throws Exception {
         mockMvc.perform(get("/bulk/jobs")) // no token param
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.statusCode").value(400))
-                .andExpect(jsonPath("$.message").exists());
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.statusCode").value(400)).andExpect(jsonPath("$.message").exists());
     }
+
     @Test
     void testGetJobs_unauthenticated_shouldReturnUnauthorized() throws Exception {
-        mockMvc.perform(get("/bulk/jobs")
-                        .param("token", "dummy-token"))
-                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/bulk/jobs").param("token", "dummy-token")).andExpect(status().isUnauthorized());
     }
+
     @Test
     @WithMockUser
     void testGetJobs_emptyList_shouldReturnEmptyArray() throws Exception {
         Mockito.when(bulkJobService.getJobs()).thenReturn(Collections.emptyList());
 
-        mockMvc.perform(get("/bulk/jobs").param("token", "dummy-token"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+        mockMvc.perform(get("/bulk/jobs").param("token", "dummy-token")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
     }
 
     @Test
@@ -108,49 +96,36 @@ public class BulkJobsControllerTest {
 
         Mockito.when(bulkJobService.getJob(1)).thenReturn(mockJob);
 
-        mockMvc.perform(get("/bulk/jobs/1")
-                        .param("token", "dummy-token"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name").value("Sample Job"));
+        mockMvc.perform(get("/bulk/jobs/1").param("token", "dummy-token")).andExpect(status().isOk()).andExpect(jsonPath("$.id").value(1)).andExpect(jsonPath("$.name").value("Sample Job"));
     }
+
     @Test
     @WithMockUser
     void testGetJob_notFound_shouldReturnNotFound() throws Exception {
-        Mockito.when(bulkJobService.getJob(999))
-                .thenThrow(new CisException(HttpStatus.NOT_FOUND, "Job not found"));
+        Mockito.when(bulkJobService.getJob(999)).thenThrow(new CisException(HttpStatus.NOT_FOUND, "Job not found"));
 
-        mockMvc.perform(get("/bulk/jobs/999")
-                        .param("token", "dummy-token"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.statusCode").value(404))
-                .andExpect(jsonPath("$.message").value("Job not found"));
+        mockMvc.perform(get("/bulk/jobs/999").param("token", "dummy-token")).andExpect(status().isNotFound()).andExpect(jsonPath("$.statusCode").value(404)).andExpect(jsonPath("$.message").value("Job not found"));
     }
+
     @Test
     @WithMockUser
     void testGetJob_missingToken_shouldReturnBadRequest() throws Exception {
-        mockMvc.perform(get("/bulk/jobs/1"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.statusCode").value(400));
+        mockMvc.perform(get("/bulk/jobs/1")).andExpect(status().isBadRequest()).andExpect(jsonPath("$.statusCode").value(400));
     }
+
     @Test
     void testGetJob_unauthenticated_shouldReturnUnauthorized() throws Exception {
-        mockMvc.perform(get("/bulk/jobs/1")
-                        .param("token", "dummy-token"))
-                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/bulk/jobs/1").param("token", "dummy-token")).andExpect(status().isUnauthorized());
     }
+
     @Test
     @WithMockUser
     void testGetJob_serviceThrows_shouldReturnInternalServerError() throws Exception {
-        Mockito.when(bulkJobService.getJob(1))
-                .thenThrow(new RuntimeException("Unexpected failure"));
+        Mockito.when(bulkJobService.getJob(1)).thenThrow(new RuntimeException("Unexpected failure"));
 
-        mockMvc.perform(get("/bulk/jobs/1")
-                        .param("token", "dummy-token"))
-                .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.statusCode").value(500))
-                .andExpect(jsonPath("$.message").value("java.lang.RuntimeException: Unexpected failure"));
+        mockMvc.perform(get("/bulk/jobs/1").param("token", "dummy-token")).andExpect(status().isInternalServerError()).andExpect(jsonPath("$.statusCode").value(500)).andExpect(jsonPath("$.message").value("java.lang.RuntimeException: Unexpected failure"));
     }
+
     @Test
     @WithMockUser
     void testGetJobRecords_success_shouldReturnList() throws Exception {
@@ -158,12 +133,7 @@ public class BulkJobsControllerTest {
 
         Mockito.when(bulkJobService.getJobRecords(1)).thenReturn(records);
 
-        mockMvc.perform(get("/bulk/jobs/1/records")
-                        .param("token", "dummy-token"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0]").value("Record1"))
-                .andExpect(jsonPath("$[1]").value("Record2"));
+        mockMvc.perform(get("/bulk/jobs/1/records").param("token", "dummy-token")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2)).andExpect(jsonPath("$[0]").value("Record1")).andExpect(jsonPath("$[1]").value("Record2"));
     }
 
     @Test
@@ -171,47 +141,33 @@ public class BulkJobsControllerTest {
     void testGetJobRecords_empty_shouldReturnEmptyList() throws Exception {
         Mockito.when(bulkJobService.getJobRecords(99)).thenReturn(List.of());
 
-        mockMvc.perform(get("/bulk/jobs/99/records")
-                        .param("token", "dummy-token"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+        mockMvc.perform(get("/bulk/jobs/99/records").param("token", "dummy-token")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
     }
+
     @Test
     @WithMockUser
     void testGetJobRecords_serviceThrows_shouldReturnInternalServerError() throws Exception {
-        Mockito.when(bulkJobService.getJobRecords(1))
-                .thenThrow(new RuntimeException("Unexpected failure"));
+        Mockito.when(bulkJobService.getJobRecords(1)).thenThrow(new RuntimeException("Unexpected failure"));
 
-        mockMvc.perform(get("/bulk/jobs/1/records")
-                        .param("token", "dummy-token"))
-                .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.statusCode").value(500))
-                .andExpect(jsonPath("$.message").value("java.lang.RuntimeException: Unexpected failure"));
+        mockMvc.perform(get("/bulk/jobs/1/records").param("token", "dummy-token")).andExpect(status().isInternalServerError()).andExpect(jsonPath("$.statusCode").value(500)).andExpect(jsonPath("$.message").value("java.lang.RuntimeException: Unexpected failure"));
     }
+
     @Test
     @WithMockUser
     void testGetJobRecords_missingToken_shouldReturnBadRequest() throws Exception {
-        mockMvc.perform(get("/bulk/jobs/1/records"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.statusCode").value(400));
+        mockMvc.perform(get("/bulk/jobs/1/records")).andExpect(status().isBadRequest()).andExpect(jsonPath("$.statusCode").value(400));
     }
+
     @Test
     void testGetJobRecords_unauthenticated_shouldReturnUnauthorized() throws Exception {
-        mockMvc.perform(get("/bulk/jobs/1/records")
-                        .param("token", "dummy-token"))
-                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/bulk/jobs/1/records").param("token", "dummy-token")).andExpect(status().isUnauthorized());
     }
 
     @Test
     @WithMockUser
     void testCleanUpExpiredIds_success_shouldReturnList() throws Exception {
         AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
-        Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken(
-                "dummy-token",
-                "admin",
-                mockDto,
-                List.of()
-        );
+        Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, List.of());
 
         CleanUpServiceResponse response1 = new CleanUpServiceResponse();
         response1.setMessage("Deleted");
@@ -227,82 +183,44 @@ public class BulkJobsControllerTest {
 
         Mockito.when(bulkJobService.cleanUpExpiredIds(mockDto)).thenReturn(responseList);
 
-        mockMvc.perform(get("/bulk/jobs/cleanupExpired")
-                        .param("token", "dummy-token")
-                        .with(authentication(authToken)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].message").value("Deleted"))
-                .andExpect(jsonPath("$[0].model").value("ID123"))
-                .andExpect(jsonPath("$[0].affectedRows").value(1))
-                .andExpect(jsonPath("$[1].message").value("Skipped"))
-                .andExpect(jsonPath("$[1].model").value("ID456"))
-                .andExpect(jsonPath("$[1].affectedRows").value(0));
+        mockMvc.perform(get("/bulk/jobs/cleanupExpired").param("token", "dummy-token").with(authentication(authToken))).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2)).andExpect(jsonPath("$[0].message").value("Deleted")).andExpect(jsonPath("$[0].model").value("ID123")).andExpect(jsonPath("$[0].affectedRows").value(1)).andExpect(jsonPath("$[1].message").value("Skipped")).andExpect(jsonPath("$[1].model").value("ID456")).andExpect(jsonPath("$[1].affectedRows").value(0));
     }
 
     @Test
     @WithMockUser
     void testCleanUpExpiredIds_cisException_shouldReturnError() throws Exception {
         AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
-        Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken(
-                "dummy-token",
-                "admin",
-                mockDto,
-                List.of()
-        );
+        Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, List.of());
 
 
-        Mockito.when(bulkJobService.cleanUpExpiredIds(mockDto))
-                .thenThrow(new CisException(HttpStatus.BAD_REQUEST, "Invalid authentication"));
+        Mockito.when(bulkJobService.cleanUpExpiredIds(mockDto)).thenThrow(new CisException(HttpStatus.BAD_REQUEST, "Invalid authentication"));
 
-        mockMvc.perform(get("/bulk/jobs/cleanupExpired")
-                        .param("token", "dummy-token")
-                        .with(authentication(authToken)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.statusCode").value(400))
-                .andExpect(jsonPath("$.message").value("Invalid authentication"));
+        mockMvc.perform(get("/bulk/jobs/cleanupExpired").param("token", "dummy-token").with(authentication(authToken))).andExpect(status().isBadRequest()).andExpect(jsonPath("$.statusCode").value(400)).andExpect(jsonPath("$.message").value("Invalid authentication"));
     }
+
     @Test
     void testCleanUpExpiredIds_unauthenticated_shouldReturnUnauthorized() throws Exception {
-        mockMvc.perform(get("/bulk/jobs/cleanupExpired")
-                        .param("token", "dummy-token"))
-                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/bulk/jobs/cleanupExpired").param("token", "dummy-token")).andExpect(status().isUnauthorized());
     }
+
     @Test
     @WithMockUser
     void testCleanUpExpiredIds_missingToken_shouldReturnBadRequest() throws Exception {
         AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
-        Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken(
-                "dummy-token",
-                "admin",
-                mockDto,
-                List.of()
-        );
+        Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, List.of());
 
-        mockMvc.perform(get("/bulk/jobs/cleanupExpired")
-                        .with(authentication(authToken)))
-                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/bulk/jobs/cleanupExpired").with(authentication(authToken))).andExpect(status().isBadRequest());
     }
+
     @Test
     @WithMockUser
     void testCleanUpExpiredIds_runtimeException_shouldReturnInternalServerError() throws Exception {
         AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
-        Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken(
-                "dummy-token",
-                "admin",
-                mockDto,
-                List.of()
-        );
+        Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, List.of());
 
-        Mockito.when(bulkJobService.cleanUpExpiredIds(mockDto))
-                .thenThrow(new RuntimeException("Unexpected failure"));
+        Mockito.when(bulkJobService.cleanUpExpiredIds(mockDto)).thenThrow(new RuntimeException("Unexpected failure"));
 
-        mockMvc.perform(get("/bulk/jobs/cleanupExpired")
-                        .param("token", "dummy-token")
-                        .with(authentication(authToken)))
-                .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.statusCode").value(500))
-                .andExpect(jsonPath("$.message").value("java.lang.RuntimeException: Unexpected failure"));
+        mockMvc.perform(get("/bulk/jobs/cleanupExpired").param("token", "dummy-token").with(authentication(authToken))).andExpect(status().isInternalServerError()).andExpect(jsonPath("$.statusCode").value(500)).andExpect(jsonPath("$.message").value("java.lang.RuntimeException: Unexpected failure"));
     }
 
 }
