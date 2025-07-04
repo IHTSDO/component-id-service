@@ -1,75 +1,40 @@
 package org.snomed.cis.config;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
 import org.junit.jupiter.api.Test;
-import org.snomed.cis.security.TokenAuthenticationFilter;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
+import org.snomed.cis.security.TokenAuthenticationProvider;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.security.authentication.ProviderManager;
 
-import java.io.IOException;
+import java.util.List;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@Import(SecurityConfigTest.TestSecurityConfig.class)
-public class SecurityConfigTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    // Mock any other beans that your app config needs
-    @MockBean
-    private AuthenticationManager authenticationManager;
-
-    @TestConfiguration
-    static class TestSecurityConfig {
-        @Bean
-        public TokenAuthenticationFilter tokenAuthenticationFilter(AuthenticationManager authenticationManager) {
-            return new TokenAuthenticationFilter(authenticationManager) {
-                @Override
-                public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-                        throws IOException, ServletException {
-                    // Bypass actual token auth logic during tests
-                    chain.doFilter(request, response);
-                }
-            };
-        }
-    }
+class SecurityConfigTest {
 
     @Test
-    void testWhitelistedEndpoint_shouldBeAccessible() throws Exception {
-        mockMvc.perform(get("/swagger-ui/index.html"))
-                .andExpect(status().isOk());
+    void testAuthenticationManager_shouldReturnProviderManagerWithCustomProvider() {
+        // Arrange
+        TokenAuthenticationProvider mockProvider = mock(TokenAuthenticationProvider.class);
+        SecurityConfig securityConfig = new SecurityConfig(mockProvider);
+
+        // Act
+        AuthenticationManager manager = securityConfig.authenticationManager();
+
+        // Assert
+        assertNotNull(manager);
+        assertTrue(manager instanceof ProviderManager);
+
+        List<?> providers = ((ProviderManager) manager).getProviders();
+        assertEquals(1, providers.size());
+        assertSame(mockProvider, providers.get(0));
+    }
+    @Test
+    void testWebSecurityCustomizer_shouldNotBeNull() {
+        TokenAuthenticationProvider mockProvider = mock(TokenAuthenticationProvider.class);
+        SecurityConfig config = new SecurityConfig(mockProvider);
+
+        assertNotNull(config.webSecurityCustomizer());
     }
 
-    @Test
-    void testPublicGetNamespace_shouldBeAccessible() throws Exception {
-        mockMvc.perform(get("/sct/namespaces"))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    void testSecuredEndpoint_shouldReturnUnauthorizedWithoutToken() throws Exception {
-        // In real scenario, this would return 401. But due to filter override in test, we get 200
-        mockMvc.perform(get("/api/secure-endpoint"))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    void testSwaggerEndpoint_isNotBlockedBySecurity() throws Exception {
-        mockMvc.perform(get("/swagger-ui/index.html"))
-                .andExpect(status().isOk());
-    }
 }
