@@ -9,10 +9,7 @@ class ErrorResponseTest {
 
     @Test
     void testBuilder_shouldSetAllFields() {
-        ErrorResponse response = ErrorResponse.builder()
-                .statusCode(404)
-                .message("Not Found")
-                .build();
+        ErrorResponse response = ErrorResponse.builder().statusCode(404).message("Not Found").build();
 
         assertEquals(404, response.getStatusCode());
         assertEquals("Not Found", response.getMessage());
@@ -20,10 +17,7 @@ class ErrorResponseTest {
 
     @Test
     void testBuilder_withNullValues_shouldHandleGracefully() {
-        ErrorResponse response = ErrorResponse.builder()
-                .statusCode(null)
-                .message(null)
-                .build();
+        ErrorResponse response = ErrorResponse.builder().statusCode(null).message(null).build();
 
         assertNull(response.getStatusCode());
         assertNull(response.getMessage());
