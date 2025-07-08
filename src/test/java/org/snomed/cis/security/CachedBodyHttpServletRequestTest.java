@@ -54,23 +54,33 @@ class CachedBodyHttpServletRequestTest {
     void testMultipleReads_shouldReturnSameContent() throws IOException {
         CachedBodyHttpServletRequest cachedRequest = new CachedBodyHttpServletRequest(mockRequest);
 
-        String firstRead = new BufferedReader(new InputStreamReader(cachedRequest.getInputStream()))
-                .lines().reduce("", String::concat);
+        String firstRead = new BufferedReader(new InputStreamReader(cachedRequest.getInputStream())).lines().reduce("", String::concat);
 
-        String secondRead = new BufferedReader(new InputStreamReader(cachedRequest.getInputStream()))
-                .lines().reduce("", String::concat);
+        String secondRead = new BufferedReader(new InputStreamReader(cachedRequest.getInputStream())).lines().reduce("", String::concat);
 
         assertEquals(firstRead, secondRead);
     }
+
     @BeforeEach
     void setupEmptyBody() throws IOException {
         mockRequest = mock(HttpServletRequest.class);
 
         ServletInputStream servletInputStream = new ServletInputStream() {
-            public boolean isFinished() { return true; }
-            public boolean isReady() { return true; }
-            public void setReadListener(ReadListener listener) {throw new UnsupportedOperationException("Non-blocking IO is not supported.");}
-            public int read() { return -1; }
+            public boolean isFinished() {
+                return true;
+            }
+
+            public boolean isReady() {
+                return true;
+            }
+
+            public void setReadListener(ReadListener listener) {
+                throw new UnsupportedOperationException("Non-blocking IO is not supported.");
+            }
+
+            public int read() {
+                return -1;
+            }
         };
 
         when(mockRequest.getInputStream()).thenReturn(servletInputStream);
@@ -79,11 +89,11 @@ class CachedBodyHttpServletRequestTest {
     @Test
     void testEmptyBody_shouldReturnEmptyString() throws IOException {
         CachedBodyHttpServletRequest cachedRequest = new CachedBodyHttpServletRequest(mockRequest);
-        String body = new BufferedReader(new InputStreamReader(cachedRequest.getInputStream()))
-                .lines().reduce("", String::concat);
+        String body = new BufferedReader(new InputStreamReader(cachedRequest.getInputStream())).lines().reduce("", String::concat);
 
         assertEquals("", body);
     }
+
     @Test
     void testIOExceptionDuringConstruction_shouldFailGracefully() throws IOException {
         HttpServletRequest badRequest = mock(HttpServletRequest.class);
