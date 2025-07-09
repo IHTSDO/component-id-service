@@ -42,5 +42,6 @@ public interface SctidRepository extends JpaRepository<Sctid, String> {
     List<Sctid> findBySctidInAndNamespaceAndPartitionIdAndStatusNot(
             List<String> sctids, int namespace, String partitionId, String status
     );
+    boolean existsBySctidAndNamespaceAndPartitionIdAndStatusNot(String sctid, Integer namespace, String partitionId, String status);
 
 }
