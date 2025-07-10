@@ -534,7 +534,7 @@ public class BackendJobService {
         }
     }
 
-    private String setNewSchemeIdRecord(JSONObject record, Optional<SchemeIdBase> thisScheme) throws CisException {
+    String setNewSchemeIdRecord(JSONObject record, Optional<SchemeIdBase> thisScheme) throws CisException {
 
         try {
             var previousCode = thisScheme.get().getIdBase();
@@ -599,7 +599,7 @@ public class BackendJobService {
         return "success";
     }
 
-    private SchemeId getSchemeId(String scheme, String schemeId, String systemId) throws CisException, CisException {
+    SchemeId getSchemeId(String scheme, String schemeId, String systemId) throws CisException, CisException {
         boolean isValidScheme = false;
         SchemeId id = null;
         if ("SNOMEDID".equalsIgnoreCase(scheme.toString().toUpperCase())) {
@@ -626,7 +626,7 @@ public class BackendJobService {
         return schemeIdService.insertSchemeIdRecord(schemeIdRecord);
     }
 
-    private Map<String, Object> getNewRecord(String schemeName, String schemeid, String systemId) {
+    Map<String, Object> getNewRecord(String schemeName, String schemeid, String systemId) {
         Map<String, Object> schemeIdRecord = new LinkedHashMap<>();
         schemeIdRecord.put("scheme", schemeName);
         schemeIdRecord.put("schemeId", schemeid);
@@ -636,7 +636,7 @@ public class BackendJobService {
         return schemeIdRecord;
     }
 
-    private String setAvailableSchemeIdRecord2NewStatus(JSONObject generationData, Optional<SchemeIdBase> thisScheme) {
+    String setAvailableSchemeIdRecord2NewStatus(JSONObject generationData, Optional<SchemeIdBase> thisScheme) {
         SchemeId schemeOutput = new SchemeId();
         List<SchemeId> schemeList = new ArrayList<>();
         Map<String, Object> queryObject = new HashMap<>();
@@ -723,7 +723,7 @@ public class BackendJobService {
 
 
     //
-    private String generateSchemeIds(JSONObject record) {
+    String generateSchemeIds(JSONObject record) {
         Map<String, Object> obj = new HashMap<String, Object>();
         obj.put("scheme", record.getString("scheme"));
         Set<String> sysIdInChunk = new HashSet<String>();
@@ -851,7 +851,7 @@ public class BackendJobService {
     }
 
 
-    private String updateSctids(JSONObject record) throws CisException {
+    String updateSctids(JSONObject record) throws CisException {
         List<Sctid> records = new ArrayList<>();
         boolean error = false;
         JSONArray sctidList = record.getJSONArray("sctids");
@@ -903,7 +903,7 @@ public class BackendJobService {
     }
 
 
-    private String registerSctids(JSONObject record) throws CisException {
+    String registerSctids(JSONObject record) throws CisException {
 
         var newStatus = stateMachine.getNewStatus(stateMachine.statuses.get("available"), stateMachine.actions.get("register"));
 
@@ -1008,11 +1008,11 @@ public class BackendJobService {
             return "failure";
     }
 
-    private Integer updateRegisterStatusAndJobId(List<String> existingSctIds, Integer jobId) {
+    Integer updateRegisterStatusAndJobId(List<String> existingSctIds, Integer jobId) {
         return sctidRepository.updateSctid(existingSctIds, jobId);
     }
 
-    private List<Sctid> findExistingSctIds(String[] sctIdToRegister) {
+    List<Sctid> findExistingSctIds(String[] sctIdToRegister) {
         List<Sctid> sctid = sctidRepository.findBySctidIn(List.of(sctIdToRegister));
         return sctid;
     }
@@ -1058,7 +1058,7 @@ public class BackendJobService {
         return sctIdRecord;
     }
 
-    private Sctid getSctid(String newSCTId, String systemId) {
+    Sctid getSctid(String newSCTId, String systemId) {
         if (!sctIdHelper.validSCTId(newSCTId)) {
             System.out.println("Not valid SCTID:" + newSCTId);
             return null;
@@ -1114,7 +1114,7 @@ public class BackendJobService {
     }
 
 
-    private Sctid getSyncSctidBySystemId(Integer namespace, String partitionId) {
+    Sctid getSyncSctidBySystemId(Integer namespace, String partitionId) {
         List<Sctid> sctidList = sctidRepository.findByNamespaceAndPartitionId(namespace, partitionId);
         if (sctidList.size() != 0) {
             return sctidList.get(0);
@@ -1123,7 +1123,7 @@ public class BackendJobService {
         }
     }
 
-    private Partitions getPartitiion(Integer namespace, String partitionId) throws CisException {
+    Partitions getPartitiion(Integer namespace, String partitionId) throws CisException {
         Optional<Partitions> partList = partitionsRepository.findByNamespacePartition(namespace, partitionId);
         if (!partList.isEmpty()) {
             return partList.get();
@@ -1133,7 +1133,7 @@ public class BackendJobService {
         }
     }
 
-    private String generateSctids(JSONObject record) throws CisException {
+    String generateSctids(JSONObject record) throws CisException {
         LocalDateTime startTime = LocalDateTime.now();
         logger.info("updated code: generateSctids() started at {}", startTime);
         List<Sctid> insertedRecords = new ArrayList<>();
@@ -1314,7 +1314,7 @@ public class BackendJobService {
 
     }
 
-    private String[] converttoArray(Set<String> sysIdInChunk) {
+    String[] converttoArray(Set<String> sysIdInChunk) {
         int n = sysIdInChunk.size();
         String arr[] = new String[n];
         int a = 0;
@@ -1326,7 +1326,7 @@ public class BackendJobService {
         return sysIdToCreate;
     }
 
-    private void updateJobId(List<String> existingSystemId, Integer jobId) {
+    void updateJobId(List<String> existingSystemId, Integer jobId) {
         try {
             sctidRepository.updateJobIdInSctid(jobId, existingSystemId);
         } catch (Exception e) {
@@ -1335,7 +1335,7 @@ public class BackendJobService {
     }
 
 // CIS-52
-    private int updateJobIdscheme(List<SchemeId> existingSystemId, String scheme, Integer jobId) {
+int updateJobIdscheme(List<SchemeId> existingSystemId, String scheme, Integer jobId) {
         List<String> systemIds = extractSystemIds(existingSystemId);
         int result = schemeIdRepository.update(systemIds, scheme, jobId);
         return result;
@@ -1349,7 +1349,7 @@ public class BackendJobService {
         return systemIds;
     }
 
-    private List<String> findExistingSystemId(Map<String, Object> obj1, String[] sysIdToCreate) {
+    List<String> findExistingSystemId(Map<String, Object> obj1, String[] sysIdToCreate) {
         List<String> sysIdList = new ArrayList<>();
         for (int i = 0; i < sysIdToCreate.length; i++) {
             sysIdList.add(sysIdToCreate[i]);
@@ -1369,7 +1369,7 @@ public class BackendJobService {
 
     }
 
-    private String generateSchemeIdSmallRequest(JSONObject record) {
+    String generateSchemeIdSmallRequest(JSONObject record) {
         var cont = 0;
         Map<String, Object> obj = new HashMap<String, Object>();
         obj.put("scheme", record.getString("scheme"));
