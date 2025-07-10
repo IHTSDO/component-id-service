@@ -48,10 +48,10 @@ public class NamespaceService {
     EntityManager entityManager;
 
     @Autowired
-    private PermissionsNamespaceRepository permissionsNamespaceRepository;
+    PermissionsNamespaceRepository permissionsNamespaceRepository;
 
     @Autowired
-    private PartitionsRepository partitionsRepository;
+    PartitionsRepository partitionsRepository;
 
 
     public List<NamespaceDto> getNamespaces() throws CisException {
@@ -121,7 +121,7 @@ public class NamespaceService {
         }
     }
 
-    private String createNamespaceList(NamespaceDto namespace) throws ParseException {
+    String createNamespaceList(NamespaceDto namespace) {
         logger.debug("NamespaceService.createNamespaceList() NamespaceDto-{} ", namespace);
         NamespaceDto output = new NamespaceDto();
         JSONObject response = new JSONObject();
@@ -185,7 +185,7 @@ public class NamespaceService {
         return response.toString();
     }
 
-    private boolean isAbleToEdit(Integer namespace, AuthenticateResponseDto authenticateResponseDto) {
+    boolean isAbleToEdit(Integer namespace, AuthenticateResponseDto authenticateResponseDto) {
         logger.debug("NamespaceService.isAbleToEdit() namespace-{} :: AuthenticateResponseDto-{} ", namespace, authenticateResponseDto.toString());
         List<String> groups = authenticateResponseDto.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
         boolean isAble = false;
@@ -233,7 +233,7 @@ public class NamespaceService {
         }
     }
 
-    private String editNamespace(Integer namespaceId, NamespaceDto namespaceObj) throws CisException {
+    String editNamespace(Integer namespaceId, NamespaceDto namespaceObj) throws CisException {
         logger.debug("NamespaceService.editNamespace() namespaceId-{} :: NamespaceDto-{} ", namespaceId, namespaceObj);
         NamespaceDto namespacesObj = new NamespaceDto();
         List<Partitions> partitionsList = null;
