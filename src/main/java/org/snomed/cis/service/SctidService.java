@@ -732,7 +732,7 @@ public class SctidService {
         return updatedrecord;
     }
 
-    private String getNextSchemeId(SchemeName schemeName, SctidGenerate request) {
+    public String getNextSchemeId(SchemeName schemeName, SctidGenerate request) {
         logger.debug("Request Received : schemeName-{} :: SctidGenerate - {} ", schemeName, request);
         Optional<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeName.toString());
         SchemeIdBase schemeIdBase = null;
