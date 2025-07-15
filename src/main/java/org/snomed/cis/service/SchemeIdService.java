@@ -572,7 +572,7 @@ public class SchemeIdService implements CisConstants {
         return updatedrecord;
     }
 
-    private String getNextSchemeId(SchemeName schemeName, SchemeIdReserveRequest request) {
+    public String getNextSchemeId(SchemeName schemeName, SchemeIdReserveRequest request) {
         logger.debug("Request Received : schemeName-{} :: SchemeIdReserveRequest - {} ", schemeName, request);
         Optional<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeName.toString());
        // SchemeIdBase schemeIdBase = null;
