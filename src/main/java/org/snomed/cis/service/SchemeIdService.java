@@ -31,7 +31,7 @@ public class SchemeIdService implements CisConstants {
     private SecurityController securityController;
 
     @Autowired
-    private BulkSchemeIdRepository bulkSchemeIdRepository;
+    BulkSchemeIdRepository bulkSchemeIdRepository;
 
     @Autowired
     AuthenticateToken authenticateToken;
@@ -103,7 +103,7 @@ public class SchemeIdService implements CisConstants {
         return this.getSchemeIdsList(limit, skip, schemeName, authToken);
     }
 
-    private List<SchemeId> getSchemeIdsList(String limit, String skip, SchemeName schemeName, AuthenticateResponseDto authToken) throws CisException {
+     List<SchemeId> getSchemeIdsList(String limit, String skip, SchemeName schemeName, AuthenticateResponseDto authToken) throws CisException {
         logger.debug("Request Received : limit - {} :: skip - {} :: schemeName-{} :: authToken - {} ", limit, skip, schemeName, authToken.toString());
         List<SchemeId> schemeidList = new ArrayList<>();
         if (this.isAbleUser("false", authToken)) {
@@ -207,7 +207,7 @@ public class SchemeIdService implements CisConstants {
         return insertSchemeIdRecord(schemeIdRecord);
     }
 
-    private Map<String, Object> getNewRecord(String schemeName, String schemeid) {
+    public Map<String, Object> getNewRecord(String schemeName, String schemeid) {
         logger.debug("Request Received : schemeName-{} :: schemeid - {} ", schemeName, schemeid);
         Map<String, Object> schemeIdRecord = new LinkedHashMap<>();
         schemeIdRecord.put("scheme", schemeName);
@@ -299,7 +299,7 @@ public class SchemeIdService implements CisConstants {
         return this.getSchemeIdsBysystemList(scheme.toString(), systemid, authToken);
     }
 
-    private SchemeId getSchemeIdsBysystemList(String scheme, String systemid, AuthenticateResponseDto authToken) throws CisException {
+    public SchemeId getSchemeIdsBysystemList(String scheme, String systemid, AuthenticateResponseDto authToken) throws CisException {
         logger.debug("Request Received : schemeName-{} ::systemid - {} :: authToken - {} ", scheme, systemid, authToken.toString());
         if (isAbleUser(scheme, authToken)) {
             List<SchemeId> schemeIdList = bulkSchemeIdRepository.findBySchemeAndSystemId(scheme, systemid);
@@ -324,7 +324,7 @@ public class SchemeIdService implements CisConstants {
         return this.deprecateSchemeIdList(schemeName, request, authToken);
     }
 
-    private SchemeId deprecateSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request, AuthenticateResponseDto authToken) throws CisException {
+    public SchemeId deprecateSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request, AuthenticateResponseDto authToken) throws CisException {
         logger.debug("Request Received : schemeName-{} ::SchemeIdUpdateRequestDto-{} :: authToken - {} ", schemeName, request, authToken.toString());
         SchemeId schemeId = new SchemeId();
         if (isAbleUser(schemeName.toString(), authToken)) {
@@ -366,7 +366,7 @@ public class SchemeIdService implements CisConstants {
         return this.releaseSchemeIdList(schemeName, request, authToken);
     }
 
-    private SchemeId releaseSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request, AuthenticateResponseDto authToken) throws CisException {
+    SchemeId releaseSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request, AuthenticateResponseDto authToken) throws CisException {
         logger.debug("Request Received : schemeName-{} ::SchemeIdUpdateRequestDto - {}:: authToken - {} ", schemeName, request, authToken.toString());
         SchemeId schemeId = new SchemeId();
         if (isAbleUser(schemeName.toString(), authToken)) {
@@ -413,7 +413,7 @@ public class SchemeIdService implements CisConstants {
 
     }
 
-    private SchemeId publishSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request, AuthenticateResponseDto authToken) throws CisException {
+    SchemeId publishSchemeIdList(SchemeName schemeName, SchemeIdUpdateRequestDto request, AuthenticateResponseDto authToken) throws CisException {
         logger.debug("Request Received : schemeName-{} :: SchemeIdUpdateRequestDto-{}:: authToken - {} ", schemeName, request, authToken.toString());
         SchemeId schemeId = new SchemeId();
         if (isAbleUser(schemeName.toString(), authToken)) {
@@ -477,7 +477,7 @@ public class SchemeIdService implements CisConstants {
     }
 
     //List
-    private SchemeId setNewSchemeIdRecord(SchemeName schemeName, SchemeIdReserveRequest request, String reserve) throws CisException {
+    SchemeId setNewSchemeIdRecord(SchemeName schemeName, SchemeIdReserveRequest request, String reserve) throws CisException {
         logger.debug("Request Received : schemeName-{} ::  SchemeIdReserveRequest -{} :: authToken - {} ", schemeName, request, reserve);
         SchemeId record = setAvailableSchemeIdRecord2NewStatus(schemeName, request, reserve);
         try {
@@ -873,7 +873,7 @@ public class SchemeIdService implements CisConstants {
         return schemeIdRec;
     }
 
-    private SchemeId registerNewSchemeId(SchemeName schemeName, SchemeIdRegisterRequest request) throws CisException {
+    SchemeId registerNewSchemeId(SchemeName schemeName, SchemeIdRegisterRequest request) throws CisException {
         logger.debug("Request Received : schemeName-{} :: request - {} ", schemeName, request);
         SchemeId schemeIdrecord = getSchemeIdsByschemeIdList(schemeName.schemeName, request.getSchemeId());
         SchemeId schemeId = new SchemeId();
