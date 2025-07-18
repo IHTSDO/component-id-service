@@ -665,7 +665,7 @@ public class BulkSctidService implements CisConstants {
         return output;
     }
 
-    private BulkJob bulkReserveSctids(SCTIDBulkReservationRequestDto sctidBulkReservationRequestDto, String username) throws CisException {
+    BulkJob bulkReserveSctids(SCTIDBulkReservationRequestDto sctidBulkReservationRequestDto, String username) throws CisException {
         logger.debug("BulkSctidService.bulkReserveSctids() sctidBulkReservationRequestDto - {} :: username-{} ", sctidBulkReservationRequestDto, username);
         SctidBulkReserve sctidBulkReserve = new SctidBulkReserve();
         sctidBulkReserve.setNamespace(sctidBulkReservationRequestDto.getNamespace());
