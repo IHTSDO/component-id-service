@@ -80,7 +80,7 @@ class RequestManagerTest {
 
     @Test
     void testRealGetRequest_toHttpBin_shouldSucceed() throws CisException {
-        ResponseEntity<String> response = requestManager.getRequest("https://httpbin.org/get", null);
+        ResponseEntity<String> response = requestManager.getRequest("https://postman-echo.com/get", null);
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
