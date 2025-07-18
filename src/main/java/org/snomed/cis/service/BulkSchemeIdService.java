@@ -109,7 +109,7 @@ public class BulkSchemeIdService implements CisConstants {
         return SchemeId;
     }
 
-    private SchemeId insertSchemeIdRecord(Map<String, Object> schemeIdRecord) throws CisException {
+    SchemeId insertSchemeIdRecord(Map<String, Object> schemeIdRecord) throws CisException {
         logger.debug("BulkSchemeIdService.insertSchemeIdRecord() schemeIdRecord - {}", schemeIdRecord);
         String error;
         SchemeId schemeIdBulk = null;
