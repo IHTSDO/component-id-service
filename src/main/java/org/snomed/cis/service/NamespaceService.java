@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
-import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -98,12 +97,12 @@ public class NamespaceService {
 
     }
 
-    public String createNamespace(AuthenticateResponseDto authenticateResponseDto, NamespaceDto namespace) throws CisException, ParseException {
+    public String createNamespace(AuthenticateResponseDto authenticateResponseDto, NamespaceDto namespace) throws CisException {
         logger.debug("NamespaceService.createNamespace() authenticateResponseDto-{} :: NamespaceDto-{} ", authenticateResponseDto.toString(), namespace);
         return this.createNamespaces(authenticateResponseDto, namespace);
     }
 
-    public String createNamespaces(AuthenticateResponseDto authenticateResponseDto, NamespaceDto namespace) throws CisException, ParseException {
+    public String createNamespaces(AuthenticateResponseDto authenticateResponseDto, NamespaceDto namespace) throws CisException {
         logger.debug("NamespaceService.createNamespaces() AuthenticateResponseDto-{} :: NamespaceDto-{} ", authenticateResponseDto.toString(), namespace);
         String namespaceString = namespace.getNamespace() + "";
         NamespaceDto output = new NamespaceDto();

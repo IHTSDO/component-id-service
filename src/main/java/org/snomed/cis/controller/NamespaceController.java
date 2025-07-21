@@ -15,7 +15,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Parameter;
 
-import java.text.ParseException;
 import java.util.List;
 
 @Tag(name = "Namespaces" , description = "Namespaces Controller")
@@ -42,7 +41,7 @@ public class NamespaceController {
 
     @Operation(summary = "createNamespace")
     @PostMapping("/sct/namespaces")
-    public ResponseEntity<String> createNamespace(@RequestParam String token, @RequestBody NamespaceDto namespace,@Parameter(hidden = true) Authentication authentication) throws CisException,ParseException {
+    public ResponseEntity<String> createNamespace(@RequestParam String token, @RequestBody NamespaceDto namespace,@Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
         logger.info("Request received for - NamespaceDto :: {} - authenticateResponseDto :: {}", namespace,authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(namespaceService.createNamespace(authToken.getAuthenticateResponseDto(),namespace));
