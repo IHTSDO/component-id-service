@@ -2,9 +2,12 @@ package org.snomed.cis.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.snomed.cis.dto.AuthenticateResponseDto;
 import org.snomed.cis.exception.CisException;
+import org.snomed.cis.security.Token;
 import org.snomed.cis.util.CrowdRequestManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -40,4 +43,25 @@ public class AuthorizationService {
         return crowdRequestManager.getGroups();
     }
 
+    private boolean isAdmin(AuthenticateResponseDto authenticateResponseDto) {
+        List<String> roles = authenticateResponseDto.getRoles();
+        if (roles == null || roles.isEmpty()) {
+            return false;
+        }
+        return roles.stream()
+                .anyMatch(role -> role.toLowerCase().contains("component-identifier-service-admin"));
+    }
+
+    public void validateAdmin(Token token) throws CisException {
+        if (!this.isAdmin(token.getAuthenticateResponseDto())) {
+            throw new CisException(HttpStatus.FORBIDDEN, "Access denied: Admin access required");
+        }
+    }
+
+    public void validateSelfOrAdmin(Token token, String username) throws CisException {
+        if (!this.isAdmin(token.getAuthenticateResponseDto())
+                && !username.equalsIgnoreCase(token.getUserName())) {
+            throw new CisException(HttpStatus.FORBIDDEN, "Access denied");
+        }
+    }
 }
