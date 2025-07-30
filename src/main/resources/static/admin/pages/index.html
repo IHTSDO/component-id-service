@@ -40,7 +40,15 @@
     var loadItems;
     var setupAdminPanel;
     function loadUsers(){
+        console.log("Current options object:", options);
         var users = [];
+
+        if (!options.adminUser) {
+        console.log("User is not an admin. Skipping all API calls.");
+        $('.panel-footer-custom').hide();
+        return;
+        }
+
         if (adminCall != null)
             adminCall.abort();
         adminCall = $.get("/api/groups/component-identifier-service-admin/users?token=" + options.token).done(function(res){
@@ -216,6 +224,10 @@
                                     $("#edit-button-" + typeSelected).show();
                                     $("#" + typeSelected + "-permissions-configure").find(".remove-permission").unbind();
                                     $("#" + typeSelected + "-permissions-configure").find(".remove-permission").disableTextSelect();
+                                    if (!options.adminUser && managerUser){
+                                        $("#addPermission-" + typeSelected).hide();
+                                        $("#" + typeSelected + "-permissions-configure").find(".remove-permission").hide();
+                                    }
                                     $("#" + typeSelected + "-permissions-configure").find(".remove-permission").click(function(e){
                                         var username = $(e.target).closest("li").attr("data-username"), auxArray = [];
                                         $("#item-" + typeSelected + "-details").find(".btn").addClass("disabled");
@@ -305,6 +317,7 @@
                                     });
                                 }else{
                                     $("#edit-button-" + typeSelected).remove();
+                                    $("#hide-user-permissions").hide();
                                     $("#" + typeSelected + "-permissions-configure").find(".btn").hide();
                                 }
                             });
@@ -1715,7 +1728,7 @@
                             </ul>
                             <!-- /.nav-second-level -->
                         </li>
-                        <li>
+                        <li class="panel-footer-custom">
                             <a id="bulk-requests" href="#" ><i class="fa fa-truck fa-fw"></i> Bulk requests</a>
                         </li>
                         <li>
@@ -1830,7 +1843,7 @@
                             </div>
                         </div>
                         <a href='javascript:setupAdminPanel();'>
-                            <div class="panel-footer">
+                            <div class="panel-footer panel-footer-custom">
                                 <span class="pull-left">View Details</span>
                                 <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
                                 <div class="clearfix"></div>

@@ -60,33 +60,66 @@ class AuthorizationControllerMockMvcTest {
         SecurityContextHolder.setContext(context);
     }
 
-    @WithMockUser(username = "admin", roles = {"USER"})
     @Test
     void testGetUsers_success_withSearchString() throws Exception {
         List<String> mockUsers = Arrays.asList("user1", "user2");
+        AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
+        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
 
-        when(authorizationService.getUsers("john")).thenReturn(mockUsers);
+        Mockito.doNothing().when(authorizationService).validateAdmin((Token) authToken);
+        Mockito.when(authorizationService.getUsers("john")).thenReturn(mockUsers);
 
-        mockMvc.perform(get("/users").param("token", "dummy-token").param("searchString", "john")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2)).andExpect(jsonPath("$[0]").value("user1")).andExpect(jsonPath("$[1]").value("user2"));
+        mockMvc.perform(get("/users")
+                        .param("token", "dummy-token")
+                        .param("searchString", "john")
+                        .with(authentication(authToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0]").value("user1"))
+                .andExpect(jsonPath("$[1]").value("user2"));
     }
 
 
-    @WithMockUser(username = "admin", roles = {"USER"})
+
     @Test
     void testGetUsers_success_withoutSearchString() throws Exception {
         List<String> mockUsers = Arrays.asList("admin", "manager");
 
-        when(authorizationService.getUsers(null)).thenReturn(mockUsers);
+        AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
+        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
 
-        mockMvc.perform(get("/users").param("token", "dummy-token")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2)).andExpect(jsonPath("$[0]").value("admin")).andExpect(jsonPath("$[1]").value("manager"));
+        Mockito.doNothing().when(authorizationService).validateAdmin((Token) authToken);
+        Mockito.when(authorizationService.getUsers(null)).thenReturn(mockUsers);
+
+        mockMvc.perform(get("/users")
+                        .param("token", "dummy-token")
+                        .with(authentication(authToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0]").value("admin"))
+                .andExpect(jsonPath("$[1]").value("manager"));
     }
 
-    @WithMockUser(username = "admin", roles = {"USER"})
+
     @Test
     void testGetUsers_exceptionThrown_shouldReturnError() throws Exception {
-        when(authorizationService.getUsers("invalid")).thenThrow(new CisException(HttpStatus.BAD_REQUEST, "Invalid Search"));
+        AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
+        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
 
-        mockMvc.perform(get("/users").param("token", "dummy-token").param("searchString", "invalid")).andExpect(status().isBadRequest());
+        Mockito.doNothing().when(authorizationService).validateAdmin((Token) authToken);
+        Mockito.when(authorizationService.getUsers("invalid"))
+                .thenThrow(new CisException(HttpStatus.BAD_REQUEST, "Invalid Search"));
+
+        mockMvc.perform(get("/users")
+                        .param("token", "dummy-token")
+                        .param("searchString", "invalid")
+                        .with(authentication(authToken)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.statusCode").value(400))
+                .andExpect(jsonPath("$.message").value("Invalid Search"));
     }
 
 
@@ -97,13 +130,23 @@ class AuthorizationControllerMockMvcTest {
     }
 
 
-    @WithMockUser(username = "admin", roles = {"USER"})
     @Test
     void testGetUserGroups_success() throws Exception {
         List<String> mockGroups = Arrays.asList("group1", "group2");
-        when(authorizationService.getUserGroups("john")).thenReturn(mockGroups);
+        AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
+        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_component-identifier-service-admin"));
+        Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
 
-        mockMvc.perform(get("/users/john/groups").param("token", "dummy-token")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2)).andExpect(jsonPath("$[0]").value("group1")).andExpect(jsonPath("$[1]").value("group2"));
+        Mockito.doNothing().when(authorizationService).validateAdmin((Token) authToken);
+        Mockito.when(authorizationService.getUserGroups("john")).thenReturn(mockGroups);
+
+        mockMvc.perform(get("/users/john/groups")
+                        .param("token", "dummy-token")
+                        .with(authentication(authToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0]").value("group1"))
+                .andExpect(jsonPath("$[1]").value("group2"));
     }
 
     @WithMockUser(username = "admin", roles = {"USER"})
@@ -122,29 +165,56 @@ class AuthorizationControllerMockMvcTest {
         mockMvc.perform(get("/users/invalidUser/groups").param("token", "dummy-token")).andExpect(status().isInternalServerError());
     }
 
-    @WithMockUser(username = "admin", roles = {"USER"})
     @Test
     void testGetUserGroups_emptyList_shouldReturnOk() throws Exception {
-        when(authorizationService.getUserGroups("john")).thenReturn(Collections.emptyList());
+        AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
+        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_component-identifier-service-admin"));
+        Token authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
 
-        mockMvc.perform(get("/users/john/groups").param("token", "dummy-token")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+        Mockito.doNothing().when(authorizationService).validateAdmin(authToken);
+        Mockito.when(authorizationService.getUserGroups("john")).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/users/john/groups")
+                        .param("token", "dummy-token")
+                        .with(authentication(authToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
-    @WithMockUser(username = "admin", roles = {"USER"})
+
     @Test
     void testAddMember_success() throws Exception {
+        AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
+        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_component-identifier-service-admin"));
+        Token authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
+
+        Mockito.doNothing().when(authorizationService).validateAdmin(authToken);
         Mockito.doNothing().when(authorizationService).addMember("john", "devGroup");
 
-        mockMvc.perform(post("/users/john/groups/devGroup").param("token", "dummy-token").with(csrf())).andExpect(status().isOk());
+        mockMvc.perform(post("/users/john/groups/devGroup")
+                        .param("token", "dummy-token")
+                        .with(csrf())
+                        .with(authentication(authToken)))
+                .andExpect(status().isOk());
     }
 
-    @WithMockUser(username = "admin", roles = {"USER"})
+
     @Test
     void testRemoveMember_success() throws Exception {
+        AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
+        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_component-identifier-service-admin"));
+        Token authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
+
+        Mockito.doNothing().when(authorizationService).validateAdmin(authToken);
         Mockito.doNothing().when(authorizationService).removeMember("john", "devGroup");
 
-        mockMvc.perform(delete("/users/john/groups/devGroup").param("token", "dummy-token").with(csrf())).andExpect(status().isOk());
+        mockMvc.perform(delete("/users/john/groups/devGroup")
+                        .param("token", "dummy-token")
+                        .with(csrf()) // required for DELETE
+                        .with(authentication(authToken)))
+                .andExpect(status().isOk());
     }
+
 
     @Test
     @WithMockUser(username = "admin", roles = {"USER"})
@@ -190,14 +260,26 @@ class AuthorizationControllerMockMvcTest {
         mockMvc.perform(delete("/users/john/groups/devGroup").param("token", "dummy-token")).andExpect(status().isForbidden());
     }
 
-    @WithMockUser(username = "admin", roles = {"USER"})
     @Test
     void testGetGroups_validToken_shouldReturnList() throws Exception {
         List<String> mockGroups = Arrays.asList("group1", "group2");
-        when(authorizationService.getGroups()).thenReturn(mockGroups);
 
-        mockMvc.perform(get("/groups").param("token", "dummy-token")).andExpect(status().isOk()).andExpect(jsonPath("$.size()").value(2)).andExpect(jsonPath("$[0]").value("group1")).andExpect(jsonPath("$[1]").value("group2"));
+        AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
+        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        Token authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
+
+        Mockito.doNothing().when(authorizationService).validateAdmin(authToken);
+        Mockito.when(authorizationService.getGroups()).thenReturn(mockGroups);
+
+        mockMvc.perform(get("/groups")
+                        .param("token", "dummy-token")
+                        .with(authentication(authToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()").value(2))
+                .andExpect(jsonPath("$[0]").value("group1"))
+                .andExpect(jsonPath("$[1]").value("group2"));
     }
+
 
     @WithMockUser(username = "admin", roles = {"USER"})
     @Test
@@ -206,12 +288,22 @@ class AuthorizationControllerMockMvcTest {
     }
 
 
-    @WithMockUser(username = "admin", roles = {"USER"})
     @Test
     void testGetGroups_serviceThrowsException_shouldReturn500() throws Exception {
-        when(authorizationService.getGroups()).thenThrow(new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong"));
+        AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
+        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_component-identifier-service-admin"));
+        Token authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
 
-        mockMvc.perform(get("/groups").param("token", "dummy-token")).andExpect(status().isInternalServerError()).andExpect(jsonPath("$.statusCode").value(500)).andExpect(jsonPath("$.message").value("Something went wrong"));
+        Mockito.doNothing().when(authorizationService).validateAdmin(authToken);
+        Mockito.when(authorizationService.getGroups())
+                .thenThrow(new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong"));
+
+        mockMvc.perform(get("/groups")
+                        .param("token", "dummy-token")
+                        .with(authentication(authToken)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.statusCode").value(500))
+                .andExpect(jsonPath("$.message").value("Something went wrong"));
     }
 
     @WithMockUser(username = "admin", roles = {"USER"})
@@ -220,23 +312,44 @@ class AuthorizationControllerMockMvcTest {
         mockMvc.perform(get("/groups/devGroup/users")).andExpect(status().isBadRequest()).andExpect(jsonPath("$.statusCode").value(400)).andExpect(jsonPath("$.message").value("Required request parameter 'token' for method parameter type String is not present"));
     }
 
-    @WithMockUser(username = "admin", roles = {"USER"})
     @Test
     void testGetGroupUsers_validToken_shouldReturnUsers() throws Exception {
         List<String> mockUsers = Arrays.asList("user1", "user2");
 
+        AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
+        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_component-identifier-service-admin"));
+        Token authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
+
+        Mockito.doNothing().when(authorizationService).validateAdmin(authToken);
         Mockito.when(authorizationService.getGroupUsers("devGroup")).thenReturn(mockUsers);
 
-        mockMvc.perform(get("/groups/devGroup/users").param("token", "dummy-token")).andExpect(status().isOk()).andExpect(jsonPath("$[0]").value("user1")).andExpect(jsonPath("$[1]").value("user2"));
+        mockMvc.perform(get("/groups/devGroup/users")
+                        .param("token", "dummy-token")
+                        .with(authentication(authToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0]").value("user1"))
+                .andExpect(jsonPath("$[1]").value("user2"));
     }
 
-    @WithMockUser(username = "admin", roles = {"USER"})
+
     @Test
     void testGetGroupUsers_invalidGroup_shouldThrowCisException() throws Exception {
-        Mockito.when(authorizationService.getGroupUsers("invalidGroup")).thenThrow(new CisException(HttpStatus.NOT_FOUND, "Group not found"));
+        AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
+        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_component-identifier-service-admin"));
+        Token authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
 
-        mockMvc.perform(get("/groups/invalidGroup/users").param("token", "dummy-token")).andExpect(status().isNotFound()).andExpect(jsonPath("$.statusCode").value(404)).andExpect(jsonPath("$.message").value("Group not found"));
+        Mockito.doNothing().when(authorizationService).validateAdmin(authToken);
+        Mockito.when(authorizationService.getGroupUsers("invalidGroup"))
+                .thenThrow(new CisException(HttpStatus.NOT_FOUND, "Group not found"));
+
+        mockMvc.perform(get("/groups/invalidGroup/users")
+                        .param("token", "dummy-token")
+                        .with(authentication(authToken)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.statusCode").value(404))
+                .andExpect(jsonPath("$.message").value("Group not found"));
     }
+
 
 
     @WithAnonymousUser
@@ -245,30 +358,67 @@ class AuthorizationControllerMockMvcTest {
         mockMvc.perform(get("/groups/devGroup/users").param("token", "dummy-token")).andExpect(status().isUnauthorized());
     }
 
-    @WithMockUser(username = "admin", roles = {"USER"})
     @Test
     void testGetGroupUsers_internalServerError_shouldReturn500() throws Exception {
-        Mockito.when(authorizationService.getGroupUsers("devGroup")).thenThrow(new RuntimeException("Something went wrong"));
+        AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
+        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        Token authToken = new TestToken("dummy-token", "admin", mockDto, authorities);
 
-        mockMvc.perform(get("/groups/devGroup/users").param("token", "dummy-token")).andExpect(status().isInternalServerError()).andExpect(jsonPath("$.statusCode").value(500)).andExpect(jsonPath("$.message").value("java.lang.RuntimeException: Something went wrong"));
+        Mockito.doNothing().when(authorizationService).validateAdmin(authToken);
+
+        Mockito.when(authorizationService.getGroupUsers("devGroup"))
+                .thenThrow(new RuntimeException("Something went wrong"));
+
+        mockMvc.perform(get("/groups/devGroup/users")
+                        .param("token", "dummy-token")
+                        .with(authentication(authToken)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.statusCode").value(500))
+                .andExpect(jsonPath("$.message").value("java.lang.RuntimeException: Something went wrong"));
     }
 
-    @WithMockUser(username = "admin", roles = {"USER"})
     @Test
     void testGetNamespacePermissions_validRequest_shouldReturnPermissions() throws Exception {
-        List<PermissionsNamespace> mockPermissions = Arrays.asList(new PermissionsNamespace(123456, "admin", "read"), new PermissionsNamespace(123456, "admin", "write"));
+        List<PermissionsNamespace> mockPermissions = Arrays.asList(
+                new PermissionsNamespace(123456, "admin", "read"),
+                new PermissionsNamespace(123456, "admin", "write")
+        );
 
-        Mockito.when(namespaceService.getNamespacePermissions("123456")).thenReturn(mockPermissions);
+        AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
+        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_component-identifier-service-admin"));
+        Token authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
 
-        mockMvc.perform(get("/sct/namespaces/123456/permissions").param("token", "dummy-token")).andExpect(status().isOk()).andExpect(jsonPath("$[0].role").value("read")).andExpect(jsonPath("$[0].namespace").value(123456)).andExpect(jsonPath("$[1].role").value("write")).andExpect(jsonPath("$[1].namespace").value(123456));
+        Mockito.doNothing().when(authorizationService).validateAdmin(authToken);
+        Mockito.when(namespaceService.isAbleToEdit(123456, mockDto)).thenReturn(true);
+        Mockito.when(namespaceService.getNamespacePermissions("123456"))
+                .thenReturn(mockPermissions);
+
+        mockMvc.perform(get("/sct/namespaces/123456/permissions")
+                        .param("token", "dummy-token")
+                        .with(authentication(authToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].role").value("read"))
+                .andExpect(jsonPath("$[0].namespace").value(123456))
+                .andExpect(jsonPath("$[1].role").value("write"))
+                .andExpect(jsonPath("$[1].namespace").value(123456));
     }
 
-    @WithMockUser(username = "admin", roles = {"USER"})
     @Test
     void testGetNamespacePermissions_invalidNamespace_shouldReturnNotFound() throws Exception {
-        Mockito.when(namespaceService.getNamespacePermissions("invalid")).thenThrow(new CisException(HttpStatus.NOT_FOUND, "Namespace not found"));
+        AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
+        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_component-identifier-service-admin"));
+        Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
 
-        mockMvc.perform(get("/sct/namespaces/invalid/permissions").param("token", "dummy-token")).andExpect(status().isNotFound()).andExpect(jsonPath("$.statusCode").value(404)).andExpect(jsonPath("$.message").value("Namespace not found"));
+        Mockito.when(namespaceService.isAbleToEdit(Mockito.anyInt(), Mockito.eq(mockDto))).thenReturn(true);
+        Mockito.when(namespaceService.getNamespacePermissions("000"))
+                .thenThrow(new CisException(HttpStatus.NOT_FOUND, "Namespace not found"));
+
+        mockMvc.perform(get("/sct/namespaces/000/permissions")
+                        .param("token", "dummy-token")
+                        .with(authentication(authToken)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.statusCode").value(404))
+                .andExpect(jsonPath("$.message").value("Namespace not found"));
     }
 
     @WithMockUser(username = "admin", roles = {"USER"})
@@ -283,13 +433,24 @@ class AuthorizationControllerMockMvcTest {
         mockMvc.perform(get("/sct/namespaces/123456/permissions").param("token", "dummy-token")).andExpect(status().isUnauthorized());
     }
 
-    @WithMockUser(username = "admin", roles = {"USER"})
     @Test
     void testGetNamespacePermissions_internalError_shouldReturn500() throws Exception {
-        Mockito.when(namespaceService.getNamespacePermissions("123456")).thenThrow(new RuntimeException("Something failed"));
+        AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
+        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_component-identifier-service-admin"));
+        Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
 
-        mockMvc.perform(get("/sct/namespaces/123456/permissions").param("token", "dummy-token")).andExpect(status().isInternalServerError()).andExpect(jsonPath("$.statusCode").value(500)).andExpect(jsonPath("$.message").value("java.lang.RuntimeException: Something failed"));
+        Mockito.when(namespaceService.isAbleToEdit(123456, mockDto)).thenReturn(true);
+        Mockito.when(namespaceService.getNamespacePermissions("123456"))
+                .thenThrow(new RuntimeException("Something failed"));
+
+        mockMvc.perform(get("/sct/namespaces/123456/permissions")
+                        .param("token", "dummy-token")
+                        .with(authentication(authToken)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.statusCode").value(500))
+                .andExpect(jsonPath("$.message").value("java.lang.RuntimeException: Something failed"));
     }
+
 
     @Test
     void testDeleteNamespacePermissions_valid_shouldReturnOk() throws Exception {

@@ -18,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Parameter;
 
+import java.util.Collections;
 import java.util.List;
 
 @Tag(name = "Authorization" , description = "Authorization Controller")
@@ -36,19 +37,23 @@ public class AuthorizationController {
 
     @Operation(summary = "getUsers")
     @GetMapping("/users")
-    public ResponseEntity<List<String>> getUsers(@RequestParam String token, @RequestParam(required = false) String searchString) throws CisException {
+    public ResponseEntity<List<String>> getUsers(@RequestParam String token, @RequestParam(required = false) String searchString, @Parameter(hidden = true) Authentication authentication) throws CisException {
+        authorizationService.validateAdmin((Token) authentication);
         return new ResponseEntity<>(authorizationService.getUsers(searchString), HttpStatus.OK);
     }
 
     @Operation(summary = "getUserGroups")
     @GetMapping("/users/{username}/groups")
     public ResponseEntity<List<String>> getUserGroups(@RequestParam String token, @Parameter(hidden = true) Authentication authentication, @PathVariable String username) throws CisException {
+
+        authorizationService.validateSelfOrAdmin((Token) authentication, username);
         return new ResponseEntity<>(authorizationService.getUserGroups(username), HttpStatus.OK);
     }
 
     @Operation(summary = "removeMember")
     @DeleteMapping("/users/{username}/groups/{groupName}")
     public ResponseEntity<Void> removeMember(@RequestParam String token, @PathVariable String username, @PathVariable String groupName, @Parameter(hidden = true) Authentication authentication) throws CisException {
+        authorizationService.validateAdmin((Token) authentication);
         authorizationService.removeMember(username, groupName);
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -56,25 +61,32 @@ public class AuthorizationController {
     @Operation(summary = "addMember")
     @PostMapping("/users/{username}/groups/{groupName}")
     public ResponseEntity<Void> addMember(@RequestParam String token, @PathVariable String username, @PathVariable String groupName, @Parameter(hidden = true) Authentication authentication) throws CisException {
+        authorizationService.validateAdmin((Token) authentication);
         authorizationService.addMember(username, groupName);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @Operation(summary = "getGroups")
     @GetMapping("/groups")
-    public ResponseEntity<List<String>> getGroups(@RequestParam String token) throws CisException {
+    public ResponseEntity<List<String>> getGroups(@RequestParam String token, @Parameter(hidden = true) Authentication authentication) throws CisException {
+        authorizationService.validateAdmin((Token) authentication);
         return new ResponseEntity<>(authorizationService.getGroups(), HttpStatus.OK);
     }
 
     @Operation(summary = "getGroupUsers")
     @GetMapping("/groups/{groupName}/users")
-    public ResponseEntity<List<String>> getGroupUsers(@RequestParam String token, @PathVariable String groupName) throws CisException {
+    public ResponseEntity<List<String>> getGroupUsers(@RequestParam String token, @PathVariable String groupName, @Parameter(hidden = true) Authentication authentication) throws CisException {
+        authorizationService.validateAdmin((Token) authentication);
         return new ResponseEntity<>(authorizationService.getGroupUsers(groupName), HttpStatus.OK);
     }
 
     @Operation(summary = "getNamespacePermissions")
     @GetMapping(value = "/sct/namespaces/{namespaceId}/permissions")
-    public ResponseEntity<List<PermissionsNamespace>> getNamespacePermissions(@RequestParam String token, @PathVariable String namespaceId) throws CisException {
+    public ResponseEntity<List<PermissionsNamespace>> getNamespacePermissions(@RequestParam String token, @PathVariable String namespaceId, @Parameter(hidden = true) Authentication authentication) throws CisException {
+        Token authToken = (Token) authentication;
+        if(!namespaceService.isAbleToEdit(Integer.valueOf(namespaceId), authToken.getAuthenticateResponseDto())){
+            return new ResponseEntity<>(Collections.emptyList(), HttpStatus.OK);
+        }
         return new ResponseEntity<>(namespaceService.getNamespacePermissions(namespaceId), HttpStatus.OK);
     }
 
