@@ -11,7 +11,7 @@
 
     <groupId>org.snomed</groupId>
     <artifactId>component-id-service</artifactId>
-    <version>3.4.0</version>
+    <version>3.5.0-SNAPSHOT</version>
     <name>cis</name>
     <description>Snomed Component Identifier Service</description>
 
