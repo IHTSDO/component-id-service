@@ -57,7 +57,7 @@ class NamespaceServiceTest {
         Namespace ns1 = new Namespace();
         ns1.setNamespace(200);
         ns1.setOrganizationName("Org B");
-        ns1.setOrganizationAndContactDetails("Contact B");
+
         ns1.setEmail("b@org.com");
         ns1.setNotes("Note B");
         ns1.setDateIssued(LocalDate.of(2020, 1, 1).atStartOfDay());
@@ -65,7 +65,6 @@ class NamespaceServiceTest {
         Namespace ns2 = new Namespace();
         ns2.setNamespace(100);
         ns2.setOrganizationName("Org A");
-        ns2.setOrganizationAndContactDetails("Contact A");
         ns2.setEmail("a@org.com");
         ns2.setNotes("Note A");
         ns2.setDateIssued(LocalDate.of(2021, 1, 1).atStartOfDay());
@@ -155,7 +154,6 @@ class NamespaceServiceTest {
         NamespaceDto namespaceDto = new NamespaceDto();
         namespaceDto.setNamespace(1234567);
         namespaceDto.setOrganizationName("Test Org");
-        namespaceDto.setOrganizationAndContactDetails("Test Details");
         namespaceDto.setDateIssued("10-07-2025 10:30:00 AM");
         namespaceDto.setEmail("test@org.com");
         namespaceDto.setNotes("Test Notes");
@@ -178,7 +176,6 @@ class NamespaceServiceTest {
         NamespaceDto namespaceDto = new NamespaceDto();
         namespaceDto.setNamespace(0);
         namespaceDto.setOrganizationName("Zero Org");
-        namespaceDto.setOrganizationAndContactDetails("Zero Details");
         namespaceDto.setDateIssued("10-07-2025 11:00:00 AM");
         namespaceDto.setEmail("zero@org.com");
         namespaceDto.setNotes("Zero Notes");
@@ -336,7 +333,6 @@ class NamespaceServiceTest {
         int namespaceId = 123;
         NamespaceDto dto = new NamespaceDto();
         dto.setOrganizationName("New Org");
-        dto.setOrganizationAndContactDetails("Details");
         dto.setDateIssued("10-7-2025 05:30:00 PM");
         dto.setEmail("email@example.com");
         dto.setNotes("notes");
@@ -480,7 +476,6 @@ class NamespaceServiceTest {
         Namespace mockNamespace = new Namespace();
         mockNamespace.setNamespace(1234567);
         mockNamespace.setOrganizationName("Org");
-        mockNamespace.setOrganizationAndContactDetails("Details");
         mockNamespace.setDateIssued(LocalDate.now().atStartOfDay());
         mockNamespace.setEmail("email@test.com");
         mockNamespace.setNotes("Note");

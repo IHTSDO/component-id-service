@@ -140,7 +140,7 @@
                     tableBody += "<tr>";
                     tableBody += "<td>" + loopNamespace.namespace + "</td>";
                     tableBody += "<td>" + linkifyStr(loopNamespace.organizationName) + "</td>";
-                    tableBody += "<td>" + linkifyStr(loopNamespace.email) + "</td>";
+<!--                    tableBody += "<td>" + linkifyStr(loopNamespace.email) + "</td>";-->
                     tableBody += "</tr>";
                 });
                 $("#namespaces-table-body").html(tableBody);
@@ -267,10 +267,10 @@
                                   id="result-field-component-type">
                                 </span>
                         </li>
-                        <li class="collection-item">
-                            Organization:<br>
-                            <span id="result-field-organization" style="font-weight: 300;"></span>
-                        </li>
+<!--                        <li class="collection-item">-->
+<!--                            Organization:<br>-->
+<!--                            <span id="result-field-organization" style="font-weight: 300;"></span>-->
+<!--                        </li>-->
                         <li class="collection-item">
                             SCTID
                             <span class="badge" id="result-field-sctid"></span>
@@ -291,10 +291,10 @@
                             Check-digit
                             <span class="badge" id="result-field-check-digit"></span>
                         </li>
-                        <li class="collection-item">
-                            Contact:<br>
-                            <span id="result-field-contact" style="font-weight: 300;"></span>
-                        </li>
+<!--                        <li class="collection-item">-->
+<!--                            Contact:<br>-->
+<!--                            <span id="result-field-contact" style="font-weight: 300;"></span>-->
+<!--                        </li>-->
                     </ul>
                 </div>
             </div>
@@ -312,7 +312,7 @@
                 <tr>
                     <th width="20%">Namespace</th>
                     <th width="40%">Organization</th>
-                    <th width="40%">Contact</th>
+<!--                    <th width="40%">Contact</th>-->
                 </tr>
                 </thead>
                 <tbody id="namespaces-table-body">
