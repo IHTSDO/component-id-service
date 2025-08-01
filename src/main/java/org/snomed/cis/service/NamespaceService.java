@@ -72,7 +72,6 @@ public class NamespaceService {
             NamespaceDto dto = new NamespaceDto();
             dto.setNamespace(namespace1.getNamespace());
             dto.setOrganizationName(namespace1.getOrganizationName());
-            dto.setOrganizationAndContactDetails(namespace1.getOrganizationAndContactDetails());
             dto.setEmail(namespace1.getEmail());
             dto.setNotes(namespace1.getNotes());
             dto.setDateIssued(String.valueOf(namespace1.getDateIssued()));
@@ -172,7 +171,6 @@ public class NamespaceService {
         Namespace toBeCreated = new Namespace();
         toBeCreated.setNamespace(namespace.getNamespace());
         toBeCreated.setOrganizationName(namespace.getOrganizationName());
-        toBeCreated.setOrganizationAndContactDetails(namespace.getOrganizationAndContactDetails());
         toBeCreated.setDateIssued(null != namespace.getDateIssued() ? LocalDateTime.parse(namespace.getDateIssued(), dateTimeFormatter) : null);
         toBeCreated.setEmail(namespace.getEmail());
         toBeCreated.setNotes(namespace.getNotes());
@@ -248,7 +246,6 @@ public class NamespaceService {
 
         if (null != namespaceGet) {
             namespaceGet.setOrganizationName(namespaceObj.getOrganizationName());
-            namespaceGet.setOrganizationAndContactDetails(namespaceObj.getOrganizationAndContactDetails());
             namespaceGet.setDateIssued(null != namespaceObj.getDateIssued() ? LocalDateTime.parse(namespaceObj.getDateIssued(), dateTimeFormatter) : null);
             namespaceGet.setEmail(namespaceObj.getEmail());
             namespaceGet.setNotes(namespaceObj.getNotes());
@@ -357,7 +354,6 @@ public class NamespaceService {
             // namespacesObj.setNamespace(namespaceGet);
             namespacesObj.setNamespace(namespaceGet.getNamespace());
             namespacesObj.setOrganizationName(namespaceGet.getOrganizationName());
-            namespacesObj.setOrganizationAndContactDetails(namespaceGet.getOrganizationAndContactDetails());
             namespacesObj.setDateIssued(null != namespaceGet.getDateIssued() ? namespaceGet.getDateIssued().toString() : null);
             namespacesObj.setEmail(namespaceGet.getEmail());
             namespacesObj.setNotes(namespaceGet.getNotes());

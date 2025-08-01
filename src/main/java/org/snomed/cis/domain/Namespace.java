@@ -22,9 +22,6 @@ public class Namespace {
     @Column(name = "organizationName", columnDefinition = "VARCHAR(255)")
     private String organizationName;
 
-    @Column(name = "organizationAndContactDetails", columnDefinition = "VARCHAR(2000)")
-    private String organizationAndContactDetails;
-
     @Column(name = "dateIssued", columnDefinition = "DATETIME")
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
     private LocalDateTime dateIssued;
@@ -38,11 +35,10 @@ public class Namespace {
     @Column(name = "idPregenerate", columnDefinition = "VARCHAR(1)")
     private String idPregenerate;
 
-    public Namespace(Integer namespace, String organizationName, String organizationAndContactDetails, LocalDateTime dateIssued, String email, String notes, String idPregenerate
+    public Namespace(Integer namespace, String organizationName, LocalDateTime dateIssued, String email, String notes, String idPregenerate
     ) {
         this.namespace = namespace;
         this.organizationName = organizationName;
-        this.organizationAndContactDetails = organizationAndContactDetails;
         this.dateIssued = dateIssued;
         this.email = email;
         this.notes = notes;
@@ -57,7 +53,6 @@ public class Namespace {
         return "{" +
                 "namespace=" + namespace +
                 ", organizationName='" + organizationName + '\'' +
-                ", organizationAndContactDetails='" + organizationAndContactDetails + '\'' +
                 ", dateIssued=" + dateIssued +
                 ", email='" + email + '\'' +
                 ", notes='" + notes + '\'' +

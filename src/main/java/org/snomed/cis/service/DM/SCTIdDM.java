@@ -173,7 +173,7 @@ public class SCTIdDM {
         return result;
     }
 
-    public Integer getNextNumber(SCTIDReserveRequest operation) throws CisException {
+    public Integer getNextNumber(SCTIDReserveRequest operation)  {
         Optional<Partitions> partitionsList = partitionsRepository.findById(new PartitionsPk(operation.getNamespace(), operation.getPartitionId()));
         Integer nextNumber = null;
         if (partitionsList.isPresent()) {
@@ -229,17 +229,16 @@ public class SCTIdDM {
         return result;
     }
 
-    public Integer getNextNumber(SctidGenerate operation) throws CisException {
+    public Integer getNextNumber(SctidGenerate operation) {
         Optional<Partitions> partitionsList = partitionsRepository.findById(new PartitionsPk(operation.getNamespace(), operation.getPartitionId()));
         if (partitionsList.isPresent()) {
             Integer nextNumber = ((partitionsList.get().getSequence()) + 1);
             Partitions partitions = new Partitions(operation.getNamespace(), operation.getPartitionId(), nextNumber);
-            Partitions partOutput = partitionsRepository.save(partitions);
-            if (null != partOutput)
-                return nextNumber;
-            else
-                return null;
-        } else {
+            partitionsRepository.save(partitions);
+
+            return nextNumber;
+        }
+          else {
             return null;
         }
     }

@@ -153,3 +153,8 @@ CREATE TABLE `pwi_deleted_ids` (
 ) DEFAULT CHARSET = `latin1`;
 
 DROP TABLE IF EXISTS `testtbl`;
+
+ALTER TABLE namespace DROP COLUMN IF EXISTS organizationAndContactDetails;
+
+
+

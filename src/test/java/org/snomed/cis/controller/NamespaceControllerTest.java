@@ -53,7 +53,6 @@ class NamespaceControllerTest {
         Namespace ns1 = new Namespace();
         ns1.setNamespace(100001);
         ns1.setOrganizationName("Org A");
-        ns1.setOrganizationAndContactDetails("Contact A");
         ns1.setDateIssued(LocalDateTime.of(2024, 1, 1, 0, 0));
         ns1.setEmail("orga@example.com");
         ns1.setNotes("note1");
@@ -62,7 +61,6 @@ class NamespaceControllerTest {
         Namespace ns2 = new Namespace();
         ns2.setNamespace(100002);
         ns2.setOrganizationName("Org B");
-        ns2.setOrganizationAndContactDetails("Contact B");
         ns2.setDateIssued(LocalDateTime.of(2024, 1, 2, 0, 0));
         ns2.setEmail("orgb@example.com");
         ns2.setNotes("note2");
@@ -196,7 +194,6 @@ class NamespaceControllerTest {
         NamespaceDto nsDto = new NamespaceDto();
         nsDto.setNamespace(Integer.valueOf(namespaceId));
         nsDto.setOrganizationName("Org A");
-        nsDto.setOrganizationAndContactDetails("Contact A");
         nsDto.setDateIssued(String.valueOf(LocalDateTime.of(2024, 1, 1, 0, 0)));
         nsDto.setNotes("note1");
         nsDto.setIdPregenerate("Y");
@@ -270,7 +267,6 @@ class NamespaceControllerTest {
         NamespaceDto requestDto = new NamespaceDto();
         requestDto.setNamespace(12345);
         requestDto.setOrganizationName("OrgName Example");
-        requestDto.setOrganizationAndContactDetails("Contact details example");
         requestDto.setDateIssued(String.valueOf(LocalDate.of(2024, 1, 1)));
         requestDto.setNotes("Sample notes");
         requestDto.setIdPregenerate("Y");
@@ -285,7 +281,6 @@ class NamespaceControllerTest {
         NamespaceDto namespaceDto = new NamespaceDto();
         namespaceDto.setNamespace(12345);
         namespaceDto.setOrganizationName("OrgName Example");
-        namespaceDto.setOrganizationAndContactDetails("Contact details example");
         namespaceDto.setDateIssued(String.valueOf(LocalDate.parse("2024-01-01")));
         namespaceDto.setEmail("org@example.com");
         namespaceDto.setNotes("Sample notes");

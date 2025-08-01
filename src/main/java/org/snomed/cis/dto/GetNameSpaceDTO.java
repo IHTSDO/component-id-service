@@ -4,28 +4,14 @@ import org.snomed.cis.domain.Partitions;
 
 import java.util.List;
 
-public class NamespaceDto {
-
+public class GetNameSpaceDTO {
     private Integer namespace;
     private String organizationName;
     private String dateIssued;
-    private String email;
+
     private String notes;
     private String idPregenerate ;
     private List<Partitions> partitions;
-
-    public NamespaceDto() {
-    }
-
-    public NamespaceDto(Integer namespace, String organizationName, String dateIssued, String email, String notes, String idPregenerate, List<Partitions> partitions) {
-        this.namespace = namespace;
-        this.organizationName = organizationName;
-        this.dateIssued = dateIssued;
-        this.email = email;
-        this.notes = notes;
-        this.idPregenerate = idPregenerate;
-        this.partitions = partitions;
-    }
 
     public Integer getNamespace() {
         return namespace;
@@ -43,6 +29,7 @@ public class NamespaceDto {
         this.organizationName = organizationName;
     }
 
+
     public String getDateIssued() {
         return dateIssued;
     }
@@ -51,13 +38,6 @@ public class NamespaceDto {
         this.dateIssued = dateIssued;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
 
     public String getNotes() {
         return notes;
@@ -83,16 +63,5 @@ public class NamespaceDto {
         this.partitions = partitions;
     }
 
-    @Override
-    public String toString() {
-        return "{" +
-                "namespace=" + namespace +
-                ", organizationName='" + organizationName + '\'' +
-                ", dateIssued='" + dateIssued + '\'' +
-                ", email='" + email + '\'' +
-                ", notes='" + notes + '\'' +
-                ", idPregenerate='" + idPregenerate + '\'' +
-                ", partitions size=" + (null==partitions?"0": partitions.size()) +
-                '}';
-    }
+
 }
