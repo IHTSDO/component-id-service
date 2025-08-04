@@ -40,11 +40,9 @@
     var loadItems;
     var setupAdminPanel;
     function loadUsers(){
-        console.log("Current options object:", options);
         var users = [];
 
         if (!options.adminUser) {
-        console.log("User is not an admin. Skipping all API calls.");
         $('.panel-footer-custom').hide();
         return;
         }

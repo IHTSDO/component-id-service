@@ -9,8 +9,8 @@ import org.snomed.cis.domain.BulkJob;
 import org.snomed.cis.dto.CleanUpServiceResponse;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.security.Token;
+import org.snomed.cis.service.AuthorizationService;
 import org.snomed.cis.service.BulkJobService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -22,9 +22,15 @@ import java.util.List;
 public class BulkJobsController {
 
     private final Logger logger = LoggerFactory.getLogger(BulkJobsController.class);
+    private final BulkJobService bulkJobService;
+    private final AuthorizationService authorizationService;
 
-    @Autowired
-    BulkJobService bulkJobService;
+
+    public BulkJobsController(BulkJobService bulkJobService,
+                              AuthorizationService authorizationService) {
+        this.bulkJobService = bulkJobService;
+        this.authorizationService = authorizationService;
+    }
 
     @Operation(
             summary="Bulk Job Service",
@@ -38,22 +44,25 @@ public class BulkJobsController {
            // @ApiResponse(code = 404, message = "Branch not found", response = RestApiError.class)
     })
     @GetMapping("/bulk/jobs")
-    public ResponseEntity<List<BulkJob>> getJobs(@RequestParam String token) throws CisException {
+    public ResponseEntity<List<BulkJob>> getJobs(@RequestParam String token, @Parameter(hidden = true) Authentication authentication) throws CisException {
         logger.info("Request received - getJobs");
+        authorizationService.validateAdmin((Token) authentication);
         return ResponseEntity.ok(bulkJobService.getJobs());
     }
 
     @Operation(summary = "getJob")
     @GetMapping("/bulk/jobs/{jobId}")
-    public ResponseEntity<BulkJob> getJob(@RequestParam String token, @PathVariable Integer jobId) throws CisException {
+    public ResponseEntity<BulkJob> getJob(@RequestParam String token, @PathVariable Integer jobId, @Parameter(hidden = true) Authentication authentication) throws CisException {
         logger.info("Request received - jobId :: {}", jobId);
+        authorizationService.validateAdmin((Token) authentication);
         return ResponseEntity.ok(bulkJobService.getJob(jobId));
     }
 
     @Operation(summary = "getJobRecords")
     @GetMapping("/bulk/jobs/{jobId}/records")
-    public ResponseEntity<List<Object>> getJobRecords(@RequestParam String token, @PathVariable Integer jobId) {
+    public ResponseEntity<List<Object>> getJobRecords(@RequestParam String token, @PathVariable Integer jobId, @Parameter(hidden = true) Authentication authentication) throws CisException {
         logger.info("Request received for - jobId :: {}", jobId);
+        authorizationService.validateAdmin((Token) authentication);
         return ResponseEntity.ok(bulkJobService.getJobRecords(jobId));
     }
 
