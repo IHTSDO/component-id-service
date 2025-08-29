@@ -87,7 +87,12 @@ class NamespaceControllerTest {
 
         when(namespaceService.getNamespacesForUser(String.valueOf(username))).thenReturn(List.of());
 
-        mockMvc.perform(get("/users/{username}/namespaces/", username).param("token", token).accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+        mockMvc.perform(get("/users/{username}/namespaces/", username)
+                        .param("token", token)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("No namespaces found"));
+
     }
 
     @WithMockUser(roles = {"USER"})
@@ -117,7 +122,11 @@ class NamespaceControllerTest {
 
         when(namespaceService.getNamespacesForUser(invalidUsername)).thenReturn(List.of());
 
-        mockMvc.perform(get("/users/{username}/namespaces/", invalidUsername).param("token", token).accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+        mockMvc.perform(get("/users/{username}/namespaces/", invalidUsername)
+                        .param("token", token)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("No namespaces found"));
     }
 
     @Test
@@ -126,7 +135,12 @@ class NamespaceControllerTest {
 
         when(namespaceService.getNamespaces()).thenReturn(List.of());
 
-        mockMvc.perform(get("/sct/namespaces").param("token", token).with(user("testuser").roles("USER")).accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
+        mockMvc.perform(get("/sct/namespaces")
+                        .param("token", token)
+                        .with(user("testuser").roles("USER"))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("No namespaces found"));
     }
 
     @WithMockUser(roles = {"USER"})
@@ -144,7 +158,10 @@ class NamespaceControllerTest {
     void testGetNamespaces_noToken_shouldReturnList() throws Exception {
         when(namespaceService.getNamespaces()).thenReturn(List.of());
 
-        mockMvc.perform(get("/sct/namespaces").accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
+        mockMvc.perform(get("/sct/namespaces")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("No namespaces found"));
     }
 
     @WithMockUser(roles = {"USER"})
@@ -152,7 +169,9 @@ class NamespaceControllerTest {
     void testGetNamespaces_emptyList_shouldReturnEmptyJsonArray() throws Exception {
         when(namespaceService.getNamespaces()).thenReturn(List.of());
 
-        mockMvc.perform(get("/sct/namespaces").accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+        mockMvc.perform(get("/sct/namespaces").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("No namespaces found"));
     }
 
     @WithMockUser(roles = {"USER"})
@@ -181,7 +200,11 @@ class NamespaceControllerTest {
     void testGetNamespaces_withInvalidTokenParam_shouldReturnOk() throws Exception {
         when(namespaceService.getNamespaces()).thenReturn(List.of());
 
-        mockMvc.perform(get("/sct/namespaces").param("token", "invalid-token").accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
+        mockMvc.perform(get("/sct/namespaces")
+                        .param("token", "invalid-token")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("No namespaces found"));
     }
 
     @WithMockUser(roles = {"USER"})

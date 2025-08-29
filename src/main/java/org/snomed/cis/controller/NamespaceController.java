@@ -13,6 +13,7 @@ import org.snomed.cis.exception.CisException;
 import org.snomed.cis.security.Token;
 import org.snomed.cis.service.NamespaceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +23,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import java.util.Collections;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Tag(name = "Namespaces" , description = "Namespaces Controller")
@@ -31,6 +33,7 @@ public class NamespaceController {
     @Autowired
     public NamespaceService namespaceService;
 
+    private static final String NO_NAMESPACES_FOUND_MESSAGE = "No namespaces found";
 
     @Operation(summary = "getNamespacesForUser")
     @GetMapping("/users/{username}/namespaces/")
@@ -38,6 +41,9 @@ public class NamespaceController {
         logger.info("Request received for - username :: {}", username);
 
         List<Namespace> namespaces = namespaceService.getNamespacesForUser(username);
+        if (namespaces == null || namespaces.isEmpty()) {
+            throw new CisException( HttpStatus.NOT_FOUND,NO_NAMESPACES_FOUND_MESSAGE);
+        }
 
         List<NameSpaceResponseDTO> response = namespaces.stream()
                 .map(ns -> {
@@ -60,10 +66,19 @@ public class NamespaceController {
         logger.info("Request received for - No ReqParam");
 
         List<NamespaceDto> originalList = namespaceService.getNamespaces();
+        if (originalList == null || originalList.isEmpty()) {
+            throw new CisException(HttpStatus.NOT_FOUND,NO_NAMESPACES_FOUND_MESSAGE);
+        }
 
         List<GetNameSpaceDTO> response = originalList.stream()
                 .map(this::mapToGetNamespaceDTO)
+                .filter(Objects::nonNull)
                 .toList();
+
+        if (response.isEmpty()) {
+            throw new CisException( HttpStatus.NOT_FOUND,NO_NAMESPACES_FOUND_MESSAGE);
+        }
+
 
         return ResponseEntity.ok(response);
     }
@@ -74,12 +89,18 @@ public class NamespaceController {
         logger.info("Request received for - namespaceId :: {}", namespaceId);
 
         NamespaceDto ns = namespaceService.getNamespace(namespaceId);
+        if (ns == null) {
+            throw new CisException(HttpStatus.NOT_FOUND,"Namespace with id " + namespaceId + " not found");
+        }
         GetNameSpaceDTO dto = mapToGetNamespaceDTO(ns);
 
         return ResponseEntity.ok(dto);
     }
 
     private GetNameSpaceDTO mapToGetNamespaceDTO(NamespaceDto ns) {
+        if (ns == null) {
+            return null;
+        }
         GetNameSpaceDTO dto = new GetNameSpaceDTO();
         dto.setNamespace(ns.getNamespace());
         dto.setOrganizationName(ns.getOrganizationName());
