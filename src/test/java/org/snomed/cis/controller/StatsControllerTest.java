@@ -42,7 +42,8 @@ class StatsControllerTest {
         String tokenParam = "dummyToken";
 
         Mockito.when(token.getAuthenticateResponseDto()).thenReturn(authenticateResponseDto);
-        Mockito.when(statsService.getStats(username, authenticateResponseDto)).thenReturn(mockResponse);
+        Mockito.when(statsService.getStats(Mockito.anyString(), Mockito.eq(username), Mockito.eq(authenticateResponseDto)))
+                .thenReturn(mockResponse);
 
         ResponseEntity<GetStatsResponseDto> response = statsController.getStats(tokenParam, username, token);
 
@@ -56,7 +57,9 @@ class StatsControllerTest {
         String tokenParam = "dummyToken";
 
         Mockito.when(token.getAuthenticateResponseDto()).thenReturn(authenticateResponseDto);
-        Mockito.when(statsService.getStats(username, authenticateResponseDto)).thenThrow(new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "Service Error"));
+        Mockito.when(statsService.getStats(Mockito.anyString(), Mockito.eq(username), Mockito.eq(authenticateResponseDto)))
+                .thenThrow(new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "Service Error"));
+
 
 
         CisException exception = assertThrows(CisException.class, () -> statsController.getStats(tokenParam, username, token));
@@ -71,7 +74,8 @@ class StatsControllerTest {
         String tokenParam = "dummyToken";
 
         Mockito.when(token.getAuthenticateResponseDto()).thenReturn(null);
-        Mockito.when(statsService.getStats(username, null)).thenThrow(new NullPointerException("Null Auth Response"));
+        Mockito.when(statsService.getStats(Mockito.anyString(), Mockito.anyString(), Mockito.isNull()))
+                .thenThrow(new NullPointerException("Null Auth Response"));
 
         assertThrows(NullPointerException.class, () -> statsController.getStats(tokenParam, username, token));
     }

@@ -15,6 +15,7 @@ import org.snomed.cis.repository.NamespaceRepository;
 import org.snomed.cis.repository.PartitionsRepository;
 import org.snomed.cis.repository.PermissionsNamespaceRepository;
 import org.snomed.cis.util.CrowdRequestManager;
+import org.snomed.cis.util.ImsRequestManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -42,6 +43,13 @@ public class NamespaceService {
 
     @Autowired
     private CrowdRequestManager crowdRequestManager;
+
+    public NamespaceService(ImsRequestManager imsRequestManager) {
+        this.imsRequestManager = imsRequestManager;
+    }
+
+
+    private ImsRequestManager imsRequestManager;
 
     @PersistenceContext
     EntityManager entityManager;
@@ -263,12 +271,12 @@ public class NamespaceService {
     }
 
 
-    public List<Namespace> getNamespacesForUser(String userName) throws CisException {
+    public List<Namespace> getNamespacesForUser(String token,String userName) throws CisException {
         logger.debug("NamespaceService.getNamespacesForUser() userName-{} ", userName);
-        return this.getNamespacesListForUser(userName);
+        return this.getNamespacesListForUser(token,userName);
     }
 
-    public List<Namespace> getNamespacesListForUser(String userName) throws CisException {
+    public List<Namespace> getNamespacesListForUser(String token,String userName) throws CisException {
         logger.debug("BulkSctidService.getNamespacesListForUser() userName-{}  ", userName);
         List<String> roleAsGroups;
         List<Namespace> namespaceList;
@@ -276,7 +284,7 @@ public class NamespaceService {
         List<String> namespaces = new ArrayList<>();
         List<String> otherGroup = new ArrayList<>();
 
-        List<String> groups = crowdRequestManager.getUserGroups(userName);
+        List<String> groups = imsRequestManager.getUserGroups(token,userName);
 
         if (groups != null && !groups.isEmpty()) {
             for (String group : groups) {

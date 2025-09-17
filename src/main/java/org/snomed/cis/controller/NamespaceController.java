@@ -40,7 +40,7 @@ public class NamespaceController {
     public ResponseEntity<List<NameSpaceResponseDTO>> getNamespacesForUser(@RequestParam String token, @PathVariable String username) throws CisException {
         logger.info("Request received for - username :: {}", username);
 
-        List<Namespace> namespaces = namespaceService.getNamespacesForUser(username);
+        List<Namespace> namespaces = namespaceService.getNamespacesForUser(token,username);
         if (namespaces == null || namespaces.isEmpty()) {
             throw new CisException( HttpStatus.NOT_FOUND,NO_NAMESPACES_FOUND_MESSAGE);
         }

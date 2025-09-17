@@ -39,7 +39,7 @@ public class AuthorizationController {
     @GetMapping("/users")
     public ResponseEntity<List<String>> getUsers(@RequestParam String token, @RequestParam(required = false) String searchString, @Parameter(hidden = true) Authentication authentication) throws CisException {
         authorizationService.validateAdmin((Token) authentication);
-        return new ResponseEntity<>(authorizationService.getUsers(searchString), HttpStatus.OK);
+        return new ResponseEntity<>(authorizationService.getUsers(token,searchString), HttpStatus.OK);
     }
 
     @Operation(summary = "getUserGroups")
@@ -47,14 +47,14 @@ public class AuthorizationController {
     public ResponseEntity<List<String>> getUserGroups(@RequestParam String token, @Parameter(hidden = true) Authentication authentication, @PathVariable String username) throws CisException {
 
         authorizationService.validateSelfOrAdmin((Token) authentication, username);
-        return new ResponseEntity<>(authorizationService.getUserGroups(username), HttpStatus.OK);
+        return new ResponseEntity<>(authorizationService.getUserGroups(token,username), HttpStatus.OK);
     }
 
     @Operation(summary = "removeMember")
     @DeleteMapping("/users/{username}/groups/{groupName}")
     public ResponseEntity<Void> removeMember(@RequestParam String token, @PathVariable String username, @PathVariable String groupName, @Parameter(hidden = true) Authentication authentication) throws CisException {
         authorizationService.validateAdmin((Token) authentication);
-        authorizationService.removeMember(username, groupName);
+        authorizationService.removeMember(token, username, groupName);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -62,7 +62,7 @@ public class AuthorizationController {
     @PostMapping("/users/{username}/groups/{groupName}")
     public ResponseEntity<Void> addMember(@RequestParam String token, @PathVariable String username, @PathVariable String groupName, @Parameter(hidden = true) Authentication authentication) throws CisException {
         authorizationService.validateAdmin((Token) authentication);
-        authorizationService.addMember(username, groupName);
+        authorizationService.addMember(token,username, groupName);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -70,14 +70,14 @@ public class AuthorizationController {
     @GetMapping("/groups")
     public ResponseEntity<List<String>> getGroups(@RequestParam String token, @Parameter(hidden = true) Authentication authentication) throws CisException {
         authorizationService.validateAdmin((Token) authentication);
-        return new ResponseEntity<>(authorizationService.getGroups(), HttpStatus.OK);
+        return new ResponseEntity<>(authorizationService.getGroups(token), HttpStatus.OK);
     }
 
     @Operation(summary = "getGroupUsers")
     @GetMapping("/groups/{groupName}/users")
     public ResponseEntity<List<String>> getGroupUsers(@RequestParam String token, @PathVariable String groupName, @Parameter(hidden = true) Authentication authentication) throws CisException {
         authorizationService.validateAdmin((Token) authentication);
-        return new ResponseEntity<>(authorizationService.getGroupUsers(groupName), HttpStatus.OK);
+        return new ResponseEntity<>(authorizationService.getGroupUsers(token,groupName), HttpStatus.OK);
     }
 
     @Operation(summary = "getNamespacePermissions")

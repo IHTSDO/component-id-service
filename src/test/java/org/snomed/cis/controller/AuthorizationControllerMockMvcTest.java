@@ -68,7 +68,7 @@ class AuthorizationControllerMockMvcTest {
         Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
 
         Mockito.doNothing().when(authorizationService).validateAdmin((Token) authToken);
-        Mockito.when(authorizationService.getUsers("john")).thenReturn(mockUsers);
+        Mockito.when(authorizationService.getUsers("dummy-token","john")).thenReturn(mockUsers);
 
         mockMvc.perform(get("/users")
                         .param("token", "dummy-token")
@@ -91,7 +91,7 @@ class AuthorizationControllerMockMvcTest {
         Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
 
         Mockito.doNothing().when(authorizationService).validateAdmin((Token) authToken);
-        Mockito.when(authorizationService.getUsers(null)).thenReturn(mockUsers);
+        Mockito.when(authorizationService.getUsers(Mockito.anyString(), Mockito.any())).thenReturn(mockUsers);
 
         mockMvc.perform(get("/users")
                         .param("token", "dummy-token")
@@ -110,7 +110,7 @@ class AuthorizationControllerMockMvcTest {
         Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
 
         Mockito.doNothing().when(authorizationService).validateAdmin((Token) authToken);
-        Mockito.when(authorizationService.getUsers("invalid"))
+        Mockito.when(authorizationService.getUsers(Mockito.anyString(), Mockito.anyString()))
                 .thenThrow(new CisException(HttpStatus.BAD_REQUEST, "Invalid Search"));
 
         mockMvc.perform(get("/users")
@@ -138,7 +138,7 @@ class AuthorizationControllerMockMvcTest {
         Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
 
         Mockito.doNothing().when(authorizationService).validateAdmin((Token) authToken);
-        Mockito.when(authorizationService.getUserGroups("john")).thenReturn(mockGroups);
+        Mockito.when(authorizationService.getUserGroups("dummy-token","john")).thenReturn(mockGroups);
 
         mockMvc.perform(get("/users/john/groups")
                         .param("token", "dummy-token")
@@ -160,7 +160,7 @@ class AuthorizationControllerMockMvcTest {
     void testGetUserGroups_userNotFound_shouldReturnInternalServerError() throws Exception {
         CisException exception = new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "User not found");
 
-        when(authorizationService.getUserGroups("invalidUser")).thenThrow(exception);
+        when(authorizationService.getUserGroups("dummy-token","user")).thenThrow(exception);
 
         mockMvc.perform(get("/users/invalidUser/groups").param("token", "dummy-token")).andExpect(status().isInternalServerError());
     }
@@ -172,7 +172,7 @@ class AuthorizationControllerMockMvcTest {
         Token authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
 
         Mockito.doNothing().when(authorizationService).validateAdmin(authToken);
-        Mockito.when(authorizationService.getUserGroups("john")).thenReturn(Collections.emptyList());
+        Mockito.when(authorizationService.getUserGroups("dummy-token","john")).thenReturn(Collections.emptyList());
 
         mockMvc.perform(get("/users/john/groups")
                         .param("token", "dummy-token")
@@ -189,7 +189,7 @@ class AuthorizationControllerMockMvcTest {
         Token authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
 
         Mockito.doNothing().when(authorizationService).validateAdmin(authToken);
-        Mockito.doNothing().when(authorizationService).addMember("john", "devGroup");
+        Mockito.doNothing().when(authorizationService).addMember("dummy-token","john", "devGroup");
 
         mockMvc.perform(post("/users/john/groups/devGroup")
                         .param("token", "dummy-token")
@@ -206,7 +206,7 @@ class AuthorizationControllerMockMvcTest {
         Token authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
 
         Mockito.doNothing().when(authorizationService).validateAdmin(authToken);
-        Mockito.doNothing().when(authorizationService).removeMember("john", "devGroup");
+        Mockito.doNothing().when(authorizationService).removeMember("dummy-token","john", "devGroup");
 
         mockMvc.perform(delete("/users/john/groups/devGroup")
                         .param("token", "dummy-token")
@@ -219,7 +219,7 @@ class AuthorizationControllerMockMvcTest {
     @Test
     @WithMockUser(username = "admin", roles = {"USER"})
     void testAddMember_userNotFound_shouldReturnInternalServerError() throws Exception {
-        Mockito.doThrow(new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "User not found")).when(authorizationService).addMember("invalidUser", "devGroup");
+        Mockito.doThrow(new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "User not found")).when(authorizationService).addMember("dummy-token","invalidUser", "devGroup");
 
         mockMvc.perform(post("/users/invalidUser/groups/devGroup").param("token", "dummy-token").with(csrf())).andExpect(status().isInternalServerError());
     }
@@ -228,7 +228,7 @@ class AuthorizationControllerMockMvcTest {
     @WithMockUser(username = "admin", roles = {"USER"})
     @Test
     void testRemoveMember_groupNotFound_shouldReturnInternalServerError() throws Exception {
-        Mockito.doThrow(new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "Group not found")).when(authorizationService).removeMember("john", "invalidGroup");
+        Mockito.doThrow(new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "Group not found")).when(authorizationService).removeMember("dummy-token","john", "invalidGroup");
 
         mockMvc.perform(delete("/users/john/groups/invalidGroup").param("token", "dummy-token").with(csrf())).andExpect(status().isInternalServerError());
     }
@@ -269,7 +269,7 @@ class AuthorizationControllerMockMvcTest {
         Token authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
 
         Mockito.doNothing().when(authorizationService).validateAdmin(authToken);
-        Mockito.when(authorizationService.getGroups()).thenReturn(mockGroups);
+        Mockito.when(authorizationService.getGroups("dummy-token")).thenReturn(mockGroups);
 
         mockMvc.perform(get("/groups")
                         .param("token", "dummy-token")
@@ -295,7 +295,7 @@ class AuthorizationControllerMockMvcTest {
         Token authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
 
         Mockito.doNothing().when(authorizationService).validateAdmin(authToken);
-        Mockito.when(authorizationService.getGroups())
+        Mockito.when(authorizationService.getGroups("dummy-token"))
                 .thenThrow(new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong"));
 
         mockMvc.perform(get("/groups")
@@ -321,7 +321,7 @@ class AuthorizationControllerMockMvcTest {
         Token authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
 
         Mockito.doNothing().when(authorizationService).validateAdmin(authToken);
-        Mockito.when(authorizationService.getGroupUsers("devGroup")).thenReturn(mockUsers);
+        Mockito.when(authorizationService.getGroupUsers("dummy-token","devGroup")).thenReturn(mockUsers);
 
         mockMvc.perform(get("/groups/devGroup/users")
                         .param("token", "dummy-token")
@@ -339,7 +339,7 @@ class AuthorizationControllerMockMvcTest {
         Token authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, authorities);
 
         Mockito.doNothing().when(authorizationService).validateAdmin(authToken);
-        Mockito.when(authorizationService.getGroupUsers("invalidGroup"))
+        Mockito.when(authorizationService.getGroupUsers("dummy-token", "invalidGroup"))
                 .thenThrow(new CisException(HttpStatus.NOT_FOUND, "Group not found"));
 
         mockMvc.perform(get("/groups/invalidGroup/users")
@@ -366,7 +366,7 @@ class AuthorizationControllerMockMvcTest {
 
         Mockito.doNothing().when(authorizationService).validateAdmin(authToken);
 
-        Mockito.when(authorizationService.getGroupUsers("devGroup"))
+        Mockito.when(authorizationService.getGroupUsers("dummy-token","devGroup"))
                 .thenThrow(new RuntimeException("Something went wrong"));
 
         mockMvc.perform(get("/groups/devGroup/users")

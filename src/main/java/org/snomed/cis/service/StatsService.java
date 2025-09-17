@@ -9,6 +9,7 @@ import org.snomed.cis.dto.QueryCountByNamespaceDto;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.repository.*;
 import org.snomed.cis.util.CrowdRequestManager;
+import org.snomed.cis.util.ImsRequestManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,30 +25,36 @@ public class StatsService {
     @Autowired
     private CrowdRequestManager crowdRequestManager;
 
+
+    public StatsService(ImsRequestManager ims) {
+        this.ims = ims;
+    }
+
+    private ImsRequestManager ims;
     @Autowired
-    private SchemeIdBaseRepository schemeIdBaseRepository;
+    SchemeIdBaseRepository schemeIdBaseRepository;
 
     @Autowired
-    private SctidRepository sctidRepository;
+    SctidRepository sctidRepository;
 
     @Autowired
-    private AuthorizationService authorizationService;
+    AuthorizationService authorizationService;
 
     @Autowired
-    private PermissionsSchemeRepository permissionsSchemeRepository;
+    PermissionsSchemeRepository permissionsSchemeRepository;
 
     @Autowired
-    private PermissionsNamespaceRepository permissionsNamespaceRepository;
+    PermissionsNamespaceRepository permissionsNamespaceRepository;
 
     @Autowired
     NamespaceRepository namespaceRepository;
 
-    public GetStatsResponseDto getStats(String userName, AuthenticateResponseDto authenticateResponseDto) throws CisException {
+    public GetStatsResponseDto getStats(String token, String userName, AuthenticateResponseDto authenticateResponseDto) throws CisException {
         GetStatsResponseDto getStatsResponseDto = new GetStatsResponseDto();
 
         List<String> users = new LinkedList<>();
-        List<String> securityAdmins = crowdRequestManager.getGroupUsers("component-identifier-service-admin");
-        List<String> securityUsers = crowdRequestManager.getGroupUsers("component-identifier-service-user");
+        List<String> securityAdmins = ims.getGroupUsers(token,"component-identifier-service-admin",1000,0);
+        List<String> securityUsers = ims.getGroupUsers(token,"component-identifier-service-user",1000,0);
         boolean adminU = false;
         for (String admin : securityAdmins) {
             if (admin.equalsIgnoreCase(userName))
@@ -65,9 +72,9 @@ public class StatsService {
             long schemeCount = schemeIdBaseRepository.count();
             getStatsResponseDto.setSchemes(schemeCount);
             List<QueryCountByNamespaceDto> queryCountByNamespaceDtosWithNull = sctidRepository.getCountByNamespace();
-            List<QueryCountByNamespaceDto> queryCountByNamespaceDtos = queryCountByNamespaceDtosWithNull.stream().filter(d -> d.getNamespace() != null).collect(Collectors.toList());
+            List<QueryCountByNamespaceDto> queryCountByNamespaceDtos = queryCountByNamespaceDtosWithNull.stream().filter(d -> d.getNamespace() != null).toList();
 
-            //Long namespaceCount = (long) queryCountByNamespaceDtos.size();
+
             long namespaceCount = namespaceRepository.count();
 
             for (QueryCountByNamespaceDto result : queryCountByNamespaceDtos) {
@@ -80,7 +87,7 @@ public class StatsService {
         } else {
             List<String> otherGroups = new LinkedList<>();
             List<String> namespacesFromGroup = new LinkedList<>();
-            List<String> userGroups = authorizationService.getUserGroups(userName);
+            List<String> userGroups = authorizationService.getUserGroups(token,userName);
             if (userGroups.size() > 0) {
                 for (String group : userGroups) {
                     String groupName = group.substring(0, group.indexOf("-"));
@@ -93,7 +100,7 @@ public class StatsService {
             Long schemeCount = permissionsSchemeRepository.countByUsernameIn(otherGroups);
             getStatsResponseDto.setSchemes(schemeCount);
             List<PermissionsNamespace> permissionsNamespaces = permissionsNamespaceRepository.findByUsernameIn(otherGroups);
-            List<String> namespaceFromPermissionNamespaces = permissionsNamespaces.stream().map(p -> String.valueOf(p.getNamespace())).collect(Collectors.toList());
+            List<String> namespaceFromPermissionNamespaces = permissionsNamespaces.stream().map(p -> String.valueOf(p.getNamespace())).toList();
             List<String> commonNamespaces = new LinkedList<>(namespacesFromGroup);
             commonNamespaces.retainAll(namespaceFromPermissionNamespaces);
 
