@@ -66,7 +66,7 @@ class NamespaceControllerTest {
         ns2.setNotes("note2");
         ns2.setIdPregenerate("N");
 
-        when(namespaceService.getNamespacesForUser(String.valueOf(username))).thenReturn(List.of(ns1, ns2));
+        when(namespaceService.getNamespacesForUser("dummy-token",String.valueOf(username))).thenReturn(List.of(ns1, ns2));
 
         mockMvc.perform(get("/users/{username}/namespaces/", username).param("token", token).accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2)).andExpect(jsonPath("$[0].namespace").value(100001)).andExpect(jsonPath("$[1].organizationName").value("Org B"));
     }
@@ -85,7 +85,7 @@ class NamespaceControllerTest {
         int username = 99999;
         String token = "dummy-token";
 
-        when(namespaceService.getNamespacesForUser(String.valueOf(username))).thenReturn(List.of());
+        when(namespaceService.getNamespacesForUser("dummy-token",String.valueOf(username))).thenReturn(List.of());
 
         mockMvc.perform(get("/users/{username}/namespaces/", username)
                         .param("token", token)
@@ -101,7 +101,7 @@ class NamespaceControllerTest {
         int username = 12345;
         String token = "dummy-token";
 
-        when(namespaceService.getNamespacesForUser(String.valueOf(username))).thenThrow(new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal error"));
+        when(namespaceService.getNamespacesForUser("dummy-token",String.valueOf(username))).thenThrow(new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal error"));
 
         mockMvc.perform(get("/users/{username}/namespaces/", username).param("token", token).accept(MediaType.APPLICATION_JSON)).andExpect(status().isInternalServerError()).andExpect(jsonPath("$.statusCode").value(500)).andExpect(jsonPath("$.message").value("Internal error"));
     }
@@ -120,7 +120,7 @@ class NamespaceControllerTest {
         String invalidUsername = "abc";
         String token = "dummy-token";
 
-        when(namespaceService.getNamespacesForUser(invalidUsername)).thenReturn(List.of());
+        when(namespaceService.getNamespacesForUser("dummy-token",invalidUsername)).thenReturn(List.of());
 
         mockMvc.perform(get("/users/{username}/namespaces/", invalidUsername)
                         .param("token", token)

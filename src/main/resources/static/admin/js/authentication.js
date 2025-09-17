@@ -86,15 +86,15 @@ function loginWithCredentials(credentials, callback, rememberMe) {
             result.forEach(function(field){
             //alert("field"+field);
                 switch (field){
-                    case "component-identifier-service-admin":
+                    case "ROLE_component-identifier-service-admin":
                         canEnter = true;
                         admin = true;
                         break;
-                    case "component-identifier-service-manager":
+                    case "ROLE_component-identifier-service-manager":
                         canEnter = true;
                         manager = true;
                         break;
-                    case "component-identifier-service-user":
+                    case "ROLE_component-identifier-service-user":
                     //alert("can enter true");
                         canEnter = true;
                         break;

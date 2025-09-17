@@ -14,7 +14,7 @@ import org.snomed.cis.exception.CisException;
 import org.snomed.cis.repository.NamespaceRepository;
 import org.snomed.cis.repository.PartitionsRepository;
 import org.snomed.cis.repository.PermissionsNamespaceRepository;
-import org.snomed.cis.util.CrowdRequestManager;
+import org.snomed.cis.util.ImsRequestManager;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -41,14 +41,14 @@ class NamespaceServiceTest {
     private PermissionsNamespaceRepository permissionsNamespaceRepository;
 
     @Mock
-    private CrowdRequestManager crowdRequestManager;
+    private ImsRequestManager imsRequestManager;
 
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(namespaceService, "namespaceRepository", namespaceRepository);
         ReflectionTestUtils.setField(namespaceService, "partitionsRepository", partitionsRepository);
         ReflectionTestUtils.setField(namespaceService, "permissionsNamespaceRepository", permissionsNamespaceRepository);
-        ReflectionTestUtils.setField(namespaceService, "crowdRequestManager", crowdRequestManager);
+        ReflectionTestUtils.setField(namespaceService, "imsRequestManager", imsRequestManager);
 
     }
 
@@ -348,22 +348,31 @@ class NamespaceServiceTest {
 
     @Test
     void testGetNamespacesForUser_ReturnsNamespaceList() throws CisException {
+        // Arrange
         String userName = "testUser";
         List<Namespace> mockList = List.of(new Namespace(), new Namespace());
-        NamespaceService service = Mockito.spy(new NamespaceService());
-        doReturn(mockList).when(service).getNamespacesListForUser(userName);
-        List<Namespace> result = service.getNamespacesForUser(userName);
+
+        ImsRequestManager imsRequest = Mockito.mock(ImsRequestManager.class);
+        NamespaceService service = Mockito.spy(new NamespaceService(imsRequest));
+
+        doReturn(mockList).when(service).getNamespacesListForUser("dummy-token", userName);
+
+        // Act
+        List<Namespace> result = service.getNamespacesForUser("dummy-token", userName);
+
+        // Assert
         assertNotNull(result);
         assertEquals(2, result.size());
-        verify(service).getNamespacesListForUser(userName);
+        verify(service).getNamespacesListForUser("dummy-token", userName);
     }
 
     @Test
     void testGetNamespacesForUser_ThrowsCisException() throws CisException {
         String userName = "errorUser";
-        NamespaceService service = Mockito.spy(new NamespaceService());
-        doThrow(new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed")).when(service).getNamespacesListForUser(userName);
-        CisException exception = assertThrows(CisException.class, () -> service.getNamespacesForUser(userName));
+        ImsRequestManager imsRequestManager = Mockito.mock(ImsRequestManager.class);
+        NamespaceService service = Mockito.spy(new NamespaceService(imsRequestManager));
+        doThrow(new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed")).when(service).getNamespacesListForUser("dummy-token",userName);
+        CisException exception = assertThrows(CisException.class, () -> service.getNamespacesForUser("dummy-token",userName));
         assertEquals("Failed", exception.getMessage());
     }
 
@@ -371,7 +380,7 @@ class NamespaceServiceTest {
     void testGetNamespacesForUser_ShouldReturnFilteredAndSortedNamespaces() throws CisException {
         String userName = "testUser";
         List<String> mockGroups = List.of("namespace-1002", "namespace-1001");
-        when(crowdRequestManager.getUserGroups(userName)).thenReturn(mockGroups);
+        when(imsRequestManager.getUserGroups("dummy-token",userName)).thenReturn(mockGroups);
         when(permissionsNamespaceRepository.findByUsernameIn(anyList())).thenReturn(Collections.emptyList());
         Namespace ns1 = new Namespace();
         ns1.setNamespace(1001);
@@ -381,12 +390,12 @@ class NamespaceServiceTest {
         mockNamespaceList.add(ns2);
         mockNamespaceList.add(ns1);
         when(namespaceRepository.findByNamespaceIn(Arrays.asList(1002, 1001))).thenReturn(mockNamespaceList);
-        List<Namespace> result = namespaceService.getNamespacesForUser(userName);
+        List<Namespace> result = namespaceService.getNamespacesForUser("dummy-token",userName);
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals((Integer) 1001, result.get(0).getNamespace());
         assertEquals((Integer) 1002, result.get(1).getNamespace());
-        verify(crowdRequestManager).getUserGroups(userName);
+        verify(imsRequestManager).getUserGroups("dummy-token",userName);
         verify(permissionsNamespaceRepository).findByUsernameIn(anyList());
         verify(namespaceRepository).findByNamespaceIn(Arrays.asList(1002, 1001));
     }
@@ -395,7 +404,7 @@ class NamespaceServiceTest {
     void testGetNamespacesForUser_WhenOnlyPermissionNamespacesExist_ShouldReturnSortedList() throws CisException {
         String userName = "testUser";
         List<String> mockGroups = List.of("admin-group", "qa-team");
-        when(crowdRequestManager.getUserGroups(userName)).thenReturn(mockGroups);
+        when(imsRequestManager.getUserGroups("dummy-token",userName)).thenReturn(mockGroups);
         PermissionsNamespace perm1 = new PermissionsNamespace();
         perm1.setUsername("admin-group");
         perm1.setNamespace(1003);
@@ -410,12 +419,12 @@ class NamespaceServiceTest {
         ns3.setNamespace(1003);
         List<Namespace> namespaceList = Arrays.asList(ns3, ns2);
         when(namespaceRepository.findByNamespaceIn(Arrays.asList(1003, 1002))).thenReturn(namespaceList);
-        List<Namespace> result = namespaceService.getNamespacesForUser(userName);
+        List<Namespace> result = namespaceService.getNamespacesForUser("dummy-token",userName);
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals((Integer) 1002, result.get(0).getNamespace());
         assertEquals((Integer) 1003, result.get(1).getNamespace());
-        verify(crowdRequestManager).getUserGroups(userName);
+        verify(imsRequestManager).getUserGroups("dummy-token",userName);
         verify(permissionsNamespaceRepository).findByUsernameIn(Arrays.asList("admin-group", "qa-team", userName));
         verify(namespaceRepository).findByNamespaceIn(Arrays.asList(1003, 1002));
     }
@@ -552,16 +561,24 @@ class NamespaceServiceTest {
         String partitionId = "01";
         String value = "123456";
         String expectedResponse = "Partition sequence updated successfully";
-        NamespaceService realService = new NamespaceService();
-        realService.namespaceRepository = namespaceRepository;
-        realService.partitionsRepository = partitionsRepository;
-        realService.permissionsNamespaceRepository = permissionsNamespaceRepository;
-        NamespaceService spyService = Mockito.spy(realService);
-        Mockito.doReturn(expectedResponse).when(spyService).updatePartitionSequences(mockAuthDto, namespaceId, partitionId, value);
+
+        ImsRequestManager imsRequest = Mockito.mock(ImsRequestManager.class);
+
+        NamespaceService spyService = Mockito.spy(new NamespaceService(imsRequest));
+
+        spyService.namespaceRepository = namespaceRepository;
+        spyService.partitionsRepository = partitionsRepository;
+        spyService.permissionsNamespaceRepository = permissionsNamespaceRepository;
+
+        Mockito.doReturn(expectedResponse)
+                .when(spyService).updatePartitionSequences(mockAuthDto, namespaceId, partitionId, value);
+
         String actualResponse = spyService.updatePartitionSequence(mockAuthDto, namespaceId, partitionId, value);
+
         assertEquals(expectedResponse, actualResponse);
         Mockito.verify(spyService).updatePartitionSequences(mockAuthDto, namespaceId, partitionId, value);
     }
+
 
     @Test
     void testUpdatePartitionSequence_ShouldThrowException_WhenUserIsNotAuthorized() throws CisException {
@@ -569,19 +586,27 @@ class NamespaceServiceTest {
         String namespaceId = "1000001";
         String partitionId = "01";
         String value = "123456";
-        NamespaceService realService = new NamespaceService();
-        realService.namespaceRepository = namespaceRepository;
-        realService.partitionsRepository = partitionsRepository;
-        realService.permissionsNamespaceRepository = permissionsNamespaceRepository;
-        NamespaceService spyService = Mockito.spy(realService);
-        Mockito.doThrow(new CisException(HttpStatus.UNAUTHORIZED, "No permission")).when(spyService).updatePartitionSequences(mockAuthDto, namespaceId, partitionId, value);
+
+        ImsRequestManager imsRequest = Mockito.mock(ImsRequestManager.class);
+
+        NamespaceService spyService = Mockito.spy(new NamespaceService(imsRequest));
+
+        spyService.namespaceRepository = namespaceRepository;
+        spyService.partitionsRepository = partitionsRepository;
+        spyService.permissionsNamespaceRepository = permissionsNamespaceRepository;
+
+        Mockito.doThrow(new CisException(HttpStatus.UNAUTHORIZED, "No permission"))
+                .when(spyService).updatePartitionSequences(mockAuthDto, namespaceId, partitionId, value);
+
         CisException exception = assertThrows(CisException.class, () -> {
             spyService.updatePartitionSequence(mockAuthDto, namespaceId, partitionId, value);
         });
+
         assertEquals("No permission", exception.getMessage());
         assertEquals(HttpStatus.UNAUTHORIZED, exception.getStatus());
         Mockito.verify(spyService).updatePartitionSequences(mockAuthDto, namespaceId, partitionId, value);
     }
+
 
     @Test
     void testUpdatePartitionSequences_ShouldReturnSuccess_WhenUserHasPermissionAndPartitionExists() throws Exception {
@@ -589,22 +614,41 @@ class NamespaceServiceTest {
         String partitionId = "01";
         String value = "123";
         AuthenticateResponseDto authDto = mock(AuthenticateResponseDto.class);
+
         Partitions existingPartition = new Partitions();
         existingPartition.setNamespace(Integer.valueOf(namespaceId));
         existingPartition.setPartitionId(partitionId);
         existingPartition.setSequence(0);
-        NamespaceService realService = new NamespaceService();
-        realService.partitionsRepository = Mockito.mock(PartitionsRepository.class);
-        realService.permissionsNamespaceRepository = Mockito.mock(PermissionsNamespaceRepository.class);
-        NamespaceService spyService = Mockito.spy(realService);
+
+        ImsRequestManager imsRequest = Mockito.mock(ImsRequestManager.class);
+
+        NamespaceService spyService = Mockito.spy(new NamespaceService(imsRequest));
+
+        spyService.partitionsRepository = Mockito.mock(PartitionsRepository.class);
+        spyService.permissionsNamespaceRepository = Mockito.mock(PermissionsNamespaceRepository.class);
+
+        // Stub behavior
         Mockito.doReturn(true).when(spyService).isAbleToEdit(Integer.valueOf(namespaceId), authDto);
-        Mockito.when(realService.partitionsRepository.findById(Mockito.argThat(p -> p.getNamespace().equals(Integer.valueOf(namespaceId)) && p.getPartitionId().equals(partitionId)))).thenReturn(Optional.of(existingPartition));
-        Mockito.when(realService.partitionsRepository.save(Mockito.any(Partitions.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Mockito.when(spyService.partitionsRepository.findById(Mockito.argThat(
+                p -> p.getNamespace().equals(Integer.valueOf(namespaceId)) &&
+                        p.getPartitionId().equals(partitionId)
+        ))).thenReturn(Optional.of(existingPartition));
+
+        Mockito.when(spyService.partitionsRepository.save(Mockito.any(Partitions.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
         String result = spyService.updatePartitionSequences(authDto, namespaceId, partitionId, value);
+
+        // Assert
         assertTrue(result.contains("Success"));
         Mockito.verify(spyService).isAbleToEdit(Integer.valueOf(namespaceId), authDto);
-        Mockito.verify(realService.partitionsRepository).findById(Mockito.argThat(p -> p.getNamespace().equals(Integer.valueOf(namespaceId)) && p.getPartitionId().equals(partitionId)));
-        Mockito.verify(realService.partitionsRepository).save(existingPartition);
+        Mockito.verify(spyService.partitionsRepository).findById(Mockito.argThat(
+                p -> p.getNamespace().equals(Integer.valueOf(namespaceId)) &&
+                        p.getPartitionId().equals(partitionId)
+        ));
+        Mockito.verify(spyService.partitionsRepository).save(existingPartition);
     }
 
     @Test

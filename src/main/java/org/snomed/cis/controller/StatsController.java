@@ -27,7 +27,7 @@ public class StatsController {
     @GetMapping("/stats")
     public ResponseEntity<GetStatsResponseDto> getStats(@RequestParam String token, @RequestParam String username, @Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        return ResponseEntity.ok(statsService.getStats(username, authToken.getAuthenticateResponseDto()));
+        return ResponseEntity.ok(statsService.getStats(token, username, authToken.getAuthenticateResponseDto()));
     }
 
 

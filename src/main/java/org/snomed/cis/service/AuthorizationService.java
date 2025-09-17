@@ -1,12 +1,10 @@
 package org.snomed.cis.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import org.snomed.cis.dto.AuthenticateResponseDto;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.security.Token;
-import org.snomed.cis.util.CrowdRequestManager;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.snomed.cis.util.ImsRequestManager;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -14,33 +12,39 @@ import java.util.List;
 
 @Service
 public class AuthorizationService {
-    private final Logger logger = LoggerFactory.getLogger(AuthorizationService.class);
 
-    @Autowired
-    CrowdRequestManager crowdRequestManager;
 
-    public List<String> getUsers(String searchString) throws CisException {
-        return crowdRequestManager.getUsers(searchString);
+
+    private ImsRequestManager imsRequestManager;
+
+    public AuthorizationService(ImsRequestManager imsRequestManager) {
+        this.imsRequestManager = imsRequestManager;
     }
 
-    public List<String> getUserGroups(String username) throws CisException {
-        return crowdRequestManager.getUserGroups(username);
+    public List<String> getUsers(String token, String searchString) throws CisException {
+        return imsRequestManager.getUsers(token, searchString);
     }
 
-    public void removeMember(String username, String groupName) throws CisException {
-        crowdRequestManager.removeMember(username, groupName);
+    public List<String> getUserGroups(String token, String username) throws CisException {
+        return imsRequestManager.getUserGroups(token, username);
     }
 
-    public void addMember(String username, String groupName) throws CisException {
-        crowdRequestManager.addMember(username, groupName);
+    public void removeMember(String token, String username, String groupName) throws CisException {
+        imsRequestManager.removeMember(token, username, groupName);
     }
 
-    public List<String> getGroupUsers(String groupName) throws CisException {
-        return crowdRequestManager.getGroupUsers(groupName);
+    public void addMember(String token, String username, String groupName) throws CisException {
+        imsRequestManager.addMember(token, username, groupName);
     }
 
-    public List<String> getGroups() throws CisException {
-        return crowdRequestManager.getGroups();
+    public List<String> getGroupUsers(String token, String groupName) throws CisException {
+        // Temporary default: first 100 results starting at 0
+        return imsRequestManager.getGroupUsers(token, groupName, 100, 0);
+    }
+
+
+    public List<String> getGroups(String token) throws CisException {
+        return imsRequestManager.getGroups(token);
     }
 
     private boolean isAdmin(AuthenticateResponseDto authenticateResponseDto) {
