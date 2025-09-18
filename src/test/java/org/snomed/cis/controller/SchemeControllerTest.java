@@ -85,10 +85,10 @@ class SchemeControllerTest {
     }
 
     @Test
-    void testGetSchemesForUser_usernameNotFound_shouldReturn404() throws Exception {
-        when(schemeService.getSchemesForUser((authDto), ("unknownUser"))).thenThrow(new CisException(HttpStatus.NOT_FOUND, "User not found"));
+    void testGetSchemesForUser_usernameNotFound_shouldReturn500() throws Exception {
+        when(schemeService.getSchemesForUser((authDto), ("unknownUser"))).thenThrow(new RuntimeException("User not found"));
 
-        mockMvc.perform(get("/users/unknownUser/schemes/").param("token", "dummy-token").with(authentication(authToken))).andExpect(status().isNotFound());
+        mockMvc.perform(get("/users/unknownUser/schemes/").param("token", "dummy-token").with(authentication(authToken))).andExpect(status().isInternalServerError());
     }
 
     @Test

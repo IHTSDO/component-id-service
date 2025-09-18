@@ -41,7 +41,7 @@ public class SctidController {
     @GetMapping("/sct/ids")
     public ResponseEntity<List<Sctid>> getSct(@RequestParam String token, @RequestParam(name = "limit", required = false) String limit, @RequestParam(name = "skip", required = false) String skip, @RequestParam(name = "namespace", required = false) String namespace, @Parameter(hidden = true) Authentication authentication) throws CisException{
         Token authToken = (Token) authentication;
-        logger.info("Request received for - limit :: {} - skip :: {} - namespace :: {} - authenticateResponseDto :: {}", limit,skip,namespace,authToken.getAuthenticateResponseDto().toString());
+        logger.info("Request received for - limit :: {} - skip :: {} - namespace :: {} - authenticateResponseDto :: {}", limit,skip,namespace,authToken.getAuthenticateResponseDto());
         return ResponseEntity.ok(sctidService.getSct(authToken.getAuthenticateResponseDto(), limit, skip, namespace));
     }
 
@@ -49,7 +49,7 @@ public class SctidController {
     @Operation(summary = "getSctWithId")
     public ResponseEntity<SctWithSchemeResponseDTO> getSctWithId(@RequestParam String token, @PathVariable String sctid, @RequestParam(name = "includeAdditionalIds", required = false) String includeAdditionalIds,@Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        logger.info("Request received for - sctid :: {} - includeAdditionalIds :: {} - authenticateResponseDto :: {}", sctid,includeAdditionalIds,authToken.getAuthenticateResponseDto().toString());
+        logger.info("Request received for - sctid :: {} - includeAdditionalIds :: {} - authenticateResponseDto :: {}", sctid,includeAdditionalIds,authToken.getAuthenticateResponseDto());
         return ResponseEntity.ok(sctidService.getSctWithId(authToken.getAuthenticateResponseDto(), sctid, includeAdditionalIds));
     }
 
@@ -64,7 +64,7 @@ public class SctidController {
     @Operation(summary = "getSctBySystemId")
     public ResponseEntity<Sctid> getSctBySystemId(@RequestParam String token, @PathVariable Integer namespaceId, @PathVariable String systemId,@Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        logger.info("Request received for - namespaceId :: {} - systemId :: {} - authenticateResponseDto :: {}", namespaceId,systemId,authToken.getAuthenticateResponseDto().toString());
+        logger.info("Request received for - namespaceId :: {} - systemId :: {} - authenticateResponseDto :: {}", namespaceId,systemId,authToken.getAuthenticateResponseDto());
         return ResponseEntity.ok(sctidService.getSctWithSystemId(authToken.getAuthenticateResponseDto(), namespaceId, systemId));
     }
 
@@ -72,7 +72,7 @@ public class SctidController {
     @Operation(summary = "deprecateSctid")
     public ResponseEntity<Sctid> deprecateSctid(@RequestParam String token, @RequestBody DeprecateSctRequestDTO deprecateRequest,@Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        logger.info("Request received for - DeprecateSctRequestDTO :: {} - authenticateResponseDto :: {}", deprecateRequest,authToken.getAuthenticateResponseDto().toString());
+        logger.info("Request received for - DeprecateSctRequestDTO :: {} - authenticateResponseDto :: {}", deprecateRequest,authToken.getAuthenticateResponseDto());
         return ResponseEntity.ok(sctidService.deprecateSct(authToken.getAuthenticateResponseDto(), deprecateRequest));
     }
 
@@ -80,7 +80,7 @@ public class SctidController {
     @Operation(summary = "releaseSctid")
     public ResponseEntity<Sctid> releaseSctid(@RequestParam String token, @RequestBody DeprecateSctRequestDTO deprecateRequest,@Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        logger.info("Request received for - DeprecateSctRequestDTO :: {} - authenticateResponseDto :: {}", deprecateRequest,authToken.getAuthenticateResponseDto().toString());
+        logger.info("Request received for - DeprecateSctRequestDTO :: {} - authenticateResponseDto :: {}", deprecateRequest,authToken.getAuthenticateResponseDto());
         return ResponseEntity.ok(sctidService.releaseSct(authToken.getAuthenticateResponseDto(), deprecateRequest));
     }
 
@@ -88,7 +88,7 @@ public class SctidController {
     @Operation(summary = "publishSctid")
     public ResponseEntity<Sctid> publishSctid(@RequestParam String token, @RequestBody DeprecateSctRequestDTO deprecateRequest,@Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        logger.info("Request received for - DeprecateSctRequestDTO :: {} - authenticateResponseDto :: {}", deprecateRequest,authToken.getAuthenticateResponseDto().toString());
+        logger.info("Request received for - DeprecateSctRequestDTO :: {} - authenticateResponseDto :: {}", deprecateRequest,authToken.getAuthenticateResponseDto());
         return ResponseEntity.ok(sctidService.publishSct(authToken.getAuthenticateResponseDto(), deprecateRequest));
     }
 
@@ -96,7 +96,7 @@ public class SctidController {
     @Operation(summary = "generateSctid")
     public ResponseEntity<SctWithSchemeResponseDTO> generateSctid(@RequestParam String token, @RequestBody SctidsGenerateRequestDto generationData, @Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        logger.info("Request received for - SctidsGenerateRequestDto :: {} - authenticateResponseDto :: {}", generationData,authToken.getAuthenticateResponseDto().toString());
+        logger.info("Request received for - SctidsGenerateRequestDto :: {} - authenticateResponseDto :: {}", generationData,authToken.getAuthenticateResponseDto());
         return ResponseEntity.ok(sctidService.generateSctid(authToken.getAuthenticateResponseDto(), generationData));
     }
 
@@ -104,7 +104,7 @@ public class SctidController {
     @Operation(summary = "registerSctid")
     public ResponseEntity<Sctid> registerSctid(@RequestParam String token, @RequestBody SCTIDRegistrationRequest generationData,@Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        logger.info("Request received for - SCTIDRegistrationRequest :: {} - authenticateResponseDto :: {}", generationData,authToken.getAuthenticateResponseDto().toString());
+        logger.info("Request received for - SCTIDRegistrationRequest :: {} - authenticateResponseDto :: {}", generationData,authToken.getAuthenticateResponseDto());
         return ResponseEntity.ok(sctidService.registerSctid(authToken.getAuthenticateResponseDto(), generationData));
     }
 
@@ -112,7 +112,7 @@ public class SctidController {
     @Operation(summary = "reserveSctid")
     public ResponseEntity<Sctid> reserveSctid(@RequestParam String token, @RequestBody SCTIDReservationRequest reservationData,@Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = (Token) authentication;
-        logger.info("Request received for - SCTIDReservationRequest :: {} - authenticateResponseDto :: {}", reservationData,authToken.getAuthenticateResponseDto().toString());
+        logger.info("Request received for - SCTIDReservationRequest :: {} - authenticateResponseDto :: {}", reservationData,authToken.getAuthenticateResponseDto());
         return ResponseEntity.ok(sctidService.reserveSctid(authToken.getAuthenticateResponseDto(), reservationData));
     }
 }

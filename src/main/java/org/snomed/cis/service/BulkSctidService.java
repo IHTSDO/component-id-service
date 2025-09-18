@@ -215,7 +215,7 @@ public class BulkSctidService implements CisConstants {
 
     public BulkJob registerScts(AuthenticateResponseDto token, RegistrationDataDTO registrationData) throws CisException {
         logger.debug("BulkSctidService.registerScts() token-{} :: registrationData - {} ", token.toString(), registrationData);
-        BulkJob resultJob = new BulkJob();
+        BulkJob resultJob;
         if (this.isAbleUser(registrationData.getNamespace().toString(), token)) {
             SctidBulkRegister sctidBulkRegister = new SctidBulkRegister();
             sctidBulkRegister.setRecords(registrationData.getRecords());
@@ -228,16 +228,16 @@ public class BulkSctidService implements CisConstants {
                 throw new CisException(HttpStatus.ACCEPTED, "Input 'records' cannot be 0 or empty or null.");
             } else {
                 int namespace;
-                boolean error = false;
+
                 for (RegistrationRecordsDTO record : registrationData.getRecords()) {
                     namespace = sctIdHelper.getNamespace(record.getSctid());
                     if (namespace != registrationData.getNamespace()) {
-                        error = true;
+
                         logger.error("error registerScts():: Differences between generated namespace and input 'namespace'. Generated namespace : {} from SCTID: {} and input 'namespace': {} ",namespace, record.getSctid(), registrationData.getNamespace());
                         throw new CisException(HttpStatus.CONFLICT, "Differences between generated namespace and input 'namespace'.");
                     }
                 }
-                if (!error) {
+
                     sctidBulkRegister.setAuthor(token.getName());
                     sctidBulkRegister.setModel(modelsConstants.SCTID);
                     sctidBulkRegister.setType(jobType.REGISTER_SCTIDS);
@@ -260,7 +260,7 @@ public class BulkSctidService implements CisConstants {
 
                     resultJob = this.bulkJobRepository.save(bulk);
                     logger.debug("BulkSctidService.registerScts() - Response :: {}", resultJob);
-                }
+
             }
         } else {
             logger.error("error registerScts():: User: {} has neither admin access nor namespace Permission for namespace: {} for the selected operation.",token.toString(),registrationData.getNamespace().toString());
@@ -482,7 +482,7 @@ public class BulkSctidService implements CisConstants {
     //Deprecate API
     public BulkJob deprecateSctid(AuthenticateResponseDto token, BulkSctRequestDTO deprecateBulkSctRequestDTO) throws CisException {
         logger.debug("BulkSctidService.deprecateSctid() token-{} :: deprecateBulkSctRequestDTO-{} ", token.toString(), deprecateBulkSctRequestDTO);
-        BulkJob resultJob = new BulkJob();
+        BulkJob resultJob;
         BulkSctRequest bulkSctRequest = new BulkSctRequest();
         bulkSctRequest.setSctids(deprecateBulkSctRequestDTO.getSctids());
         bulkSctRequest.setNamespace(deprecateBulkSctRequestDTO.getNamespace());
@@ -499,16 +499,16 @@ public class BulkSctidService implements CisConstants {
                 throw new CisException(HttpStatus.ACCEPTED, "input 'sctids' cannot be 0 or empty or null.");
             } else {
                 int namespace;
-                boolean error = false;
+
                 for (String sctid : deprecateBulkSctRequestDTO.getSctids()) {
                     namespace = sctIdHelper.getNamespace(sctid);
                     if (namespace != deprecateBulkSctRequestDTO.getNamespace()) {
-                        error = true;
+
                         logger.error("error deprecateSctid():: Difference between generated namespace and input 'namespace'.Generated namespace: {} sctid: {} and input 'namespace': {}",namespace, sctid, deprecateBulkSctRequestDTO.getNamespace());
                         throw new CisException(HttpStatus.ACCEPTED, "Difference between generated namespace and input 'namespace'.");
                     }
                 }
-                if (!error) {
+
                     bulkSctRequest.setAuthor(token.getName());
                     bulkSctRequest.setModel(modelsConstants.SCTID);
                     bulkSctRequest.setType(jobType.DEPRECATE_SCTIDS);
@@ -528,7 +528,7 @@ public class BulkSctidService implements CisConstants {
                         throw new CisException(HttpStatus.BAD_REQUEST,"Json processing Exception: "+ e.getMessage());
                     }
                     resultJob = this.bulkJobRepository.save(bulk);
-                }
+
             }
 
         }
@@ -539,7 +539,7 @@ public class BulkSctidService implements CisConstants {
     //Publish API
     public BulkJob publishSctid(AuthenticateResponseDto token, BulkSctRequestDTO publishBulkSctRequestDTO) throws CisException {
         logger.debug("BulkSctidService.publishSctid() token-{} :: publishBulkSctRequestDTO-{} ", token.toString(), publishBulkSctRequestDTO);
-        BulkJob resultJob = new BulkJob();
+        BulkJob resultJob;
         BulkSctRequest bulkSctRequest = new BulkSctRequest();
         bulkSctRequest.setSctids(publishBulkSctRequestDTO.getSctids());
         bulkSctRequest.setNamespace(publishBulkSctRequestDTO.getNamespace());
@@ -555,16 +555,16 @@ public class BulkSctidService implements CisConstants {
                 throw new CisException(HttpStatus.ACCEPTED, "input 'sctids' cannot be empty or null.");
             } else {
                 int namespace;
-                boolean error = false;
+
                 for (String sctid : publishBulkSctRequestDTO.getSctids()) {
                     namespace = sctIdHelper.getNamespace(sctid);
                     if (namespace != publishBulkSctRequestDTO.getNamespace()) {
-                        error = true;
+
                         logger.error("error publishSctid():: Difference between generated namespace and input 'namespace'. Generated namespace: {} , sctid: {} and input 'namespace': {}",namespace, sctid, publishBulkSctRequestDTO.getNamespace());
                         throw new CisException(HttpStatus.ACCEPTED, "Difference between generated namespace and input 'namespace'.");
                     }
                 }
-                if (!error) {
+
                     bulkSctRequest.setAuthor(token.getName());
                     bulkSctRequest.setModel(modelsConstants.SCTID);
                     bulkSctRequest.setType(jobType.PUBLISH_SCTIDS);
@@ -585,7 +585,7 @@ public class BulkSctidService implements CisConstants {
                     }
 
                     resultJob = this.bulkJobRepository.save(bulk);
-                }
+
             }
 
         }
@@ -596,7 +596,7 @@ public class BulkSctidService implements CisConstants {
     //Release Sctid API
     public BulkJob releaseSctid(AuthenticateResponseDto token, BulkSctRequestDTO releaseBulkSctRequestDTO) throws CisException {
         logger.debug("BulkSctidService.releaseSctid() token-{} :: releaseBulkSctRequestDTO-{} ", token.toString(), releaseBulkSctRequestDTO);
-        BulkJob resultJob = new BulkJob();
+        BulkJob resultJob;
         BulkSctRequest bulkSctRequest = new BulkSctRequest();
         bulkSctRequest.setSctids(releaseBulkSctRequestDTO.getSctids());
         bulkSctRequest.setNamespace(releaseBulkSctRequestDTO.getNamespace());
@@ -614,16 +614,16 @@ public class BulkSctidService implements CisConstants {
                 throw new CisException(HttpStatus.ACCEPTED, "input 'sctids' cannot be empty or null.");
             } else {
                 int namespace;
-                boolean error = false;
+
                 for (String sctid : releaseBulkSctRequestDTO.getSctids()) {
                     namespace = sctIdHelper.getNamespace(sctid);
                     if (namespace != releaseBulkSctRequestDTO.getNamespace()) {
-                        error = true;
+
                         logger.error("error releaseSctid()::Difference between generated namespace and input 'namespace'. Generated namespace: {}, sctid: {} and input 'namespace': {}",namespace, sctid, releaseBulkSctRequestDTO.getNamespace());
                         throw new CisException(HttpStatus.ACCEPTED, "Difference between generated namespace and input 'namespace'.");
                     }
                 }
-                if (!error) {
+
                     bulkSctRequest.setAuthor(token.getName());
                     bulkSctRequest.setModel(modelsConstants.SCTID);
                     bulkSctRequest.setType(jobType.RELEASE_SCTIDS);
@@ -643,7 +643,7 @@ public class BulkSctidService implements CisConstants {
                         throw new CisException(HttpStatus.BAD_REQUEST, "Json processing Exception: "+e.getMessage());
                     }
                     resultJob = this.bulkJobRepository.save(bulk);
-                }
+
             }
 
         }
