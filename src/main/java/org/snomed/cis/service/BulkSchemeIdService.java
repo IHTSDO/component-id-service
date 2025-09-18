@@ -95,7 +95,7 @@ public class BulkSchemeIdService implements CisConstants {
             logger.error("error getSchemeIds():: user : {} has neither admin access nor scheme permission for the selected operation.",token.toString());
             throw new CisException(HttpStatus.BAD_REQUEST, "No permission for the selected operation");
         }
-        logger.debug("BulkSchemeIdService.getSchemeIds() - Response size-:: {}", (null==resSchemeArrayList?"0":resSchemeArrayList.size()));
+        logger.debug("BulkSchemeIdService.getSchemeIds() - Response size-:: {}", resSchemeArrayList.size());
         return resSchemeArrayList;
     }
 
@@ -167,7 +167,7 @@ public class BulkSchemeIdService implements CisConstants {
             error = e.getMessage();
         }
         if (error != null) {
-            Optional<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeIdBulk.getScheme().toString());
+
 
             if (error.indexOf("ER_DUP_ENTRY") > -1) {
                 if (error.indexOf("'PRIMARY'") > -1 /*&& ()*/) {

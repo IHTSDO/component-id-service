@@ -65,12 +65,12 @@ public class SchemeService {
         return hasSchemePermission;
     }
 
-    public List<Scheme> getSchemesForUser(AuthenticateResponseDto token, String user) throws CisException {
+    public List<Scheme> getSchemesForUser(AuthenticateResponseDto token, String user)  {
         logger.debug("Request Received : authToken - {} , user - {}", token.toString(), user);
         return this.getSchemesForUsers(token, user);
     }
 
-    public List<Scheme> getSchemesForUsers(AuthenticateResponseDto token, String user) throws CisException {
+    public List<Scheme> getSchemesForUsers(AuthenticateResponseDto token, String user)  {
         logger.debug("Request Received : AuthenticateResponseDto-{} :: user - {} ", token.toString(), user);
         List<PermissionsScheme> permissionsSchemes = null;
         List<Scheme> scheme = new ArrayList<>();
@@ -83,7 +83,7 @@ public class SchemeService {
             schemeObj = new Scheme(perm.getScheme(), perm.getRole());
             scheme.add(schemeObj);
         }
-        logger.debug("getSchemesForUsers() Response size: {}",  (null==scheme?"0":scheme.size()));
+        logger.debug("getSchemesForUsers() Response size: {}", scheme.size());
         return scheme;
     }
 

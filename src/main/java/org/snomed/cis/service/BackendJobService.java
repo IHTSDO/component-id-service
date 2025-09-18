@@ -89,7 +89,7 @@ public class BackendJobService {
         return resultList;
     }
 
-    public List<BulkJob> save(Map<String, Object> qObj, List<BulkJobResponseDto> bulkJobsRecord) throws CisException {
+    public List<BulkJob> save(Map<String, Object> qObj, List<BulkJobResponseDto> bulkJobsRecord)  {
         List<BulkJob> resultList = new LinkedList<>();
 
         Optional<Map.Entry<String, Object>> idEntryOpt = qObj.entrySet().stream().filter(e -> "id".equalsIgnoreCase(e.getKey())).findFirst();
@@ -124,7 +124,7 @@ public class BackendJobService {
     }
 
     @Transactional
-    public void updateJobStatus(Map<String, Object> jobRecord, BulkJob bulkJobRecord) throws CisException {
+    public void updateJobStatus(Map<String, Object> jobRecord, BulkJob bulkJobRecord)  {
         StringBuffer supdate = new StringBuffer("");
         String updateValue;
         Integer count = 0;

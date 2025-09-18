@@ -735,20 +735,23 @@ public class SctidService {
     public String getNextSchemeId(SchemeName schemeName, SctidGenerate request) {
         logger.debug("Request Received : schemeName-{} :: SctidGenerate - {} ", schemeName, request);
         Optional<SchemeIdBase> schemeIdBaseList = schemeIdBaseRepository.findByScheme(schemeName.toString());
-        SchemeIdBase schemeIdBase = null;
         String nextId = null;
 
         if (schemeIdBaseList.isPresent()) {
+            SchemeIdBase schemeIdBase = schemeIdBaseList.get();
             if (schemeName.toString().toUpperCase().equalsIgnoreCase("SNOMEDID")) {
-                if (schemeIdBaseList.isPresent())
+
                     nextId = SNOMEDID.getNextId(schemeIdBaseList.get().getIdBase());
             } else if (schemeName.toString().toUpperCase().equalsIgnoreCase("CTV3ID")) {
-                if (schemeIdBaseList.isPresent())
+
                     nextId = CTV3ID.getNextId(schemeIdBaseList.get().getIdBase());
             }
-            schemeIdBase.setIdBase(nextId);
+            if (nextId != null) {
+                schemeIdBase.setIdBase(nextId);
+                schemeIdBaseRepository.save(schemeIdBase);
+            }
         }
-        schemeIdBaseRepository.save(schemeIdBase);
+
         logger.debug("getNextSchemeId() Response: {}", nextId);
         return nextId;
     }
