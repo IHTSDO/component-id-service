@@ -327,4 +327,13 @@ public class BulkJobService {
         logger.debug("BulkJobService.isAbleUser() - Response :: {}", isAble);
         return isAble;
     }
+
+    public Integer extractNamespaceFromRequest(String request) throws CisException {
+        try {
+            JSONObject requestJson = new JSONObject(request);
+            return requestJson.getInt("namespace");
+        } catch (Exception e) {
+            throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
 }

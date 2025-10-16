@@ -8,6 +8,7 @@ import org.snomed.cis.dto.CleanUpServiceResponse;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.service.AuthorizationService;
 import org.snomed.cis.service.BulkJobService;
+import org.snomed.cis.service.NamespaceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -35,6 +36,9 @@ class BulkJobsControllerTest {
 
     @MockBean
     private AuthorizationService authorizationService;
+
+    @MockBean
+    private NamespaceService namespaceService;
 
     @Test
     void testGetJobs_shouldReturnListOfJobs() throws Exception {
@@ -124,8 +128,10 @@ class BulkJobsControllerTest {
         AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
         Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, List.of());
 
-        Mockito.doNothing().when(authorizationService).validateAdmin(Mockito.any());
+
         Mockito.when(bulkJobService.getJob(1)).thenReturn(mockJob);
+        Mockito.when(namespaceService.isAbleToEdit(Mockito.anyInt(), Mockito.any(AuthenticateResponseDto.class)))
+                .thenReturn(true);
 
         mockMvc.perform(get("/bulk/jobs/1")
                         .param("token", "dummy-token")
