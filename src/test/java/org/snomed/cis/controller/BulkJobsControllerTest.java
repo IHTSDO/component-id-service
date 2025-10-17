@@ -6,9 +6,9 @@ import org.snomed.cis.domain.BulkJob;
 import org.snomed.cis.dto.AuthenticateResponseDto;
 import org.snomed.cis.dto.CleanUpServiceResponse;
 import org.snomed.cis.exception.CisException;
+import org.snomed.cis.security.Token;
 import org.snomed.cis.service.AuthorizationService;
 import org.snomed.cis.service.BulkJobService;
-import org.snomed.cis.service.NamespaceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -36,9 +36,6 @@ class BulkJobsControllerTest {
 
     @MockBean
     private AuthorizationService authorizationService;
-
-    @MockBean
-    private NamespaceService namespaceService;
 
     @Test
     void testGetJobs_shouldReturnListOfJobs() throws Exception {
@@ -130,7 +127,7 @@ class BulkJobsControllerTest {
 
 
         Mockito.when(bulkJobService.getJob(1)).thenReturn(mockJob);
-        Mockito.when(namespaceService.isAbleToEdit(Mockito.anyInt(), Mockito.any(AuthenticateResponseDto.class)))
+        Mockito.when(bulkJobService.isAuthorizedToViewJob(Mockito.anyInt(), Mockito.any(Token.class)))
                 .thenReturn(true);
 
         mockMvc.perform(get("/bulk/jobs/1")
@@ -147,7 +144,8 @@ class BulkJobsControllerTest {
         AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
         Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, List.of());
 
-        Mockito.doNothing().when(authorizationService).validateAdmin(Mockito.any());
+        Mockito.when(bulkJobService.isAuthorizedToViewJob(Mockito.anyInt(), Mockito.any(Token.class)))
+                .thenReturn(true);
         Mockito.when(bulkJobService.getJob(999)).thenThrow(new CisException(HttpStatus.NOT_FOUND, "Job not found"));
 
         mockMvc.perform(get("/bulk/jobs/999")
@@ -175,7 +173,8 @@ class BulkJobsControllerTest {
         AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
         Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, List.of());
 
-        Mockito.doNothing().when(authorizationService).validateAdmin(Mockito.any());
+        Mockito.when(bulkJobService.isAuthorizedToViewJob(Mockito.anyInt(), Mockito.any(Token.class)))
+                .thenReturn(true);
         Mockito.when(bulkJobService.getJob(1)).thenThrow(new RuntimeException("Unexpected failure"));
 
         mockMvc.perform(get("/bulk/jobs/1")
@@ -194,7 +193,8 @@ class BulkJobsControllerTest {
 
         List<Object> records = List.of("Record1", "Record2");
 
-        Mockito.doNothing().when(authorizationService).validateAdmin(Mockito.any());
+        Mockito.when(bulkJobService.isAuthorizedToViewJob(Mockito.anyInt(), Mockito.any(Token.class)))
+                .thenReturn(true);
         Mockito.when(bulkJobService.getJobRecords(1)).thenReturn(records);
 
         mockMvc.perform(get("/bulk/jobs/1/records")
@@ -212,7 +212,8 @@ class BulkJobsControllerTest {
         AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
         Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, List.of());
 
-        Mockito.doNothing().when(authorizationService).validateAdmin(Mockito.any());
+        Mockito.when(bulkJobService.isAuthorizedToViewJob(Mockito.anyInt(), Mockito.any(Token.class)))
+                .thenReturn(true);
         Mockito.when(bulkJobService.getJobRecords(99)).thenReturn(List.of());
 
         mockMvc.perform(get("/bulk/jobs/99/records")
@@ -228,7 +229,8 @@ class BulkJobsControllerTest {
         AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
         Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, List.of());
 
-        Mockito.doNothing().when(authorizationService).validateAdmin(Mockito.any());
+        Mockito.when(bulkJobService.isAuthorizedToViewJob(Mockito.anyInt(), Mockito.any(Token.class)))
+                .thenReturn(true);
         Mockito.when(bulkJobService.getJobRecords(1)).thenThrow(new RuntimeException("Unexpected failure"));
 
         mockMvc.perform(get("/bulk/jobs/1/records")

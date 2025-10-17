@@ -3,12 +3,10 @@ package org.snomed.cis.service;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.Spy;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.snomed.cis.domain.BulkJob;
 import org.snomed.cis.domain.SchemeId;
@@ -18,7 +16,6 @@ import org.snomed.cis.dto.CleanUpServiceResponse;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.repository.BulkJobRepository;
 import org.springframework.http.HttpStatus;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -43,6 +40,11 @@ class BulkJobServiceTest {
 
     @Mock
     private AuthenticateResponseDto authToken;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
 
     @Test
     void testGetJobs() {
@@ -281,19 +283,14 @@ class BulkJobServiceTest {
 
     @Test
     void testCleanUpExpiredIdsAsAdmin() throws CisException {
-        authToken.setRoles(List.of("ROLE_component-identifier-service-admin"));
+        Mockito.lenient().when(authToken.getRoles()).thenReturn(List.of("ROLE_component-identifier-service-admin"));
 
-        BulkJobService realService = new BulkJobService();
-        ReflectionTestUtils.setField(realService, "bulkJobRepository", bulkJobRepository);
-
-        BulkJobService spyService = Mockito.spy(realService);
-
-        Mockito.doReturn(true).when(spyService).isAbleUser(authToken);
+        Mockito.doReturn(true).when(bulkJobService).isAbleUser(authToken);
 
         when(bulkJobRepository.cleanExpiredSctids()).thenReturn(5);
         when(bulkJobRepository.cleanExpiredSchemeids()).thenReturn(3);
 
-        List<CleanUpServiceResponse> result = spyService.cleanUpExpiredIds(authToken);
+        List<CleanUpServiceResponse> result = bulkJobService.cleanUpExpiredIds(authToken);
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(2, result.size());
@@ -308,14 +305,10 @@ class BulkJobServiceTest {
     @Test
     void testCleanUpExpiredIdsAsUnauthorizedUser() throws CisException {
 
-        BulkJobService realService = new BulkJobService();
-        ReflectionTestUtils.setField(realService, "bulkJobRepository", bulkJobRepository);
-
-        BulkJobService spyService = Mockito.spy(realService);
-        Mockito.doReturn(false).when(spyService).isAbleUser(authToken);
+        Mockito.doReturn(false).when(bulkJobService).isAbleUser(authToken);
 
         CisException thrown = Assertions.assertThrows(CisException.class, () -> {
-            spyService.cleanUpExpiredIds(authToken);
+            bulkJobService.cleanUpExpiredIds(authToken);
         });
 
         Assertions.assertEquals("No permission for the selected operation", thrown.getMessage());

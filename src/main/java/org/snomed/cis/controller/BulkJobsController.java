@@ -11,7 +11,7 @@ import org.snomed.cis.exception.CisException;
 import org.snomed.cis.security.Token;
 import org.snomed.cis.service.AuthorizationService;
 import org.snomed.cis.service.BulkJobService;
-import org.snomed.cis.service.NamespaceService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -25,14 +25,12 @@ public class BulkJobsController {
     private final Logger logger = LoggerFactory.getLogger(BulkJobsController.class);
     private final BulkJobService bulkJobService;
     private final AuthorizationService authorizationService;
-    private final NamespaceService namespaceService;
 
 
     public BulkJobsController(BulkJobService bulkJobService,
-                              AuthorizationService authorizationService, NamespaceService namespaceService) {
+                              AuthorizationService authorizationService) {
         this.bulkJobService = bulkJobService;
         this.authorizationService = authorizationService;
-        this.namespaceService = namespaceService;
     }
 
     @Operation(
@@ -58,10 +56,10 @@ public class BulkJobsController {
     public ResponseEntity<BulkJob> getJob(@RequestParam String token, @PathVariable Integer jobId, @Parameter(hidden = true) Authentication authentication) throws CisException {
         logger.info("Request received - jobId :: {}", jobId);
         Token authToken = (Token) authentication;
-        BulkJob bulkJob = bulkJobService.getJob(jobId);
-        if(!namespaceService.isAbleToEdit(bulkJobService.extractNamespaceFromRequest(bulkJob.getRequest()), authToken.getAuthenticateResponseDto())){
-            return ResponseEntity.ok(new BulkJob());
+        if (!bulkJobService.isAuthorizedToViewJob(jobId, authToken)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+        BulkJob bulkJob = bulkJobService.getJob(jobId);
         return ResponseEntity.ok(bulkJob);
     }
 
@@ -69,7 +67,10 @@ public class BulkJobsController {
     @GetMapping("/bulk/jobs/{jobId}/records")
     public ResponseEntity<List<Object>> getJobRecords(@RequestParam String token, @PathVariable Integer jobId, @Parameter(hidden = true) Authentication authentication) throws CisException {
         logger.info("Request received for - jobId :: {}", jobId);
-        authorizationService.validateAdmin((Token) authentication);
+        Token authToken = (Token) authentication;
+        if (!bulkJobService.isAuthorizedToViewJob(jobId, authToken)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         return ResponseEntity.ok(bulkJobService.getJobRecords(jobId));
     }
 

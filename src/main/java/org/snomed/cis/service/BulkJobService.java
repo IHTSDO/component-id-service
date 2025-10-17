@@ -11,7 +11,9 @@ import org.snomed.cis.dto.BulkJobsListResponse;
 import org.snomed.cis.dto.CleanUpServiceResponse;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.repository.BulkJobRepository;
+import org.snomed.cis.repository.PermissionsNamespaceRepository;
 import org.snomed.cis.repository.SctidRepository;
+import org.snomed.cis.security.Token;
 import org.snomed.cis.util.ModelsConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -48,6 +50,13 @@ public class BulkJobService {
 
     @Autowired
     SctidRepository sctidRepository;
+
+    private final PermissionsNamespaceRepository permissionsNamespaceRepository;
+
+    public BulkJobService(PermissionsNamespaceRepository permissionsNamespaceRepository) {
+        this.permissionsNamespaceRepository = permissionsNamespaceRepository;
+    }
+
 
     public List<BulkJob> getJobs() {
         logger.debug("BulkJobService.getJobs()- Inside Service");
@@ -328,6 +337,11 @@ public class BulkJobService {
         return isAble;
     }
 
+    public boolean isAuthorizedToViewJob(Integer jobId, Token authToken) throws CisException {
+        BulkJob bulkJob = getJob(jobId);
+        return isAbleToViewJobs(extractNamespaceFromRequest(bulkJob.getRequest()), authToken.getAuthenticateResponseDto());
+    }
+
     public Integer extractNamespaceFromRequest(String request) throws CisException {
         try {
             JSONObject requestJson = new JSONObject(request);
@@ -336,4 +350,25 @@ public class BulkJobService {
             throw new CisException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
+
+    public boolean isAbleToViewJobs(Integer namespace, AuthenticateResponseDto authenticateResponseDto) {
+        logger.debug("NamespaceService.isAbleToViewJobs() namespace-{} :: AuthenticateResponseDto-{} ", namespace, authenticateResponseDto);
+
+        List<String> groups = authenticateResponseDto.getRoles().stream()
+                .map(s -> s.split("_")[1])
+                .toList();
+
+        boolean isJobsAccess = groups.contains("component-identifier-service-admin") ||
+                (!String.valueOf(namespace).equalsIgnoreCase("false") &&
+                        permissionsNamespaceRepository.findByNamespace(namespace).stream()
+                                .anyMatch(permissionsNamespace ->
+                                        ("manager".equalsIgnoreCase(permissionsNamespace.getRole()) ||
+                                                "user".equalsIgnoreCase(permissionsNamespace.getRole())) &&
+                                                permissionsNamespace.getUsername().equalsIgnoreCase(authenticateResponseDto.getName())));
+
+
+        logger.info("isAbleToViewJobs() Response-{} ", isJobsAccess);
+        return isJobsAccess;
+    }
+
 }
