@@ -92,7 +92,7 @@ The set of valid statuses and actions are represented in the State Machine diagr
 PDF file.
 
 # Authentication
-Currently Authentication is done by IMS Integration to bypass Crowd. Tokens are Read from Cookies.
+Currently Authentication is done by IMS Integration to bypass Keycloak. Tokens are Read from Cookies.
 
 # Example REST Api calls
 Integrating this service into an application will require to perform http calls to the Api, 

@@ -7,7 +7,6 @@ import org.snomed.cis.dto.GetStatsResponseDto;
 import org.snomed.cis.dto.QueryCountByNamespaceDto;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.repository.*;
-import org.snomed.cis.util.CrowdRequestManager;
 import org.snomed.cis.util.ImsRequestManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,9 +18,6 @@ import java.util.List;
 @Service
 public class StatsService {
     private final Logger logger = LoggerFactory.getLogger(StatsService.class);
-
-    @Autowired
-    private CrowdRequestManager crowdRequestManager;
 
 
     public StatsService(ImsRequestManager ims) {

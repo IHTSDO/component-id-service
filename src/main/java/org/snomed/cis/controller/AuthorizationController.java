@@ -35,12 +35,6 @@ public class AuthorizationController {
     private AuthorizationService authorizationService;
 
 
-    @Operation(summary = "getUsers")
-    @GetMapping("/users")
-    public ResponseEntity<List<String>> getUsers(@RequestParam String token, @RequestParam(required = false) String searchString, @Parameter(hidden = true) Authentication authentication) throws CisException {
-        authorizationService.validateAdmin((Token) authentication);
-        return new ResponseEntity<>(authorizationService.getUsers(token,searchString), HttpStatus.OK);
-    }
 
     @Operation(summary = "getUserGroups")
     @GetMapping("/users/{username}/groups")
@@ -48,29 +42,6 @@ public class AuthorizationController {
 
         authorizationService.validateSelfOrAdmin((Token) authentication, username);
         return new ResponseEntity<>(authorizationService.getUserGroups(token,username), HttpStatus.OK);
-    }
-
-    @Operation(summary = "removeMember")
-    @DeleteMapping("/users/{username}/groups/{groupName}")
-    public ResponseEntity<Void> removeMember(@RequestParam String token, @PathVariable String username, @PathVariable String groupName, @Parameter(hidden = true) Authentication authentication) throws CisException {
-        authorizationService.validateAdmin((Token) authentication);
-        authorizationService.removeMember(token, username, groupName);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @Operation(summary = "addMember")
-    @PostMapping("/users/{username}/groups/{groupName}")
-    public ResponseEntity<Void> addMember(@RequestParam String token, @PathVariable String username, @PathVariable String groupName, @Parameter(hidden = true) Authentication authentication) throws CisException {
-        authorizationService.validateAdmin((Token) authentication);
-        authorizationService.addMember(token,username, groupName);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @Operation(summary = "getGroups")
-    @GetMapping("/groups")
-    public ResponseEntity<List<String>> getGroups(@RequestParam String token, @Parameter(hidden = true) Authentication authentication) throws CisException {
-        authorizationService.validateAdmin((Token) authentication);
-        return new ResponseEntity<>(authorizationService.getGroups(token), HttpStatus.OK);
     }
 
     @Operation(summary = "getGroupUsers")

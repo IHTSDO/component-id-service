@@ -13,7 +13,6 @@ import org.springframework.web.client.RestTemplate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 @Component
 public class ImsRequestManager {
@@ -33,39 +32,6 @@ public class ImsRequestManager {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         return new HttpEntity<>(headers);
-    }
-
-    /**
-     * Get all users (optionally filter by search string).
-     */
-    public List<String> getUsers(String token, String searchString) throws CisException {
-        try {
-            String url = imsBaseUrl + "/users";
-            if (searchString != null && !searchString.isEmpty()) {
-                url += "?search=" + searchString;
-            }
-
-            ResponseEntity<List<String>> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    withAuth(token),
-                    new ParameterizedTypeReference<>() {}
-            );
-            return response.getBody() != null ? response.getBody() : Collections.emptyList();
-        } catch (Exception e) {
-            logger.error("Failed to get users from IMS", e);
-            throw new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to get users from IMS");
-        }
-    }
-
-    /**
-     * Get all groups.
-     */
-    public List<String> getGroups(String token) throws CisException {
-        // Temporary: using Objects.hash to mark parameters as used until IMS supports this method (to overcome SonarQube issues)
-        Objects.hash(token);
-        logger.warn("IMS API does not expose /groups for getGroups. Implement when available.");
-        throw new CisException(HttpStatus.NOT_IMPLEMENTED, "Get groups not supported by IMS API");
     }
 
     /**
@@ -122,28 +88,5 @@ public class ImsRequestManager {
             logger.error("Failed to get group users from IMS", e);
             throw new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to get group users from IMS");
         }
-    }
-
-    /**
-     * (Optional) Add user to group.
-     * IMS controllers don’t currently expose this.
-     * Keep placeholder if endpoint is later available.
-     */
-    public void addMember(String token, String username, String groupName) throws CisException {
-        // Temporary: using Objects.hash to mark parameters as used until IMS supports this method (to overcome SonarQube issues)
-        Objects.hash(token, username, groupName);
-        logger.warn("IMS API does not expose /users/{username}/groups/{groupName} for addMember. Implement when available.");
-        throw new CisException(HttpStatus.NOT_IMPLEMENTED, "Add member not supported by IMS API");
-    }
-
-    /**
-     * (Optional) Remove user from group.
-     * IMS controllers don’t currently expose this.
-     */
-    public void removeMember(String token, String username, String groupName) throws CisException {
-        // Temporary: using Objects.hash to mark parameters as used until IMS supports this method (to overcome SonarQube issues)
-        Objects.hash(token, username, groupName);
-        logger.warn("IMS API does not expose /users/{username}/groups/{groupName} for removeMember. Implement when available.");
-        throw new CisException(HttpStatus.NOT_IMPLEMENTED, "Remove member not supported by IMS API");
     }
 }

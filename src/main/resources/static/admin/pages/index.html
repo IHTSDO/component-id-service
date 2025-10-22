@@ -67,13 +67,6 @@
             console.log(err.message);
         });
 
-        $.get("/api/groups?token=" + options.token).done(function(res){
-            if (!res.groups || !res) res = {groups: []};
-            options.groups = res.groups;
-        }).fail(function(err){
-            console.log(err.message);
-        });
-
         $.when(adminCall, consumerCall).done(function(){
             options.users = users;
             //console.log("users:", users);
@@ -1249,158 +1242,158 @@
                 bulkJobs();
             });
 
-            $("#admin-users").unbind();
-            $("#admin-users").disableTextSelect();
-            $("#admin-users").click(function(){
-               setupAdminPanel();
-            });
-            setupAdminPanel = function(){
-                $("#page-wrapper").html('<br><br><br><br><div class="text-center"><i class="fa fa-spinner fa-spin fa-4x"></i></div>');
-                $.get("../views/admin/main.hbs").then(function(src){
-                    var template = Handlebars.compile(src);
-                    $("#page-wrapper").html(template());
-                    function loadUsersList(usersList, type, completeGroupName){
-                        $.get("../views/admin/detailsList.hbs").then(function(src){
-                            var template = Handlebars.compile(src);
-                            var context = {
-                                users: usersList,
-                                type: type
-                            };
-                            $("#selected-list-details").html(template(context));
+<!--            $("#admin-users").unbind();-->
+<!--            $("#admin-users").disableTextSelect();-->
+<!--            $("#admin-users").click(function(){-->
+<!--               setupAdminPanel();-->
+<!--            });-->
+<!--            setupAdminPanel = function(){-->
+<!--                $("#page-wrapper").html('<br><br><br><br><div class="text-center"><i class="fa fa-spinner fa-spin fa-4x"></i></div>');-->
+<!--                $.get("../views/admin/main.hbs").then(function(src){-->
+<!--                    var template = Handlebars.compile(src);-->
+<!--                    $("#page-wrapper").html(template());-->
+<!--                    function loadUsersList(usersList, type, completeGroupName){-->
+<!--                        $.get("../views/admin/detailsList.hbs").then(function(src){-->
+<!--                            var template = Handlebars.compile(src);-->
+<!--                            var context = {-->
+<!--                                users: usersList,-->
+<!--                                type: type-->
+<!--                            };-->
+<!--                            $("#selected-list-details").html(template(context));-->
 
-                            $("#selected-list-details").find(".remove-group").unbind();
-                            $("#selected-list-details").find(".remove-group").disableTextSelect();
-                            $("#selected-list-details").find(".remove-group").click(function(e){
-                                $("#selected-list-details").find(".btn").addClass("disabled");
-                                var userSelected = $(e.target).closest("li").attr("data-username");
-                                $.ajax({
-                                    type: "DELETE",
-                                    url: "/api/users/" + userSelected + "/groups/" + completeGroupName + "?token=" + options.token
-                                }).done(function(res){
-                                    $("#selected-list-details").find(".btn").removeClass("disabled");
-                                    $(e.target).closest("li").remove();
-                                    $.notify("Removed", "success");
-                                    loadUsers();
-                                }).fail(function(err){
-                                    $.notify("Failed", "error");
-                                    $("#selected-list-details").find(".btn").addClass("disabled");
-                                    console.log(err.message);
-                                });
-                            });
+<!--                            $("#selected-list-details").find(".remove-group").unbind();-->
+<!--                            $("#selected-list-details").find(".remove-group").disableTextSelect();-->
+<!--                            $("#selected-list-details").find(".remove-group").click(function(e){-->
+<!--                                $("#selected-list-details").find(".btn").addClass("disabled");-->
+<!--                                var userSelected = $(e.target).closest("li").attr("data-username");-->
+<!--                                $.ajax({-->
+<!--                                    type: "DELETE",-->
+<!--                                    url: "/api/users/" + userSelected + "/groups/" + completeGroupName + "?token=" + options.token-->
+<!--                                }).done(function(res){-->
+<!--                                    $("#selected-list-details").find(".btn").removeClass("disabled");-->
+<!--                                    $(e.target).closest("li").remove();-->
+<!--                                    $.notify("Removed", "success");-->
+<!--                                    loadUsers();-->
+<!--                                }).fail(function(err){-->
+<!--                                    $.notify("Failed", "error");-->
+<!--                                    $("#selected-list-details").find(".btn").addClass("disabled");-->
+<!--                                    console.log(err.message);-->
+<!--                                });-->
+<!--                            });-->
 
-                            $("#addGroup-" + type).unbind();
-                            $("#addGroup-" + type).disableTextSelect();
-                            $("#addGroup-" + type).click(function(){
-                                $("#select-user-modal").modal("show");
-                                $("#select-user-modal-body").html('<div class="text-center"><i class="fa fa-spinner fa-spin fa-2x"></i></div>');
-                                function loadSelectUsersModal(){
-                                    $.get("../views/admin/modalBody.hbs").then(function(src){
-                                        var template = Handlebars.compile(src);
-                                        var context = {
-                                            users: options.allUsers
-                                        };
-                                        $("#select-user-modal-body").html(template(context));
+<!--                            $("#addGroup-" + type).unbind();-->
+<!--                            $("#addGroup-" + type).disableTextSelect();-->
+<!--                            $("#addGroup-" + type).click(function(){-->
+<!--                                $("#select-user-modal").modal("show");-->
+<!--                                $("#select-user-modal-body").html('<div class="text-center"><i class="fa fa-spinner fa-spin fa-2x"></i></div>');-->
+<!--                                function loadSelectUsersModal(){-->
+<!--                                    $.get("../views/admin/modalBody.hbs").then(function(src){-->
+<!--                                        var template = Handlebars.compile(src);-->
+<!--                                        var context = {-->
+<!--                                            users: options.allUsers-->
+<!--                                        };-->
+<!--                                        $("#select-user-modal-body").html(template(context));-->
 
-                                        $("#select-user-modal-select-button").addClass("disabled");
-                                        $("#select-user-modal-select-button").unbind();
-                                        $("#select-user-modal-select-button").disableTextSelect();
-                                        $("#select-user-modal-select-button").click(function(){
-                                            var userSelected = $("#selectedUser-span").html();
-                                            $("#select-user-modal").find(".btn").addClass("disabled");
-                                            $.ajax({
-                                                type: "POST",
-                                                url: "/api/users/" + userSelected + "/groups/" + completeGroupName + "?token=" + options.token
-                                            }).done(function(res){
-                                                $("#select-user-modal").find(".btn").removeClass("disabled");
-                                                $("#select-user-modal").modal("hide");
-                                                $.notify("Added", "success");
-                                                if (type == "Users")
-                                                    $("#users-select-list").click();
-                                                else
-                                                    $("#admins-select-list").click();
-                                                loadUsers();
-                                            }).fail(function(err){
-                                                $("#select-user-modal").find(".btn").removeClass("disabled");
-                                                $.notify("Failed", "error");
-                                                console.log(err.message);
-                                            });
-                                        });
+<!--                                        $("#select-user-modal-select-button").addClass("disabled");-->
+<!--                                        $("#select-user-modal-select-button").unbind();-->
+<!--                                        $("#select-user-modal-select-button").disableTextSelect();-->
+<!--                                        $("#select-user-modal-select-button").click(function(){-->
+<!--                                            var userSelected = $("#selectedUser-span").html();-->
+<!--                                            $("#select-user-modal").find(".btn").addClass("disabled");-->
+<!--                                            $.ajax({-->
+<!--                                                type: "POST",-->
+<!--                                                url: "/api/users/" + userSelected + "/groups/" + completeGroupName + "?token=" + options.token-->
+<!--                                            }).done(function(res){-->
+<!--                                                $("#select-user-modal").find(".btn").removeClass("disabled");-->
+<!--                                                $("#select-user-modal").modal("hide");-->
+<!--                                                $.notify("Added", "success");-->
+<!--                                                if (type == "Users")-->
+<!--                                                    $("#users-select-list").click();-->
+<!--                                                else-->
+<!--                                                    $("#admins-select-list").click();-->
+<!--                                                loadUsers();-->
+<!--                                            }).fail(function(err){-->
+<!--                                                $("#select-user-modal").find(".btn").removeClass("disabled");-->
+<!--                                                $.notify("Failed", "error");-->
+<!--                                                console.log(err.message);-->
+<!--                                            });-->
+<!--                                        });-->
 
-                                        $("#select-user-modal-body").find(".selectUser").unbind();
-                                        $("#select-user-modal-body").find(".selectUser").disableTextSelect();
-                                        $("#select-user-modal-body").find(".selectUser").click(function(e){
-                                            $("#selectedUser-span").html($(e.target).closest("li").attr("data-value"));
-                                            $("#selectedUser-span").addClass("label-success");
-                                            $("#selectedUser-span").removeClass("label-danger");
-                                            $("#select-user-modal-select-button").removeClass("disabled");
-                                        });
-                                        function searchUser(){
-                                            var query = $.trim($("#users-querySearchBox").val().toLowerCase());
-                                            if (query == "") {
-                                                $("#select-user-modal-body").find(".selectUserRow").show();
-                                            }else{
-                                                $("#select-user-modal-body").find(".selectUserRow").hide();
-                                                $("#select-user-modal-body").find(".selectUserRow[data-id*=" + query + "]").show();
-                                                $("#select-user-modal-body").find(".selectUserRow[data-id=" + query + "]").show();
-                                            }
-                                        }
-                                        //
-                                        $("#users-query-clearButton").unbind();
-                                        $("#users-query-clearButton").disableTextSelect();
-                                        $("#users-query-clearButton").click(function(){
-                                            $("#users-querySearchBox").val("");
-                                            searchUser();
-                                        });
-                                        $('#users-querySearchBox').keyup(function () {
-                                            searchUser();
-                                        });
-                                    });
-                                }
-                                if (!options.allUsers){
-                                    $.get("/api/users?token=" + options.token).done(function(res){
-                                        options.allUsers = res;
-                                        loadSelectUsersModal();
-                                    }).fail(function(err){
-                                        $("#select-user-modal-body").html("");
-                                        $.notify("Failed", "error");
-                                        console.log(err.message);
-                                    });
-                                }else{
-                                    loadSelectUsersModal();
-                                }
-                            });
-                        });
-                    }
-                    $("#users-select-list").unbind();
-                    $("#users-select-list").disableTextSelect();
-                    $("#users-select-list").click(function(){
-                        $("#admins-select-list").closest("li").removeClass("active");
-                        $("#users-select-list").closest("li").addClass("active");
-                        $("#selected-list-details").html('<div class="text-center"><i class="fa fa-spinner fa-spin fa-2x"></i></div>');
-                        $.get("/api/groups/component-identifier-service-user/users?token=" + options.token).done(function(res){
-                            loadUsersList(res, "Users", "component-identifier-service-user");
-                        }).fail(function(err){
-                            $.notify("Failed", "error");
-                            console.log(err.message);
-                        });
-                    });
+<!--                                        $("#select-user-modal-body").find(".selectUser").unbind();-->
+<!--                                        $("#select-user-modal-body").find(".selectUser").disableTextSelect();-->
+<!--                                        $("#select-user-modal-body").find(".selectUser").click(function(e){-->
+<!--                                            $("#selectedUser-span").html($(e.target).closest("li").attr("data-value"));-->
+<!--                                            $("#selectedUser-span").addClass("label-success");-->
+<!--                                            $("#selectedUser-span").removeClass("label-danger");-->
+<!--                                            $("#select-user-modal-select-button").removeClass("disabled");-->
+<!--                                        });-->
+<!--                                        function searchUser(){-->
+<!--                                            var query = $.trim($("#users-querySearchBox").val().toLowerCase());-->
+<!--                                            if (query == "") {-->
+<!--                                                $("#select-user-modal-body").find(".selectUserRow").show();-->
+<!--                                            }else{-->
+<!--                                                $("#select-user-modal-body").find(".selectUserRow").hide();-->
+<!--                                                $("#select-user-modal-body").find(".selectUserRow[data-id*=" + query + "]").show();-->
+<!--                                                $("#select-user-modal-body").find(".selectUserRow[data-id=" + query + "]").show();-->
+<!--                                            }-->
+<!--                                        }-->
+<!--                                        //-->
+<!--                                        $("#users-query-clearButton").unbind();-->
+<!--                                        $("#users-query-clearButton").disableTextSelect();-->
+<!--                                        $("#users-query-clearButton").click(function(){-->
+<!--                                            $("#users-querySearchBox").val("");-->
+<!--                                            searchUser();-->
+<!--                                        });-->
+<!--                                        $('#users-querySearchBox').keyup(function () {-->
+<!--                                            searchUser();-->
+<!--                                        });-->
+<!--                                    });-->
+<!--                                }-->
+<!--                                if (!options.allUsers){-->
+<!--                                    $.get("/api/users?token=" + options.token).done(function(res){-->
+<!--                                        options.allUsers = res;-->
+<!--                                        loadSelectUsersModal();-->
+<!--                                    }).fail(function(err){-->
+<!--                                        $("#select-user-modal-body").html("");-->
+<!--                                        $.notify("Failed", "error");-->
+<!--                                        console.log(err.message);-->
+<!--                                    });-->
+<!--                                }else{-->
+<!--                                    loadSelectUsersModal();-->
+<!--                                }-->
+<!--                            });-->
+<!--                        });-->
+<!--                    }-->
+<!--                    $("#users-select-list").unbind();-->
+<!--                    $("#users-select-list").disableTextSelect();-->
+<!--                    $("#users-select-list").click(function(){-->
+<!--                        $("#admins-select-list").closest("li").removeClass("active");-->
+<!--                        $("#users-select-list").closest("li").addClass("active");-->
+<!--                        $("#selected-list-details").html('<div class="text-center"><i class="fa fa-spinner fa-spin fa-2x"></i></div>');-->
+<!--                        $.get("/api/groups/component-identifier-service-user/users?token=" + options.token).done(function(res){-->
+<!--                            loadUsersList(res, "Users", "component-identifier-service-user");-->
+<!--                        }).fail(function(err){-->
+<!--                            $.notify("Failed", "error");-->
+<!--                            console.log(err.message);-->
+<!--                        });-->
+<!--                    });-->
 
-                    $("#admins-select-list").unbind();
-                    $("#admins-select-list").disableTextSelect();
-                    $("#admins-select-list").click(function(){
-                        $("#admins-select-list").closest("li").addClass("active");
-                        $("#users-select-list").closest("li").removeClass("active");
-                        $("#selected-list-details").html('<div class="text-center"><i class="fa fa-spinner fa-spin fa-2x"></i></div>');
-                        $.get("/api/groups/component-identifier-service-admin/users?token=" + options.token).done(function(res){
-                            loadUsersList(res, "Administrators", "component-identifier-service-admin");
-                        }).fail(function(err){
-                            $.notify("Failed", "error");
-                            console.log(err.message);
-                        });
-                    });
-                    $("#users-select-list").click();
-                });
-            };
+<!--                    $("#admins-select-list").unbind();-->
+<!--                    $("#admins-select-list").disableTextSelect();-->
+<!--                    $("#admins-select-list").click(function(){-->
+<!--                        $("#admins-select-list").closest("li").addClass("active");-->
+<!--                        $("#users-select-list").closest("li").removeClass("active");-->
+<!--                        $("#selected-list-details").html('<div class="text-center"><i class="fa fa-spinner fa-spin fa-2x"></i></div>');-->
+<!--                        $.get("/api/groups/component-identifier-service-admin/users?token=" + options.token).done(function(res){-->
+<!--                            loadUsersList(res, "Administrators", "component-identifier-service-admin");-->
+<!--                        }).fail(function(err){-->
+<!--                            $.notify("Failed", "error");-->
+<!--                            console.log(err.message);-->
+<!--                        });-->
+<!--                    });-->
+<!--                    $("#users-select-list").click();-->
+<!--                });-->
+<!--            };-->
         }
 
         function drawPieChart(data) {
@@ -1761,7 +1754,7 @@
             </div>
             <!-- /.row -->
             <div class="row">
-                <div class="col-lg-3 col-md-6">
+                <div class="col-lg-4 col-md-6">
                     <div class="panel panel-primary">
                         <div class="panel-heading">
                             <div class="row">
@@ -1783,7 +1776,7 @@
                         </a>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6">
+                <div class="col-lg-4 col-md-6">
                     <div class="panel panel-green">
                         <div class="panel-heading">
                             <div class="row">
@@ -1805,7 +1798,7 @@
                         </a>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6">
+                <div class="col-lg-4 col-md-6">
                     <div class="panel panel-yellow">
                         <div class="panel-heading">
                             <div class="row">
@@ -1827,28 +1820,28 @@
                         </a>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="panel panel-red">
-                        <div class="panel-heading">
-                            <div class="row">
-                                <div class="col-xs-3">
-                                    <i class="fa fa-users fa-5x"></i>
-                                </div>
-                                <div class="col-xs-9 text-right">
-                                    <div id="users-count-stats" class="huge"><i class="fa fa-spinner fa-spin"></i></div>
-                                    <div>Users</div>
-                                </div>
-                            </div>
-                        </div>
-                        <a href='javascript:setupAdminPanel();'>
-                            <div class="panel-footer panel-footer-custom">
-                                <span class="pull-left">View Details</span>
-                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
-                                <div class="clearfix"></div>
-                            </div>
-                        </a>
-                    </div>
-                </div>
+<!--                <div class="col-lg-3 col-md-6">-->
+<!--                    <div class="panel panel-red">-->
+<!--                        <div class="panel-heading">-->
+<!--                            <div class="row">-->
+<!--                                <div class="col-xs-3">-->
+<!--                                    <i class="fa fa-users fa-5x"></i>-->
+<!--                                </div>-->
+<!--                                <div class="col-xs-9 text-right">-->
+<!--                                    <div id="users-count-stats" class="huge"><i class="fa fa-spinner fa-spin"></i></div>-->
+<!--                                    <div>Users</div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                        <a href='javascript:setupAdminPanel();'>-->
+<!--                            <div class="panel-footer panel-footer-custom">-->
+<!--                                <span class="pull-left">View Details</span>-->
+<!--                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>-->
+<!--                                <div class="clearfix"></div>-->
+<!--                            </div>-->
+<!--                        </a>-->
+<!--                    </div>-->
+<!--                </div>-->
             </div>
             <!-- /.row -->
             <div class="row">

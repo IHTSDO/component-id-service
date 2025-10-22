@@ -14,7 +14,6 @@ import org.snomed.cis.exception.CisException;
 import org.snomed.cis.repository.NamespaceRepository;
 import org.snomed.cis.repository.PartitionsRepository;
 import org.snomed.cis.repository.PermissionsNamespaceRepository;
-import org.snomed.cis.util.CrowdRequestManager;
 import org.snomed.cis.util.ImsRequestManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -41,8 +40,6 @@ public class NamespaceService {
     @Autowired
     BulkSctidService bulkSctidService;
 
-    @Autowired
-    private CrowdRequestManager crowdRequestManager;
 
     public NamespaceService(ImsRequestManager imsRequestManager) {
         this.imsRequestManager = imsRequestManager;

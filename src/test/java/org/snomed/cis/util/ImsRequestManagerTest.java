@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
-import org.snomed.cis.exception.CisException;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
@@ -30,49 +29,6 @@ class ImsRequestManagerTest {
     void setup() {
         MockitoAnnotations.openMocks(this);
         imsRequestManager = new ImsRequestManager(restTemplate, imsBaseUrl);
-    }
-
-    @Test
-    void getUsers_withSearchString_shouldReturnUsers() throws Exception {
-        List<String> mockUsers = List.of("user1", "user2");
-        ResponseEntity<List<String>> responseEntity = new ResponseEntity<>(mockUsers, HttpStatus.OK);
-
-        when(restTemplate.exchange(
-                eq(imsBaseUrl + "/users?search=test"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                ArgumentMatchers.<ParameterizedTypeReference<List<String>>>any())
-        ).thenReturn(responseEntity);
-
-        List<String> users = imsRequestManager.getUsers("dummy-token", "test");
-        assertEquals(2, users.size());
-        assertTrue(users.contains("user1"));
-    }
-
-    @Test
-    void getUsers_withNullSearch_shouldCallWithoutQuery() throws Exception {
-        List<String> mockUsers = List.of("user1");
-        ResponseEntity<List<String>> responseEntity = new ResponseEntity<>(mockUsers, HttpStatus.OK);
-
-        when(restTemplate.exchange(
-                eq(imsBaseUrl + "/users"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                ArgumentMatchers.<ParameterizedTypeReference<List<String>>>any())
-        ).thenReturn(responseEntity);
-
-        List<String> users = imsRequestManager.getUsers("dummy-token", null);
-        assertEquals(1, users.size());
-        assertEquals("user1", users.get(0));
-    }
-
-    @Test
-    void getGroups_shouldThrowNotImplemented() {
-        CisException ex = assertThrows(CisException.class, () ->
-                imsRequestManager.getGroups("dummy-token")
-        );
-        assertEquals(HttpStatus.NOT_IMPLEMENTED, ex.getStatus());
-        assertEquals("Get groups not supported by IMS API", ex.getMessage());
     }
 
 
@@ -123,19 +79,4 @@ class ImsRequestManagerTest {
         assertTrue(users.contains("user2"));
     }
 
-    @Test
-    void addMember_shouldThrowNotImplemented() {
-        CisException ex = assertThrows(CisException.class, () ->
-                imsRequestManager.addMember("token", "user", "group")
-        );
-        assertEquals(HttpStatus.NOT_IMPLEMENTED, ex.getStatus());
-    }
-
-    @Test
-    void removeMember_shouldThrowNotImplemented() {
-        CisException ex = assertThrows(CisException.class, () ->
-                imsRequestManager.removeMember("token", "user", "group")
-        );
-        assertEquals(HttpStatus.NOT_IMPLEMENTED, ex.getStatus());
-    }
 }

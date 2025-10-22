@@ -75,15 +75,6 @@ public class ViewsController {
         return source.content(DEFAULT_CHARSET);
     }
 
-    @Operation(summary = "adminMainHbs")
-    @GetMapping("/api/views/admin/main.hbs")
-    @ResponseBody
-    public String adminMainHbs() throws IOException {
-        logger.info("Request received");
-        TemplateSource source = adminLoader.sourceAt("main");
-        return source.content(DEFAULT_CHARSET);
-    }
-
     @Operation(summary = "adminModalBodyHbs")
     @GetMapping("/api/views/admin/modalBody.hbs")
     @ResponseBody
