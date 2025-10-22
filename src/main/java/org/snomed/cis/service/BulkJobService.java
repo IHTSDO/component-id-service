@@ -225,7 +225,7 @@ public class BulkJobService {
                 ids.add(resultList.get(i).getSystemId());
             }
         }
-        logger.debug("BulkJobService.findSchemeByJobId() - Response size- :: {}", (null==cleanRows?"0":cleanRows.size()));
+        logger.debug("BulkJobService.findSchemeByJobId() - Response size- :: {}", cleanRows.isEmpty() ? "0" : cleanRows.size());
         return cleanRows;
     }
 

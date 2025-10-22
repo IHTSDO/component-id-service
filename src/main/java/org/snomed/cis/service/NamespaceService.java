@@ -191,7 +191,7 @@ public class NamespaceService {
 
     public boolean isAbleToEdit(Integer namespace, AuthenticateResponseDto authenticateResponseDto) {
         logger.debug("NamespaceService.isAbleToEdit() namespace-{} :: AuthenticateResponseDto-{} ", namespace, authenticateResponseDto.toString());
-        List<String> groups = authenticateResponseDto.getRoles().stream().map(s -> s.split("_")[1]).collect(Collectors.toList());
+        List<String> groups = authenticateResponseDto.getRoles().stream().map(s -> s.split("_")[1]).toList();
         boolean isAble = false;
         if (groups.contains("component-identifier-service-admin") || hasNamespacePermission(namespace, authenticateResponseDto.getName())) {
             isAble = true;
