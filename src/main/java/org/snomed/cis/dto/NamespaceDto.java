@@ -8,6 +8,7 @@ public class NamespaceDto {
 
     private Integer namespace;
     private String organizationName;
+    private String organizationAndContactDetails;
     private String dateIssued;
     private String email;
     private String notes;
@@ -17,9 +18,11 @@ public class NamespaceDto {
     public NamespaceDto() {
     }
 
-    public NamespaceDto(Integer namespace, String organizationName, String dateIssued, String email, String notes, String idPregenerate, List<Partitions> partitions) {
+
+    public NamespaceDto(Integer namespace, String organizationName, String organizationAndContactDetails, String dateIssued, String email, String notes, String idPregenerate, List<Partitions> partitions) {
         this.namespace = namespace;
         this.organizationName = organizationName;
+        this.organizationAndContactDetails = organizationAndContactDetails;
         this.dateIssued = dateIssued;
         this.email = email;
         this.notes = notes;
@@ -42,6 +45,15 @@ public class NamespaceDto {
     public void setOrganizationName(String organizationName) {
         this.organizationName = organizationName;
     }
+
+    public String getOrganizationAndContactDetails() {
+        return organizationAndContactDetails;
+    }
+
+    public void setOrganizationAndContactDetails(String organizationAndContactDetails) {
+        this.organizationAndContactDetails = organizationAndContactDetails;
+    }
+
 
     public String getDateIssued() {
         return dateIssued;
@@ -88,6 +100,7 @@ public class NamespaceDto {
         return "{" +
                 "namespace=" + namespace +
                 ", organizationName='" + organizationName + '\'' +
+                ", organizationAndContactDetails='" + organizationAndContactDetails + '\'' +
                 ", dateIssued='" + dateIssued + '\'' +
                 ", email='" + email + '\'' +
                 ", notes='" + notes + '\'' +

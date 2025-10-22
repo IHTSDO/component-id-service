@@ -90,8 +90,8 @@ class NamespaceControllerTest {
         mockMvc.perform(get("/users/{username}/namespaces/", username)
                         .param("token", token)
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("No namespaces found"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
 
     }
 
@@ -125,8 +125,8 @@ class NamespaceControllerTest {
         mockMvc.perform(get("/users/{username}/namespaces/", invalidUsername)
                         .param("token", token)
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("No namespaces found"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
     @Test

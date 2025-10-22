@@ -21,6 +21,7 @@
         <packageName>component-id-service</packageName>
         <execFinalName>${packageName}.jar</execFinalName>
         <sonar.cpd.exclusions>**/SchemeId.java, **/Sctid.java</sonar.cpd.exclusions>
+        <sonar.exclusions>**/NamespaceDto.java</sonar.exclusions>
     </properties>
 
 
