@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>metisMenu - animate</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="assets/css/metisMenu.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/noty/lib/noty.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/noty/lib/themes/relax.css">
+
+  <link rel="stylesheet" href="assets/css/app.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/jquery"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/js/metisMenu.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/noty"></script>
+
+</head>
+
+<body>
+  <header>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">metisMenu</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Examples
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li>
+                  <a class="dropdown-item" href="mm-vertical.html">Vertical Menu</a>
+                </li>
+                <li>
+
+                <a class="dropdown-item" href="mm-horizontal.html">Horizontal Menu</a>
+                </li>
+                <li>
+
+                <a class="dropdown-item" href="mm-folder.html">Folder View</a>
+                </li>
+                <li>
+
+                <a class="dropdown-item" href="mm-vertical-hover.html">Hover Option For Desktop</a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="mm-animate.html">Animate</a></li>
+                  <li>
+
+                  <a class="dropdown-item" href="mm-event.html">Event</a>
+                  </li>
+                  <li>
+
+                  <a class="dropdown-item" href="mm-event2.html">Event 2</a>
+                  </li>
+                  <li>
+
+                  <a class="dropdown-item" href="mm-dispose.html">Stop &amp; Start metisMenu</a>
+                  </li>
+                  <li>
+
+                  <a class="dropdown-item" href="mm-ajax.html">Ajax</a>
+                  </li>
+                  <li>
+
+                  <a class="dropdown-item" href="mm-faq.html">FAQ</a>
+                  </li>
+                  <li>
+
+                  <a class="dropdown-item" href="mm-bs-card.html">Bootstrap Card</a>
+                  </li>
+                  <li>
+
+                  <a class="dropdown-item" href="mm-docs.html">Docs</a>
+                  </li>
+              </ul>
+            </li>
+
+
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Templates
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li>
+                  <a class="dropdown-item" href="https://onokumus.com/chaldene" target="_blank">Chaldene Admin</a>
+                </li>
+                <li>
+
+                  <a class="dropdown-item" href="https://onokumus.com/elektron" target="_blank">Elektron Admin</a>
+                </li>
+                <li>
+
+                  <a class="dropdown-item" href="https://onokumus.com/twbuttons/" target="_blank">twbuttons</a>
+                </li>
+              </ul>
+            </li>
+
+
+            <li class="nav-item">
+              <a class="nav-link" href="https://onokumus.com" target="_blank">onokumus</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+  <div class="container">
+    <link rel="stylesheet" href="assets/css/mm-vertical.css">
+<style>
+  .metismenu .fade.mm-collapse.mm-show {
+   opacity: 1;
+}
+</style>
+<section class="jumbotron text-center">
+  <h2 class="jumbotron-heading">Animate</h2>
+  <a class="btn btn-outline-info" href="assets/css/mm-vertical.css" target="_top">
+  <i class="fa fa-fw fa-css3"></i>
+  Download CSS
+  </a>
+  <a class="btn btn-outline-warning" href="assets/js/mm-animate.js" target="_top">
+  <i class="fa fa-fw fa-file-code-o"></i>
+  Download JS</a>
+</section>
+<div class="row">
+  <div class="col-md-3">
+    <nav class="sidebar-nav">
+      <ul class="metismenu" id="menu">
+        <li class="mm-active">
+          <a href="#" aria-expanded="true" class="has-arrow">
+            <span class="fa fa-fw fa-github fa-lg"></span>
+            <span class="sidebar-nav-item">metisMenu</span>
+          </a>
+          <ul>
+            <li>
+              <a href="https://github.com/onokumus/metisMenu">
+                <span class="fa fa-fw fa-code-fork"></span>
+                Fork
+              </a>
+            </li>
+            <li>
+              <a href="https://github.com/onokumus/metisMenu">
+                <span class="fa fa-fw fa-star"></span>
+                Star
+              </a>
+            </li>
+            <li>
+              <a href="https://github.com/onokumus/metisMenu/issues">
+                <span class="fa fa-fw fa-exclamation-triangle"></span>
+                Issues
+              </a>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <a href="#" aria-expanded="false"  class="has-arrow">Bounce</a>
+          <ul aria-expanded="false" class="animate__animated animate__bounce">
+            <li>
+              <a href="#">bounceIn</a>
+              <ul class="animate__animated animate__bounceIn">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">bounceInDown</a>
+              <ul class="animate__animated animate__bounceInDown">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">bounceInLeft</a>
+              <ul class="animate__animated animate__bounceInLeft">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">bounceInRight</a>
+              <ul class="animate__animated animate__bounceInRight">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">bounceInUp</a>
+              <ul class="animate__animated animate__bounceInUp">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <a href="#" aria-expanded="false"  class="has-arrow">Fade</a>
+          <ul aria-expanded="false" class="animate__animated animate__fade">
+            <li>
+              <a href="#">fadeIn</a>
+              <ul class="animate__animated animate__fadeIn">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">fadeInDown</a>
+              <ul class="animate__animated animate__fadeInDown">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">fadeInDownBig</a>
+              <ul class="animate__animated animate__fadeInDownBig">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">fadeInLeft</a>
+              <ul class="animate__animated animate__fadeInLeft">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">fadeInLeftBig</a>
+              <ul class="animate__animated animate__fadeInLeftBig">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">fadeInRight</a>
+              <ul class="animate__animated animate__fadeInRight">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">fadeInRightBig</a>
+              <ul class="animate__animated animate__fadeInRightBig">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">fadeInUp</a>
+              <ul class="animate__animated animate__fadeInUp">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">fadeInUpBig</a>
+              <ul class="animate__animated animate__fadeInUpBig">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <a href="#" aria-expanded="false" class="has-arrow">Flip</a>
+          <ul aria-expanded="false" class="animate__animated animate__flip">
+            <li>
+              <a href="#">flipInX</a>
+              <ul class="animate__animated animate__flipInX">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">flipInY</a>
+              <ul class="animate__animated animate__flipInY">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <a href="#" aria-expanded="false" class="has-arrow">Zoom</a>
+          <ul aria-expanded="false" class="animate__animated animate__swing">
+            <li>
+              <a href="#">zoomIn</a>
+              <ul class="animate__animated animate__zoomIn">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">zoomInDown</a>
+              <ul class="animate__animated animate__zoomInDown">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">zoomInLeft</a>
+              <ul class="animate__animated animate__zoomInLeft">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">zoomInRight</a>
+              <ul class="animate__animated animate__zoomInRight">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">zoomInUp</a>
+              <ul class="animate__animated animate__zoomInUp">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="#" aria-expanded="false"  class="has-arrow">Slide</a>
+          <ul aria-expanded="false" class="animate__animated animate__shake">
+            <li>
+              <a href="#">slideInDown</a>
+              <ul class="animate__animated animate__slideInDown">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">slideInLeft</a>
+              <ul class="animate__animated animate__slideInLeft">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">slideInRight</a>
+              <ul class="animate__animated animate__slideInRight">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">slideInUp</a>
+              <ul class="animate__animated animate__zoomInRight">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">slideInUp</a>
+              <ul class="animate__animated animate__zoomInUp">
+                <li><a href="#">item</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+  </div>
+<div class="col-md-9">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Animate</h5>
+        <h6>Include <code>animate.css</code></h6>
+<pre><code class="language-html"><span class="hljs-tag">&lt;<span class="hljs-name">link</span> <span class="hljs-attr">rel</span>=<span class="hljs-string">"stylesheet"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"https://cdn.jsdelivr.net/npm/animate.css"</span>&gt;</span>
+</code></pre>
+        <h6>Add <code>animate__animated animate__bounce</code> classes to <code>ul</code> element</h6>
+<pre><code class="language-html"><span class="hljs-tag">&lt;<span class="hljs-name">ul</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"animate__animated animate__bounce"</span>&gt;</span> ... <span class="hljs-tag">&lt;/<span class="hljs-name">ul</span>&gt;</span>
+</code></pre>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/mm-animate.js" charset="utf-8"></script>
+  </div>
+
+</body>
+
+</html>
