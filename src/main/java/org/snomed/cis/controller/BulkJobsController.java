@@ -11,7 +11,6 @@ import org.snomed.cis.exception.CisException;
 import org.snomed.cis.security.Token;
 import org.snomed.cis.service.AuthorizationService;
 import org.snomed.cis.service.BulkJobService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -55,22 +54,13 @@ public class BulkJobsController {
     @GetMapping("/bulk/jobs/{jobId}")
     public ResponseEntity<BulkJob> getJob(@RequestParam String token, @PathVariable Integer jobId, @Parameter(hidden = true) Authentication authentication) throws CisException {
         logger.info("Request received - jobId :: {}", jobId);
-        Token authToken = (Token) authentication;
-        if (!bulkJobService.isAuthorizedToViewJob(jobId, authToken)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        BulkJob bulkJob = bulkJobService.getJob(jobId);
-        return ResponseEntity.ok(bulkJob);
+        return ResponseEntity.ok(bulkJobService.getJob(jobId));
     }
 
     @Operation(summary = "getJobRecords")
     @GetMapping("/bulk/jobs/{jobId}/records")
-    public ResponseEntity<List<Object>> getJobRecords(@RequestParam String token, @PathVariable Integer jobId, @Parameter(hidden = true) Authentication authentication) throws CisException {
+    public ResponseEntity<List<Object>> getJobRecords(@RequestParam String token, @PathVariable Integer jobId, @Parameter(hidden = true) Authentication authentication) {
         logger.info("Request received for - jobId :: {}", jobId);
-        Token authToken = (Token) authentication;
-        if (!bulkJobService.isAuthorizedToViewJob(jobId, authToken)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
         return ResponseEntity.ok(bulkJobService.getJobRecords(jobId));
     }
 
