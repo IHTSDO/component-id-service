@@ -46,7 +46,7 @@ class AuthorizationServiceTest {
 
     @Test
     void testGetGroupUsers_shouldReturnEmptyList() throws Exception {
-        when(imsRequestManager.getGroupUsers(anyString(), eq("group"), eq(100), eq(0))).thenReturn(List.of());
+        when(imsRequestManager.getGroupUsers(anyString(), eq("group"), eq(-1), eq(0))).thenReturn(List.of());
         List<String> result = authorizationService.getGroupUsers("dummy-token","group");
         assertTrue(result.isEmpty());
     }

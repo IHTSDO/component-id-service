@@ -27,8 +27,7 @@ public class AuthorizationService {
     }
 
     public List<String> getGroupUsers(String token, String groupName) throws CisException {
-        // Temporary default: first 100 results starting at 0
-        return imsRequestManager.getGroupUsers(token, groupName, 100, 0);
+        return imsRequestManager.getGroupUsers(token, groupName, -1, 0);
     }
 
 

@@ -68,8 +68,8 @@ class StatsServiceTest {
         Mockito.when(dto1.getNamespace()).thenReturn("1234");
         Mockito.when(dto1.getCount()).thenReturn(10L);
 
-        Mockito.when(imsRequestManager.getGroupUsers("dummy-token","component-identifier-service-admin",1000,0)).thenReturn(admins);
-        Mockito.when(imsRequestManager.getGroupUsers("dummy-token","component-identifier-service-user",1000,0)).thenReturn(users);
+        Mockito.when(imsRequestManager.getGroupUsers("dummy-token","component-identifier-service-admin",-1,0)).thenReturn(admins);
+        Mockito.when(imsRequestManager.getGroupUsers("dummy-token","component-identifier-service-user",-1,0)).thenReturn(users);
         Mockito.when(schemeIdBaseRepository.count()).thenReturn(5L);
         Mockito.when(sctidRepository.getCountByNamespace()).thenReturn(List.of(dto1));
         Mockito.when(namespaceRepository.count()).thenReturn(1L);
@@ -96,8 +96,8 @@ class StatsServiceTest {
         Mockito.when(dto.getNamespace()).thenReturn("111");
         Mockito.when(dto.getCount()).thenReturn(20L);
 
-        Mockito.when(imsRequestManager.getGroupUsers("dummy-token","component-identifier-service-admin",1000,0)).thenReturn(admins);
-        Mockito.when(imsRequestManager.getGroupUsers("dummy-token","component-identifier-service-user",1000,0)).thenReturn(users);
+        Mockito.when(imsRequestManager.getGroupUsers("dummy-token","component-identifier-service-admin",-1,0)).thenReturn(admins);
+        Mockito.when(imsRequestManager.getGroupUsers("dummy-token","component-identifier-service-user",-1,0)).thenReturn(users);
         Mockito.when(authorizationService.getUserGroups("dummy-token", NORMAL_USERNAME)).thenReturn(userGroups);
         Mockito.when(permissionsSchemeRepository.countByUsernameIn(List.of("group-role"))).thenReturn(3L);
         Mockito.when(permissionsNamespaceRepository.findByUsernameIn(List.of("group-role"))).thenReturn(permissionsNamespaces);
@@ -113,8 +113,8 @@ class StatsServiceTest {
 
     @Test
     void testGetStats_NoGroupsNoPermissions() throws CisException {
-        Mockito.when(imsRequestManager.getGroupUsers("dummy-token","component-identifier-service-admin",1000,0)).thenReturn(List.of());
-        Mockito.when(imsRequestManager.getGroupUsers("dummy-token","component-identifier-service-user",1000,0)).thenReturn(List.of());
+        Mockito.when(imsRequestManager.getGroupUsers("dummy-token","component-identifier-service-admin",-1,0)).thenReturn(List.of());
+        Mockito.when(imsRequestManager.getGroupUsers("dummy-token","component-identifier-service-user",-1,0)).thenReturn(List.of());
         Mockito.when(authorizationService.getUserGroups("dummy-token", NORMAL_USERNAME)).thenReturn(List.of());
 
         Mockito.when(permissionsSchemeRepository.countByUsernameIn(List.of())).thenReturn(0L);

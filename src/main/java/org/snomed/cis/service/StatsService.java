@@ -48,8 +48,8 @@ public class StatsService {
         GetStatsResponseDto getStatsResponseDto = new GetStatsResponseDto();
 
         List<String> users = new LinkedList<>();
-        List<String> securityAdmins = ims.getGroupUsers(token,"component-identifier-service-admin",1000,0);
-        List<String> securityUsers = ims.getGroupUsers(token,"component-identifier-service-user",1000,0);
+        List<String> securityAdmins = ims.getGroupUsers(token,"component-identifier-service-admin",-1,0);
+        List<String> securityUsers = ims.getGroupUsers(token,"component-identifier-service-user",-1,0);
         boolean adminU = false;
 
         for (String admin : securityAdmins) {
