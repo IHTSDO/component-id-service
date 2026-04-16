@@ -1,8 +1,6 @@
 package org.snomed.cis.controller;
 
-import com.github.jknack.handlebars.io.ClassPathTemplateLoader;
-import com.github.jknack.handlebars.io.TemplateLoader;
-import com.github.jknack.handlebars.io.TemplateSource;
+
 import io.swagger.v3.oas.annotations.Operation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,23 +18,22 @@ import java.nio.charset.StandardCharsets;
 @RequestMapping("/ui")
 public class ViewsController {
     private final Logger logger = LoggerFactory.getLogger(ViewsController.class);
-    TemplateLoader viewsItemsLoader = new ClassPathTemplateLoader("/static/admin/views/items", ".hbs");
-    TemplateLoader viewsHomeLoader = new ClassPathTemplateLoader("/static/admin/views/home", ".hbs");
-    TemplateLoader generateIdsLoader = new ClassPathTemplateLoader("/static/admin/views/generateIds", ".hbs");
-    TemplateLoader bulkLoader = new ClassPathTemplateLoader("/static/admin/views/bulk", ".hbs");
-    TemplateLoader adminLoader = new ClassPathTemplateLoader("/static/admin/views/admin", ".hbs");
-    TemplateLoader reportsLoader = new ClassPathTemplateLoader("/static/admin/views/reports", ".hbs");
-    TemplateLoader searchIdsLoader = new ClassPathTemplateLoader("/static/admin/views/searchIds", ".hbs");
+
 
     public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
+
+    private String loadTemplate(String path) throws IOException {
+        org.springframework.core.io.ClassPathResource resource = new org.springframework.core.io.ClassPathResource(path);
+        return org.springframework.util.StreamUtils.copyToString(resource.getInputStream(), DEFAULT_CHARSET);
+    }
+
 
     @Operation(summary = "formToFillHbs")
     @GetMapping("/api/views/searchIds/formToFill.hbs")
     @ResponseBody
     public String formToFillHbs() throws IOException {
         logger.info("Request received");
-        TemplateSource source = searchIdsLoader.sourceAt("formToFill");
-        return source.content(DEFAULT_CHARSET);
+        return loadTemplate("/static/admin/views/searchIds/formToFill.hbs");
     }
 
     @Operation(summary = "searchIdsMainHbs")
@@ -44,8 +41,7 @@ public class ViewsController {
     @ResponseBody
     public String searchIdsMainHbs() throws IOException {
         logger.info("Request received");
-        TemplateSource source = searchIdsLoader.sourceAt("main");
-        return source.content(DEFAULT_CHARSET);
+        return loadTemplate("/static/admin/views/searchIds/main.hbs");
     }
 
     @Operation(summary = "reportsBodyHbs")
@@ -53,8 +49,7 @@ public class ViewsController {
     @ResponseBody
     public String reportsBodyHbs() throws IOException {
         logger.info("Request received");
-        TemplateSource source = reportsLoader.sourceAt("body");
-        return source.content(DEFAULT_CHARSET);
+        return loadTemplate("/static/admin/views/reports/body.hbs");
     }
 
     @Operation(summary = "reportsMainHbs")
@@ -62,8 +57,7 @@ public class ViewsController {
     @ResponseBody
     public String reportsMainHbs() throws IOException {
         logger.info("Request received");
-        TemplateSource source = reportsLoader.sourceAt("main");
-        return source.content(DEFAULT_CHARSET);
+        return loadTemplate("/static/admin/views/reports/main.hbs");
     }
 
     @Operation(summary = "adminDetailsListHbs")
@@ -71,8 +65,7 @@ public class ViewsController {
     @ResponseBody
     public String adminDetailsListHbs() throws IOException {
         logger.info("Request received");
-        TemplateSource source = adminLoader.sourceAt("detailsList");
-        return source.content(DEFAULT_CHARSET);
+        return loadTemplate("/static/admin/views/admin/detailsList.hbs");
     }
 
     @Operation(summary = "adminModalBodyHbs")
@@ -80,8 +73,7 @@ public class ViewsController {
     @ResponseBody
     public String adminModalBodyHbs() throws IOException {
         logger.info("Request received");
-        TemplateSource source = adminLoader.sourceAt("modalBody");
-        return source.content(DEFAULT_CHARSET);
+        return loadTemplate("/static/admin/views/admin/modalBody.hbs");
     }
 
     @Operation(summary = "detailsHbs")
@@ -89,8 +81,7 @@ public class ViewsController {
     @ResponseBody
     public String detailsHbs() throws IOException {
         logger.info("Request received");
-        TemplateSource source = bulkLoader.sourceAt("details");
-        return source.content(DEFAULT_CHARSET);
+        return loadTemplate("/static/admin/views/bulk/details.hbs");
     }
 
     @Operation(summary = "bulkListHbs")
@@ -98,8 +89,7 @@ public class ViewsController {
     @ResponseBody
     public String bulkListHbs() throws IOException {
         logger.info("Request received");
-        TemplateSource source = bulkLoader.sourceAt("list");
-        return source.content(DEFAULT_CHARSET);
+        return loadTemplate("/static/admin/views/bulk/list.hbs");
     }
 
     @Operation(summary = "bulkMainHbs")
@@ -107,8 +97,7 @@ public class ViewsController {
     @ResponseBody
     public String bulkMainHbs() throws IOException {
         logger.info("Request received");
-        TemplateSource source = bulkLoader.sourceAt("main");
-        return source.content(DEFAULT_CHARSET);
+        return loadTemplate("/static/admin/views/bulk/main.hbs");
     }
 
     @Operation(summary = "bulkRecordsHbs")
@@ -116,8 +105,7 @@ public class ViewsController {
     @ResponseBody
     public String bulkRecordsHbs() throws IOException {
         logger.info("Request received");
-        TemplateSource source = bulkLoader.sourceAt("records");
-        return source.content(DEFAULT_CHARSET);
+        return loadTemplate("/static/admin/views/bulk/records.hbs");
     }
 
     @Operation(summary = "generateIdsMainHbs")
@@ -125,8 +113,7 @@ public class ViewsController {
     @ResponseBody
     public String generateIdsMainHbs() throws IOException {
         logger.info("Request received");
-        TemplateSource source = generateIdsLoader.sourceAt("main");
-        return source.content(DEFAULT_CHARSET);
+        return loadTemplate("/static/admin/views/generateIds/main.hbs");
     }
 
     @Operation(summary = "profileHbs")
@@ -134,8 +121,7 @@ public class ViewsController {
     @ResponseBody
     public String profileHbs() throws IOException {
         logger.info("Request received");
-        TemplateSource source = viewsHomeLoader.sourceAt("profile");
-        return source.content(DEFAULT_CHARSET);
+        return loadTemplate("/static/admin/views/home/profile.hbs");
     }
 
     @Operation(summary = "mainHbs")
@@ -143,8 +129,7 @@ public class ViewsController {
     @ResponseBody
     public String mainHbs() throws IOException {
         logger.info("Request received");
-        TemplateSource source = viewsItemsLoader.sourceAt("main");
-        return source.content(DEFAULT_CHARSET);
+        return loadTemplate("/static/admin/views/items/main.hbs");
     }
 
     @Operation(summary = "listSchemesHbs")
@@ -152,8 +137,7 @@ public class ViewsController {
     @ResponseBody
     public String listSchemesHbs() throws IOException {
         logger.info("Request received");
-        TemplateSource source = viewsItemsLoader.sourceAt("list-schemes");
-        return source.content(DEFAULT_CHARSET);
+        return loadTemplate("/static/admin/views/items/list-schemes.hbs");
     }
 
     @Operation(summary = "testView")
@@ -161,8 +145,7 @@ public class ViewsController {
     @ResponseBody
     public String testView() throws IOException {
         logger.info("Request received");
-        TemplateSource source = viewsItemsLoader.sourceAt("list-namespaces");
-        return source.content(DEFAULT_CHARSET);
+        return loadTemplate("/static/admin/views/items/list-namespaces.hbs");
     }
 
     @Operation(summary = "permissionsHbs")
@@ -170,8 +153,7 @@ public class ViewsController {
     @ResponseBody
     public String permissionsHbs() throws IOException {
         logger.info("Request received");
-        TemplateSource source = viewsItemsLoader.sourceAt("permissions");
-        return source.content(DEFAULT_CHARSET);
+        return loadTemplate("/static/admin/views/items/permissions.hbs");
     }
 
     @Operation(summary = "groupPermissionsHbs")
@@ -179,8 +161,7 @@ public class ViewsController {
     @ResponseBody
     public String groupPermissionsHbs() throws IOException {
         logger.info("Request received");
-        TemplateSource source = viewsItemsLoader.sourceAt("groupPermissions");
-        return source.content(DEFAULT_CHARSET);
+        return loadTemplate("/static/admin/views/items/groupPermissions.hbs");
     }
 
     @Operation(summary = "detailsSchemesHbs")
@@ -188,8 +169,7 @@ public class ViewsController {
     @ResponseBody
     public String detailsSchemesHbs() throws IOException {
         logger.info("Request received");
-        TemplateSource source = viewsItemsLoader.sourceAt("details-schemes");
-        return source.content(DEFAULT_CHARSET);
+        return loadTemplate("/static/admin/views/items/details-schemes.hbs");
     }
 
     @Operation(summary = "detailsNamespacesHbs")
@@ -197,8 +177,7 @@ public class ViewsController {
     @ResponseBody
     public String detailsNamespacesHbs() throws IOException {
         logger.info("Request received");
-        TemplateSource source = viewsItemsLoader.sourceAt("details-namespaces");
-        return source.content(DEFAULT_CHARSET);
+        return loadTemplate("/static/admin/views/items/details-namespaces.hbs");
     }
 
     @Operation(summary = "addPermissionHbs")
@@ -206,8 +185,7 @@ public class ViewsController {
     @ResponseBody
     public String addPermissionHbs() throws IOException {
         logger.info("Request received");
-        TemplateSource source = viewsItemsLoader.sourceAt("addPermission");
-        return source.content(DEFAULT_CHARSET);
+        return loadTemplate("/static/admin/views/items/addPermission.hbs");
     }
 
     @Operation(summary = "redirectInfo")
