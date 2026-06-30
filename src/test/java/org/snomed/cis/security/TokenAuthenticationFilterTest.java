@@ -35,11 +35,11 @@ class TokenAuthenticationFilterTest {
     void setUp() throws Exception {
         request = mock(HttpServletRequest.class);
         response = mock(HttpServletResponse.class);
-        filter = new TokenAuthenticationFilter(authenticationManager);
+        filter = new TokenAuthenticationFilter(authenticationManager, "ims-cookie");
         String jsonBody = "{\"token\":\"abc123\"}";
         ByteArrayInputStream byteStream = new ByteArrayInputStream(jsonBody.getBytes(StandardCharsets.UTF_8));
         authenticationManager = Mockito.mock(AuthenticationManager.class);
-        filter = new TokenAuthenticationFilter(authenticationManager);
+        filter = new TokenAuthenticationFilter(authenticationManager, "ims-cookie");
         when(authenticationManager.authenticate(any())).thenReturn(Mockito.mock(Authentication.class));
         ServletInputStream servletInputStream = new DelegatingServletInputStream(byteStream);
         when(request.getInputStream()).thenReturn(servletInputStream);

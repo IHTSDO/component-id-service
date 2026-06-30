@@ -26,6 +26,8 @@ public class TokenAuthenticationFilter extends AbstractAuthenticationProcessingF
 
     private String contextPath = "/api";
 
+    private String imsCookieName;
+
     /*
     Map of public endpoints
     <"/sct/namespaces",[GET]>
@@ -36,9 +38,10 @@ public class TokenAuthenticationFilter extends AbstractAuthenticationProcessingF
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
 
-    public TokenAuthenticationFilter(AuthenticationManager authenticationManager) {
+    public TokenAuthenticationFilter(AuthenticationManager authenticationManager, String imsCookieName) {
         super("/**");
         this.setAuthenticationManager(authenticationManager);
+        this.imsCookieName = imsCookieName;
     }
 
     @Override
@@ -83,6 +86,20 @@ public class TokenAuthenticationFilter extends AbstractAuthenticationProcessingF
                         tokenOptional = Optional.empty();
                     }
                 }
+                if (tokenOptional.isEmpty()) {
+                    Optional<String> imsOpt = Arrays.stream(cookieHeaderValue.split(";"))
+                            .map(String::trim)
+                            .filter(c -> c.startsWith(getImsCookieName() + "="))
+                            .findFirst();
+
+                    if (imsOpt.isPresent()) {
+                        String token = imsOpt.get().substring(imsOpt.get().indexOf("=") + 1);
+
+                        if (token != null && !token.isBlank()) {
+                            tokenOptional = Optional.of(token);
+                        }
+                    }
+                }
             }
         } else {
             tokenOptional = Optional.ofNullable(request.getParameter("token"));
@@ -124,5 +141,10 @@ public class TokenAuthenticationFilter extends AbstractAuthenticationProcessingF
         }
         return isPublicEndpointRequest;
     }
+
+    private String getImsCookieName() {
+        return imsCookieName;
+    }
+
 
 }

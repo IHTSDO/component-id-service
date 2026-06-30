@@ -2,6 +2,7 @@ package org.snomed.cis.config;
 
 import org.snomed.cis.security.TokenAuthenticationFilter;
 import org.snomed.cis.security.TokenAuthenticationProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -43,6 +44,9 @@ public class SecurityConfig {
             "/testService"
     };
 
+    @Value("${ims.cookiename}")
+    private String imsCookieName;
+
     private final TokenAuthenticationProvider tokenAuthenticationProvider;
 
     public SecurityConfig(TokenAuthenticationProvider tokenAuthenticationProvider) {
@@ -62,7 +66,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/sct/namespaces").permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new TokenAuthenticationFilter(authenticationManager()),
+                .addFilterBefore(new TokenAuthenticationFilter(authenticationManager(), imsCookieName),
                         AnonymousAuthenticationFilter.class)
                 .cors(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable);
