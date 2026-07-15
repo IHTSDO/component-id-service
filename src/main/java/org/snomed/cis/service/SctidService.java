@@ -131,10 +131,10 @@ public class SctidService {
             if (null != namespace) {
                 queryObject.put("namespace", namespace);
             }
-            if (null != limit && null != skip)
-                sctList = findSctWithIndexAndLimit(queryObject, limit, skip);
+            if (null != limit)
+                sctList = findSctForReports(queryObject, limit, skip);
             else
-                sctList = findSctWithIndexAndLimit(queryObject, null, null);
+                sctList = findSctForReports(queryObject, null, null);
             if (sctList.size() > 0) {
                 logger.debug("getSct - Response size :: {}", (null==sctList?"0":sctList.size()));
                 return sctList;
@@ -172,57 +172,7 @@ public class SctidService {
 
     public List<Sctid> findSctWithIndexAndLimit(Map<String, Object> queryObject, String limit, String skip) {
         logger.debug("Request Received : queryObject-{} :: limit - {} :: skip - {} ", queryObject, limit, skip);
-        List<Sctid> sctList;
-        var limitR = 100;
-        var skipTo = 0;
-        if (null != limit)
-            limitR = Integer.parseInt(limit);
-        if (null != skip)
-            skipTo = Integer.parseInt(skip);
-
-        StringBuffer resultWhere = new StringBuffer("");
-        StringBuffer swhere = new StringBuffer("");
-        if (queryObject.size() > 0) {
-            for (var query :
-                    queryObject.entrySet()) {
-                swhere = swhere.append(" And ").append(query.getKey()).append("=").append(query.getValue());
-            }
-        }
-        if (!(swhere.toString().equalsIgnoreCase(""))) {
-            resultWhere.append(" WHERE ").append(swhere.substring(5));
-        }
-        StringBuffer sql = new StringBuffer();
-        if ((limitR > 0) && (skipTo == 0)) {
-
-            if (swhere.toString() != "")
-                sql.append("Select * FROM sctid USE INDEX (nam_par_st)").append(resultWhere).append(" order by sctid limit ").append(limitR);
-            else
-                sql.append("Select * FROM sctid ").append(resultWhere).append(" order by sctid limit ").append(limitR);
-        } else {
-
-            if (swhere.toString() != "")
-                sql.append("Select * FROM sctid USE INDEX (nam_par_st)").append(resultWhere).append(" order by sctid");
-            else
-                sql.append("Select * FROM sctid ").append(resultWhere).append(" order by sctid");
-        }
-        Query genQuery = entityManager.createNativeQuery(sql.toString(), Sctid.class);
-        List<Sctid> resultList = genQuery.getResultList();
-        if ((skipTo == 0)) {
-            sctList = resultList;
-        } else {
-            var cont = 1;
-            List<Sctid> newRows = new ArrayList<>();
-            for (var i = 0; i < resultList.size(); i++) {
-                if (i >= skipTo) {
-                    if ((limitR > 0) && (limitR < cont)) {
-                        break;
-                    }
-                    newRows.add(resultList.get(i));
-                    cont++;
-                }
-            }
-            sctList = newRows;
-        }
+        List<Sctid> sctList = querySctidsWithOptionalIndexHint(queryObject, limit, skip, true);
         logger.debug("findSctWithIndexAndLimit() - Response Size :: {}", (null==sctList?"0":sctList.size()));
         return sctList;
     }
@@ -834,6 +784,66 @@ public class SctidService {
             }
         }
         return found;
+    }
+
+    public List<Sctid> findSctForReports(Map<String, Object> queryObject, String limit, String skip) {
+        List<Sctid> sctList = querySctidsWithOptionalIndexHint(queryObject, limit, skip, false);
+        logger.debug("findSctForReports() - Response Size :: {}", (null==sctList?"0":sctList.size()));
+        return sctList;
+    }
+
+    private List<Sctid> querySctidsWithOptionalIndexHint(Map<String, Object> queryObject, String limit, String skip, boolean forceIndexForNamespace) {
+        int limitR = (limit != null) ? Integer.parseInt(limit) : 100;
+        int skipTo = (skip != null) ? Integer.parseInt(skip) : 0;
+
+        String whereClause = buildWhereClause(queryObject);
+        String sql = buildSqlQuery(whereClause, limitR, skipTo, forceIndexForNamespace);
+
+        Query genQuery = entityManager.createNativeQuery(sql, Sctid.class);
+        List<Sctid> resultList = genQuery.getResultList();
+
+        return paginateResults(resultList, limitR, skipTo);
+    }
+
+    private String buildWhereClause(Map<String, Object> queryObject) {
+        if (queryObject == null || queryObject.isEmpty()) {
+            return "";
+        }
+        StringBuilder swhere = new StringBuilder();
+        for (Map.Entry<String, Object> query : queryObject.entrySet()) {
+            swhere.append(" And ").append(query.getKey()).append("=").append(query.getValue());
+        }
+        return " WHERE " + swhere.substring(5);
+    }
+
+    private String buildSqlQuery(String whereClause, int limitR, int skipTo, boolean forceIndexForNamespace) {
+        StringBuilder sql = new StringBuilder("Select * FROM sctid ");
+        if (!whereClause.isEmpty() && forceIndexForNamespace) {
+            sql.append("USE INDEX (nam_par_st) ");
+        }
+        sql.append(whereClause).append(" order by sctid");
+        if (limitR > 0 && skipTo == 0) {
+            sql.append(" limit ").append(limitR);
+        }
+        return sql.toString();
+    }
+
+    private List<Sctid> paginateResults(List<Sctid> resultList, int limitR, int skipTo) {
+        if (skipTo == 0) {
+            return resultList;
+        }
+        List<Sctid> newRows = new ArrayList<>();
+        int cont = 1;
+        for (int i = 0; i < resultList.size(); i++) {
+            if (i >= skipTo) {
+                if (limitR > 0 && limitR < cont) {
+                    break;
+                }
+                newRows.add(resultList.get(i));
+                cont++;
+            }
+        }
+        return newRows;
     }
 
 }
