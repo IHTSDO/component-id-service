@@ -3,6 +3,7 @@ package org.snomed.cis.controller;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.cis.domain.BulkJob;
@@ -24,6 +25,9 @@ import jakarta.validation.Valid;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import org.snomed.cis.util.SctIdHelper;
+import java.util.Set;
+import java.util.HashSet;
 
 @Tag(name = "SCTIDS - Bulk Operations" , description = "Bulk Sctid Controller")
 @RestController
@@ -42,6 +46,9 @@ public class BulkSctidController {
     @Autowired
     HttpServletRequest httpRequest;
 
+    @Resource
+    private SctIdHelper sctIdHelper;
+
     @Operation(
             summary = "Bulk Sct ID",
             description = "Returns a list Sct ID"
@@ -56,14 +63,16 @@ public class BulkSctidController {
 
     @GetMapping("/sct/bulk/ids")
     public ResponseEntity<List<Sctid>> getSctidsByQL(@RequestParam String token, @RequestParam String sctids) throws CisException {
-        logger.info("Request received for - ids :: {}", sctids);
+        logSummary(sctids, "getSctidsByQL");
+        logger.trace("Request received for - getSctidsByQL: ids :: {}", sctids);
         return ResponseEntity.ok(service.getSctByIds(sctids));
     }
 
     @Operation(summary = "getSctidsByQLPost")
     @PostMapping("/sct/bulk/ids")
     public ResponseEntity<List<Sctid>> getSctidsByQLPost(@RequestParam String token, @RequestBody SctIdRequest sctids) throws CisException {
-        logger.info("Request received for - sctids :: {}", sctids);
+        logSummary(sctids != null ? sctids.getSctids() : null, "getSctidsByQLPost");
+        logger.trace("Request received for - getSctidsByQLPost: sctids :: {}", sctids);
         return ResponseEntity.ok(service.postSctByIds(sctids));
     }
 
@@ -126,5 +135,30 @@ public class BulkSctidController {
         return ResponseEntity.ok(service.reserveSctids(authToken.getAuthenticateResponseDto(), sctidBulkReservationRequestDto));
     }
 
+
+    private void logSummary(String sctidsStr, String methodName) {
+        if (sctidsStr == null || sctidsStr.trim().isEmpty()) {
+            logger.info("Request received for method {} - count: 0", methodName);
+            return;
+        }
+        String idsWthtSpace = sctidsStr.replaceAll("\\s+", "");
+        String[] sctidsArray = idsWthtSpace.split(",");
+        Set<Integer> uniqueNamespaces = new HashSet<>();
+        Set<String> uniquePartitions = new HashSet<>();
+        for (String id : sctidsArray) {
+            if (SctIdHelper.validSCTId(id)) {
+                String partition = SctIdHelper.getPartition(id);
+                if (partition != null) {
+                    uniquePartitions.add(partition);
+                }
+                Integer ns = sctIdHelper.getNamespace(id);
+                if (ns != null) {
+                    uniqueNamespaces.add(ns);
+                }
+            }
+        }
+        logger.info("Request received for method {} - count: {}, namespaces: {}, partitions: {}", 
+                methodName, sctidsArray.length, uniqueNamespaces, uniquePartitions);
+    }
 
 }

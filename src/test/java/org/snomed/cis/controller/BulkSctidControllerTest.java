@@ -41,6 +41,9 @@ class BulkSctidControllerTest {
     @MockBean
     private BulkSctidService service;
 
+    @MockBean
+    private org.snomed.cis.util.SctIdHelper sctIdHelper;
+
     @Autowired
     private ObjectMapper objectMapper;
 

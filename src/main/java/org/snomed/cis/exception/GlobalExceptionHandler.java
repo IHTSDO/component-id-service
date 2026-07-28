@@ -34,6 +34,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleException(Exception exception) {
+        if (isBrokenPipeException(exception)) {
+            logger.warn("Broken Pipe Detected, client has disconnected");
+            return null;
+        }
         logger.error("exception thrown :: ", exception);
         ResponseEntity<?> response;
         if(exception instanceof IllegalArgumentException){
@@ -42,6 +46,22 @@ public class GlobalExceptionHandler {
             response = new ResponseEntity<>(ErrorResponse.builder().statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value()).message(exception.toString()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return response;
+    }
+
+    private boolean isBrokenPipeException(Throwable throwable) {
+        if (throwable == null) {
+            return false;
+        }
+        String className = throwable.getClass().getName();
+        if (className.equals("org.apache.catalina.connector.ClientAbortException") ||
+            className.equals("org.springframework.web.context.request.async.AsyncRequestNotUsableException")) {
+            return true;
+        }
+        String message = throwable.getMessage();
+        if (message != null && (message.toLowerCase().contains("broken pipe") || message.toLowerCase().contains("connection reset"))) {
+            return true;
+        }
+        return isBrokenPipeException(throwable.getCause());
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)

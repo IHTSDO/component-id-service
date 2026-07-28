@@ -69,7 +69,7 @@ public class BulkSctidService implements CisConstants {
     }
 
     public List<Sctid> validScts(String ids) throws CisException {
-        logger.debug("BulkSctidService.validScts() ids-{}", ids);
+        logger.trace("BulkSctidService.validScts() ids-{}", ids);
         String idsWthtSpace = ids.replaceAll("\\s+", "");
         String[] sctidsArray = idsWthtSpace.split(",");
         ArrayList<String> sctidsReqArray = new ArrayList<String>(Arrays.asList(sctidsArray));
@@ -96,7 +96,7 @@ public class BulkSctidService implements CisConstants {
     }
 
     public List<Sctid> postValidScts(SctIdRequest ids) throws CisException {
-        logger.debug("BulkSctidService.postValidScts() ids :: {}", ids);
+        logger.trace("BulkSctidService.postValidScts() ids :: {}", ids);
         String idsWthtSpace = ids.getSctids().replaceAll("\\s+", "");
         String[] sctidsArray = idsWthtSpace.split(",");
         ArrayList<String> sctidsReqArray = new ArrayList<String>(Arrays.asList(sctidsArray));
@@ -123,7 +123,7 @@ public class BulkSctidService implements CisConstants {
     }
 
     public void validSctidCheck(ArrayList<String> sctidsArray) throws CisException {
-        logger.debug("BulkSctidService.validSctidCheck() sctidsArray :: {} ", sctidsArray);
+        logger.trace("BulkSctidService.validSctidCheck() sctidsArray :: {} ", sctidsArray);
         for (int i = 0; i < sctidsArray.size(); i++) {
             if (!(sctIdHelper.validSCTId(sctidsArray.get(i)))) {
                 logger.error("error validSctidCheck():: Not a Valid Sctid: {}", sctidsArray.get(i));
