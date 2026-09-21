@@ -11,6 +11,7 @@ import org.snomed.cis.domain.Sctid;
 import org.snomed.cis.dto.*;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.repository.SctidRepository;
+import org.snomed.cis.security.AuthUtils;
 import org.snomed.cis.security.Token;
 import org.snomed.cis.service.BulkSctidService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,7 +63,8 @@ public class BulkSctidController {
     })
 
     @GetMapping("/sct/bulk/ids")
-    public ResponseEntity<List<Sctid>> getSctidsByQL(@RequestParam String token, @RequestParam String sctids) throws CisException {
+    public ResponseEntity<List<Sctid>> getSctidsByQL(@RequestParam String token, @RequestParam String sctids, @Parameter(hidden = true) Authentication authentication) throws CisException {
+        AuthUtils.getAuthToken(authentication);
         logSummary(sctids, "getSctidsByQL");
         logger.trace("Request received for - getSctidsByQL: ids :: {}", sctids);
         return ResponseEntity.ok(service.getSctByIds(sctids));
@@ -70,7 +72,8 @@ public class BulkSctidController {
 
     @Operation(summary = "getSctidsByQLPost")
     @PostMapping("/sct/bulk/ids")
-    public ResponseEntity<List<Sctid>> getSctidsByQLPost(@RequestParam String token, @RequestBody SctIdRequest sctids) throws CisException {
+    public ResponseEntity<List<Sctid>> getSctidsByQLPost(@RequestParam String token, @RequestBody SctIdRequest sctids, @Parameter(hidden = true) Authentication authentication) throws CisException {
+        AuthUtils.getAuthToken(authentication);
         logSummary(sctids != null ? sctids.getSctids() : null, "getSctidsByQLPost");
         logger.trace("Request received for - getSctidsByQLPost: sctids :: {}", sctids);
         return ResponseEntity.ok(service.postSctByIds(sctids));
@@ -78,7 +81,8 @@ public class BulkSctidController {
 
     @Operation(summary = "getSctidBySystemIds")
     @GetMapping("sct/namespace/{namespaceId}/systemIds")
-    public ResponseEntity<List<Sctid>> getSctidBySystemIds(@RequestParam String token, @PathVariable Integer namespaceId, @RequestParam("systemIds") String systemIdStr) {
+    public ResponseEntity<List<Sctid>> getSctidBySystemIds(@RequestParam String token, @PathVariable Integer namespaceId, @RequestParam("systemIds") String systemIdStr, @Parameter(hidden = true) Authentication authentication) throws CisException {
+        AuthUtils.getAuthToken(authentication);
         logger.info("Request received for - namespaceId :: {} - systemIdStr :: {}", namespaceId, systemIdStr);
         return ResponseEntity.ok(service.getSctidBySystemIds(systemIdStr, namespaceId));
     }
@@ -86,7 +90,7 @@ public class BulkSctidController {
     @Operation(summary = "registerScts")
     @PostMapping("/sct/bulk/register")
     public ResponseEntity<BulkJob> registerScts(@RequestParam String token, @RequestBody RegistrationDataDTO registrationData, @Parameter(hidden = true) Authentication authentication) throws CisException {
-        Token authToken = (Token) authentication;
+        Token authToken = AuthUtils.getAuthToken(authentication);
         logger.info("Request received for - RegistrationDataDTO :: {} - AuthenticateResponseDTo :: {}", registrationData, authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(service.registerSctids(authToken.getAuthenticateResponseDto(), registrationData));
     }
@@ -95,8 +99,8 @@ public class BulkSctidController {
     @PostMapping("/sct/bulk/generate")
     public ResponseEntity<BulkJobResponseDto> generateSctids(@RequestParam String token, @RequestBody @Valid SCTIDBulkGenerationRequestDto sctidBulkGenerationRequestDto, @Parameter(hidden = true) Authentication authentication) throws CisException {
         Instant start = Instant.now();
-        Token authToken = (Token) authentication;
-        logger.info("Request received from user {} - request :: {}",((Token) authentication).getUserName(), sctidBulkGenerationRequestDto);
+        Token authToken = AuthUtils.getAuthToken(authentication);
+        logger.info("Request received from user {} - request :: {}", authToken.getUserName(), sctidBulkGenerationRequestDto);
         BulkJobResponseDto bulkJobResponseDto = service.generateSctids(authToken.getAuthenticateResponseDto(), sctidBulkGenerationRequestDto);
         Instant end = Instant.now();
         logger.info("Job {} for user '{}' completed successfully in {} seconds", bulkJobResponseDto.getId(), authToken.getUserName(), (ChronoUnit.MILLIS.between(start,end)/1000.0));
@@ -106,7 +110,7 @@ public class BulkSctidController {
     @Operation(summary = "deprecateSctid")
     @PutMapping("/sct/bulk/deprecate")
     public ResponseEntity<BulkJob> deprecateSctid(@RequestParam String token, @RequestBody BulkSctRequestDTO deprecationData, @Parameter(hidden = true) Authentication authentication) throws CisException {
-        Token authToken = (Token) authentication;
+        Token authToken = AuthUtils.getAuthToken(authentication);
         logger.info("Request received for - BulkSctRequestDTO :: {} - AuthenticateResponseDTo :: {}", deprecationData, authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(service.deprecateSctid(authToken.getAuthenticateResponseDto(), deprecationData));
     }
@@ -114,7 +118,7 @@ public class BulkSctidController {
     @Operation(summary = "publishSctid")
     @PutMapping("/sct/bulk/publish")
     public ResponseEntity<BulkJob> publishSctid(@RequestParam String token, @RequestBody BulkSctRequestDTO publishData, @Parameter(hidden = true) Authentication authentication) throws CisException {
-        Token authToken = (Token) authentication;
+        Token authToken = AuthUtils.getAuthToken(authentication);
         logger.info("Request received for - SCTIDBulkPublishRequestDto :: {} - AuthenticateResponseDTo :: {}", publishData, authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(service.publishSctid(authToken.getAuthenticateResponseDto(), publishData));
     }
@@ -122,7 +126,7 @@ public class BulkSctidController {
     @Operation(summary = "releaseSctid")
     @PutMapping("/sct/bulk/release")
     public ResponseEntity<BulkJob> releaseSctid(@RequestParam String token, @RequestBody BulkSctRequestDTO publishData, @Parameter(hidden = true) Authentication authentication) throws CisException {
-        Token authToken = (Token) authentication;
+        Token authToken = AuthUtils.getAuthToken(authentication);
         logger.info("Request received for - SCTIDBulkReleaseRequestDto :: {} - AuthenticateResponseDTo :: {}", publishData, authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(service.releaseSctid(authToken.getAuthenticateResponseDto(), publishData));
     }
@@ -130,7 +134,7 @@ public class BulkSctidController {
     @Operation(summary = "reserveSctids")
     @PostMapping("/sct/bulk/reserve")
     public ResponseEntity<BulkJob> reserveSctids(@RequestParam String token, @RequestBody @Valid SCTIDBulkReservationRequestDto sctidBulkReservationRequestDto, @Parameter(hidden = true) Authentication authentication) throws CisException {
-        Token authToken = (Token) authentication;
+        Token authToken = AuthUtils.getAuthToken(authentication);
         logger.info("Request received for - SCTIDBulkReserveRequestDto :: {} - AuthenticateResponseDTo :: {}", sctidBulkReservationRequestDto, authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(service.reserveSctids(authToken.getAuthenticateResponseDto(), sctidBulkReservationRequestDto));
     }

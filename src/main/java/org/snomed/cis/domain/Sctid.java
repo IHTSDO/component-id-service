@@ -2,12 +2,9 @@ package org.snomed.cis.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
-import org.springframework.lang.Nullable;
-
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Entity
 @Table(name = "sctid")
@@ -54,7 +51,6 @@ public class Sctid {
     @Column(name = "comment", columnDefinition = "VARCHAR(255)")
     private String comment;
 
-    @Nullable
     @Column(name = "jobId", columnDefinition = "INT")
     private Integer jobId;
 

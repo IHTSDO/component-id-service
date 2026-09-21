@@ -2,7 +2,6 @@ package org.snomed.cis.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.snomed.cis.domain.SchemeId;
-import org.springframework.lang.Nullable;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,7 +18,6 @@ public class SctWithSchemeResponseDTO {
     private String software;
     private LocalDateTime expirationDate;
     private String comment;
-    @Nullable
     private Integer jobId;
 
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
@@ -32,7 +30,7 @@ public class SctWithSchemeResponseDTO {
     public SctWithSchemeResponseDTO() {
     }
 
-    public SctWithSchemeResponseDTO(String sctid, long sequence, int namespace, String partitionId, Integer checkDigit, String systemId, String status, String author, String software, LocalDateTime expirationDate, String comment, @Nullable Integer jobId, LocalDateTime created_at, LocalDateTime modified_at, List<SchemeId> additionalIds) {
+    public SctWithSchemeResponseDTO(String sctid, long sequence, int namespace, String partitionId, Integer checkDigit, String systemId, String status, String author, String software, LocalDateTime expirationDate, String comment, Integer jobId, LocalDateTime created_at, LocalDateTime modified_at, List<SchemeId> additionalIds) {
         this.sctid = sctid;
         this.sequence = sequence;
         this.namespace = namespace;
@@ -142,12 +140,11 @@ public class SctWithSchemeResponseDTO {
         return additionalIds;
     }
 
-    @Nullable
     public Integer getJobId() {
         return jobId;
     }
 
-    public void setJobId(@Nullable Integer jobId) {
+    public void setJobId(Integer jobId) {
         this.jobId = jobId;
     }
 

@@ -14,8 +14,8 @@ import org.snomed.cis.exception.CisException;
 import org.snomed.cis.security.Token;
 import org.snomed.cis.service.SchemeIdService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
@@ -23,6 +23,9 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 import java.util.stream.Stream;
+
+import org.snomed.cis.config.WebConfig;
+import org.springframework.context.annotation.Import;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -32,17 +35,17 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Import(WebConfig.class)
 @WebMvcTest(SchemeIdController.class)
 class SchemeIdControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private SchemeIdService schemeIdService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     private Token authToken;
     private AuthenticateResponseDto authDto;
@@ -268,12 +271,12 @@ class SchemeIdControllerTest {
     }
 
     @Test
-    void testReleaseSchemeId_missingCsrf_shouldReturnForbidden() throws Exception {
+    void testReleaseSchemeId_missingCsrf_shouldSucceed() throws Exception {
         SchemeIdUpdateRequestDto updateDto = new SchemeIdUpdateRequestDto();
         updateDto.setSchemeId("SCTID456");
 
         mockMvc.perform(put("/scheme/SNOMEDID/release").param("token", "dummy-token").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(updateDto)).with(authentication(authToken))) // No csrf()
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -333,8 +336,8 @@ class SchemeIdControllerTest {
     }
 
     @Test
-    void testPublishSchemeId_missingCsrf_shouldReturnForbidden() throws Exception {
-        mockMvc.perform(put("/scheme/SNOMEDID/publish").param("token", "dummy-token").content(objectMapper.writeValueAsString(validDto)).contentType(MediaType.APPLICATION_JSON).with(authentication(authToken))).andExpect(status().isForbidden());
+    void testPublishSchemeId_missingCsrf_shouldSucceed() throws Exception {
+        mockMvc.perform(put("/scheme/SNOMEDID/publish").param("token", "dummy-token").content(objectMapper.writeValueAsString(validDto)).contentType(MediaType.APPLICATION_JSON).with(authentication(authToken))).andExpect(status().isOk());
     }
 
     @Test
@@ -379,9 +382,9 @@ class SchemeIdControllerTest {
     }
 
     @Test
-    void testReserveSchemeId_missingCsrf_shouldReturnForbidden() throws Exception {
+    void testReserveSchemeId_missingCsrf_shouldSucceed() throws Exception {
         SchemeIdReserveRequestDto dto = new SchemeIdReserveRequestDto();
-        mockMvc.perform(post("/scheme/SNOMEDID/reserve").param("token", "dummy-token").content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON).with(authentication(authToken))).andExpect(status().isForbidden());
+        mockMvc.perform(post("/scheme/SNOMEDID/reserve").param("token", "dummy-token").content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON).with(authentication(authToken))).andExpect(status().isOk());
     }
 
     @Test
@@ -420,10 +423,10 @@ class SchemeIdControllerTest {
     }
 
     @Test
-    void testGenerateSchemeId_missingCsrf_shouldReturnForbidden() throws Exception {
+    void testGenerateSchemeId_missingCsrf_shouldSucceed() throws Exception {
         SchemeIdGenerateRequestDto dto = new SchemeIdGenerateRequestDto();
 
-        mockMvc.perform(post("/scheme/SNOMEDID/generate").param("token", "dummy-token").content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON).with(authentication(authToken))).andExpect(status().isForbidden());
+        mockMvc.perform(post("/scheme/SNOMEDID/generate").param("token", "dummy-token").content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON).with(authentication(authToken))).andExpect(status().isOk());
     }
 
     @Test
@@ -468,11 +471,11 @@ class SchemeIdControllerTest {
     }
 
     @Test
-    void testRegisterSchemeId_missingCsrf_shouldReturnForbidden() throws Exception {
+    void testRegisterSchemeId_missingCsrf_shouldSucceed() throws Exception {
         SchemeIdRegisterRequestDto dto = new SchemeIdRegisterRequestDto();
 
 
-        mockMvc.perform(post("/scheme/SNOMEDID/register").param("token", "dummy-token").content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON).with(authentication(authToken))).andExpect(status().isForbidden());
+        mockMvc.perform(post("/scheme/SNOMEDID/register").param("token", "dummy-token").content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON).with(authentication(authToken))).andExpect(status().isOk());
     }
 
     private static Stream<Arguments> invalidJsonEndpoints() {

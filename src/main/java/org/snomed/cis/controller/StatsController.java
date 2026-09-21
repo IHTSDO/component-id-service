@@ -26,7 +26,7 @@ public class StatsController {
     @Operation(summary = "getStats")
     @GetMapping("/stats")
     public ResponseEntity<GetStatsResponseDto> getStats(@RequestParam String token, @RequestParam String username, @Parameter(hidden = true) Authentication authentication) throws CisException {
-        Token authToken = (Token) authentication;
+        Token authToken = org.snomed.cis.security.AuthUtils.getAuthToken(authentication);
         return ResponseEntity.ok(statsService.getStats(token, username, authToken.getAuthenticateResponseDto()));
     }
 

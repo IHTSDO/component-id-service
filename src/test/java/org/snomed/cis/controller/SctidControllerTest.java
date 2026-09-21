@@ -22,9 +22,7 @@ import org.springframework.security.core.Authentication;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static org.junit.Assert.fail;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 @ExtendWith(MockitoExtension.class)
@@ -439,12 +437,12 @@ class SctidControllerTest {
     @Test
     void testReserveSctid_Failure_dueToInvalidNamespace() throws CisException {
         Mockito.when(token.getAuthenticateResponseDto()).thenReturn(authDto);
-        Mockito.when(sctidService.reserveSctid(authDto, reservationRequest)).thenThrow(new CisException(HttpStatus.UNPROCESSABLE_ENTITY, "Invalid namespace ID"));
+        Mockito.when(sctidService.reserveSctid(authDto, reservationRequest)).thenThrow(new CisException(HttpStatus.UNPROCESSABLE_CONTENT, "Invalid namespace ID"));
 
         CisException ex = assertThrows(CisException.class, () -> sctidController.reserveSctid("token", reservationRequest, token));
 
         assertEquals("Invalid namespace ID", ex.getMessage());
-        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, ex.getStatus());
+        assertEquals(HttpStatus.UNPROCESSABLE_CONTENT, ex.getStatus());
     }
 
 

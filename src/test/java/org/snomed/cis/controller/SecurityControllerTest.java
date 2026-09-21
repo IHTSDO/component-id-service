@@ -92,7 +92,7 @@ class SecurityControllerTest {
     void testAuthenticate_nullBody() throws Exception {
         Cookie[] cookies = new Cookie[]{new Cookie("auth-token", "validToken")};
         when(mockRequest.getCookies()).thenReturn(cookies);
-        ResponseEntity<UserDTO> mockResp = new ResponseEntity<>(null, HttpStatus.OK);
+        ResponseEntity<UserDTO> mockResp = ResponseEntity.ok((UserDTO) null);
 
         SecurityController spyController = Mockito.spy(securityController);
         doReturn(mockResp).when(spyController).isValidUser(any());

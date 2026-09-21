@@ -5,12 +5,13 @@ import jakarta.servlet.ServletInputStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.snomed.cis.dto.*;
 import org.snomed.cis.exception.CisException;
 import org.snomed.cis.security.Token;
 import org.snomed.cis.service.AuthenticationService;
 import org.snomed.cis.util.ValidationUtil;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +23,7 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@WebMvcTest(AuthenticationControllerTest.class)
+@ExtendWith(MockitoExtension.class)
 class AuthenticationControllerTest {
 
     @InjectMocks

@@ -3,10 +3,9 @@ package org.snomed.cis.util;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.snomed.cis.exception.CisException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 
 import java.lang.reflect.Constructor;
 
@@ -25,7 +24,7 @@ class RequestManagerTest {
 
     @Test
     void testPostRequestWithoutPayload_throwsGenericException() {
-        MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+        HttpHeaders headers = new HttpHeaders();
         assertThrows(CisException.class, () -> {
             requestManager.postRequestWithoutPayload("http://localhost:9999/fake", headers);
         });
@@ -33,7 +32,7 @@ class RequestManagerTest {
 
     @Test
     void testPostRequest_throwsGenericException() {
-        MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+        HttpHeaders headers = new HttpHeaders();
         String payload = "{}";
         assertThrows(CisException.class, () -> {
             requestManager.postRequest("http://localhost:9999/fake", headers, payload);
@@ -42,7 +41,7 @@ class RequestManagerTest {
 
     @Test
     void testGetRequest_throwsGenericException() {
-        MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+        HttpHeaders headers = new HttpHeaders();
         assertThrows(CisException.class, () -> {
             requestManager.getRequest("http://localhost:9999/fake", headers);
         });
@@ -65,7 +64,7 @@ class RequestManagerTest {
 
     @Test
     void testPostRequest_malformedUrl_shouldThrowCisException() {
-        MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+        HttpHeaders headers = new HttpHeaders();
         assertThrows(CisException.class, () -> {
             requestManager.postRequest("htp://bad-url", headers, "{}");
         });
@@ -86,10 +85,11 @@ class RequestManagerTest {
 
     @Test
     void testPostRequest_emptyPayload_shouldThrowException() {
-        MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+        HttpHeaders headers = new HttpHeaders();
         assertThrows(CisException.class, () -> {
             requestManager.postRequest("http://localhost:9999/fake", headers, "");
         });
     }
 
 }
+

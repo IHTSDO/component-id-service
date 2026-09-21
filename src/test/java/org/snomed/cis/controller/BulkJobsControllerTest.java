@@ -10,8 +10,8 @@ import org.snomed.cis.security.Token;
 import org.snomed.cis.service.AuthorizationService;
 import org.snomed.cis.service.BulkJobService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -31,10 +31,10 @@ class BulkJobsControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private BulkJobService bulkJobService;
 
-    @MockBean
+    @MockitoBean
     private AuthorizationService authorizationService;
 
     @Test
@@ -253,7 +253,6 @@ class BulkJobsControllerTest {
     }
 
     @Test
-    @WithMockUser
     void testCleanUpExpiredIds_success_shouldReturnList() throws Exception {
         AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
         Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, List.of());
@@ -276,7 +275,6 @@ class BulkJobsControllerTest {
     }
 
     @Test
-    @WithMockUser
     void testCleanUpExpiredIds_cisException_shouldReturnError() throws Exception {
         AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
         Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, List.of());
@@ -293,7 +291,6 @@ class BulkJobsControllerTest {
     }
 
     @Test
-    @WithMockUser
     void testCleanUpExpiredIds_missingToken_shouldReturnBadRequest() throws Exception {
         AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
         Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, List.of());
@@ -302,7 +299,6 @@ class BulkJobsControllerTest {
     }
 
     @Test
-    @WithMockUser
     void testCleanUpExpiredIds_runtimeException_shouldReturnInternalServerError() throws Exception {
         AuthenticateResponseDto mockDto = Mockito.mock(AuthenticateResponseDto.class);
         Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "admin", mockDto, List.of());

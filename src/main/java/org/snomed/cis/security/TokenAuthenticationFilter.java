@@ -1,7 +1,5 @@
 package org.snomed.cis.security;
 
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URLEncodedUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.http.HttpMethod;
@@ -17,12 +15,15 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class TokenAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
+
+    private static final String TOKEN = "token";
 
     private String contextPath = "/api";
 
@@ -47,65 +48,100 @@ public class TokenAuthenticationFilter extends AbstractAuthenticationProcessingF
     @Override
     public Authentication attemptAuthentication(
             HttpServletRequest request, HttpServletResponse response) {
-        String uri = request.getRequestURI();
-        Optional<String> tokenOptional = Optional.empty();
+        Optional<String> tokenOptional = extractToken(request);
         boolean isPublicEndpoint = isPublicEndpointRequest(request);
-        if (uri.endsWith("/authenticate") || uri.endsWith("/users/logout")) {
-            String requestBody = "";
-            try {
-                requestBody = new String(request.getInputStream().readAllBytes());//.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-                JSONObject requestBodyJson = new JSONObject(requestBody);
-                if (requestBodyJson.has("token")) {
-                    tokenOptional = Optional.ofNullable(requestBodyJson.getString("token"));
-                }
-            } catch (IOException e) {
-                tokenOptional = Optional.empty();
-            } catch (JSONException e) { //check if token is avaialble as form data
-                List<NameValuePair> formEntityList = URLEncodedUtils.parse(requestBody, StandardCharsets.UTF_8);
-                for (NameValuePair entry : formEntityList) {
-                    if ("token".equalsIgnoreCase(entry.getName()))
-                        tokenOptional = Optional.ofNullable(entry.getValue());
-                }
-                if (tokenOptional.isEmpty()) {
-                    tokenOptional = Optional.ofNullable(request.getParameter("token"));
-                }
-            }
-        } else if (uri.endsWith("/sct/namespaces")) {
-            tokenOptional = Optional.empty();
-            String cookieHeaderValue = request.getHeader("cookie");
-            if (cookieHeaderValue != null) {
-                Optional<String> tsAuthorCookieStringOpt = Arrays.stream(cookieHeaderValue.split(";")).filter(c -> c.contains("ts-author")).findAny();
-                if (tsAuthorCookieStringOpt.isPresent()) {
-                    String cookieValue = tsAuthorCookieStringOpt.get().substring(tsAuthorCookieStringOpt.get().indexOf("=") + 1);
-                    try {
-                        JSONObject cookieValueJsonObj = new JSONObject(cookieValue);
-                        if (cookieValueJsonObj.has("token")) {
-                            tokenOptional = Optional.ofNullable(cookieValueJsonObj.getString("token"));
-                        }
-                    } catch (Exception e) {
-                        tokenOptional = Optional.empty();
-                    }
-                }
-                if (tokenOptional.isEmpty()) {
-                    Optional<String> imsOpt = Arrays.stream(cookieHeaderValue.split(";"))
-                            .map(String::trim)
-                            .filter(c -> c.startsWith(getImsCookieName() + "="))
-                            .findFirst();
-
-                    if (imsOpt.isPresent()) {
-                        String token = imsOpt.get().substring(imsOpt.get().indexOf("=") + 1);
-
-                        if (token != null && !token.isBlank()) {
-                            tokenOptional = Optional.of(token);
-                        }
-                    }
-                }
-            }
-        } else {
-            tokenOptional = Optional.ofNullable(request.getParameter("token"));
-        }
-        Token authToken = tokenOptional.map(s -> new Token(s, isPublicEndpoint)).orElseGet(() -> new Token(isPublicEndpoint));
+        Token authToken = tokenOptional
+                .map(s -> new Token(s, isPublicEndpoint))
+                .orElseGet(() -> new Token(isPublicEndpoint));
         return getAuthenticationManager().authenticate(authToken);
+    }
+
+    private Optional<String> extractToken(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        if (uri.endsWith("/authenticate") || uri.endsWith("/users/logout")) {
+            return extractTokenFromAuthRequest(request);
+        } else if (uri.endsWith("/sct/namespaces")) {
+            return extractTokenFromCookieHeader(request.getHeader("cookie"));
+        } else {
+            return Optional.ofNullable(request.getParameter(TOKEN));
+        }
+    }
+
+    private Optional<String> extractTokenFromAuthRequest(HttpServletRequest request) {
+        String requestBody = "";
+        try {
+            requestBody = new String(request.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            JSONObject requestBodyJson = new JSONObject(requestBody);
+            if (requestBodyJson.has(TOKEN)) {
+                return Optional.ofNullable(requestBodyJson.getString(TOKEN));
+            }
+        } catch (IOException e) {
+            return Optional.empty();
+        } catch (JSONException e) {
+            Optional<String> formToken = extractTokenFromFormData(requestBody);
+            if (formToken.isPresent()) {
+                return formToken;
+            }
+        }
+        return Optional.ofNullable(request.getParameter(TOKEN));
+    }
+
+    private Optional<String> extractTokenFromFormData(String requestBody) {
+        if (!requestBody.isBlank()) {
+            for (String pair : requestBody.split("&")) {
+                String[] parts = pair.split("=", 2);
+                if (parts.length > 0 && TOKEN.equalsIgnoreCase(URLDecoder.decode(parts[0], StandardCharsets.UTF_8))) {
+                    if (parts.length > 1) {
+                        return Optional.ofNullable(URLDecoder.decode(parts[1], StandardCharsets.UTF_8));
+                    }
+                    break;
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    private Optional<String> extractTokenFromCookieHeader(String cookieHeaderValue) {
+        if (cookieHeaderValue == null) {
+            return Optional.empty();
+        }
+        Optional<String> tsAuthorToken = extractTokenFromTsAuthorCookie(cookieHeaderValue);
+        if (tsAuthorToken.isPresent()) {
+            return tsAuthorToken;
+        }
+        return extractTokenFromImsCookie(cookieHeaderValue);
+    }
+
+    private Optional<String> extractTokenFromTsAuthorCookie(String cookieHeaderValue) {
+        Optional<String> tsAuthorCookieStringOpt = Arrays.stream(cookieHeaderValue.split(";"))
+                .filter(c -> c.contains("ts-author"))
+                .findAny();
+        if (tsAuthorCookieStringOpt.isPresent()) {
+            String cookieValue = tsAuthorCookieStringOpt.get().substring(tsAuthorCookieStringOpt.get().indexOf("=") + 1);
+            try {
+                JSONObject cookieValueJsonObj = new JSONObject(cookieValue);
+                if (cookieValueJsonObj.has(TOKEN)) {
+                    return Optional.ofNullable(cookieValueJsonObj.getString(TOKEN));
+                }
+            } catch (Exception e) {
+                return Optional.empty();
+            }
+        }
+        return Optional.empty();
+    }
+
+    private Optional<String> extractTokenFromImsCookie(String cookieHeaderValue) {
+        Optional<String> imsOpt = Arrays.stream(cookieHeaderValue.split(";"))
+                .map(String::trim)
+                .filter(c -> c.startsWith(getImsCookieName() + "="))
+                .findFirst();
+        if (imsOpt.isPresent()) {
+            String token = imsOpt.get().substring(imsOpt.get().indexOf("=") + 1);
+            if (!token.isBlank()) {
+                return Optional.of(token);
+            }
+        }
+        return Optional.empty();
     }
 
     @Override

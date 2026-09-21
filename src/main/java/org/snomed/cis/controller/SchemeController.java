@@ -9,6 +9,7 @@ import org.snomed.cis.domain.SchemeIdBase;
 import org.snomed.cis.domain.SchemeName;
 import org.snomed.cis.dto.Scheme;
 import org.snomed.cis.exception.CisException;
+import org.snomed.cis.security.AuthUtils;
 import org.snomed.cis.security.Token;
 import org.snomed.cis.service.SchemeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,23 +38,35 @@ public class SchemeController {
             // @ApiResponse(code = 404, message = "Branch not found", response = RestApiError.class)
     })
 
+    private Token getAuthToken(Authentication authentication) throws CisException {
+        return AuthUtils.getAuthToken(authentication);
+    }
+
     @GetMapping("/users/{username}/schemes/")
-    public ResponseEntity<List<Scheme>> getSchemesForUser(@RequestParam String token, @PathVariable String username, @Parameter(hidden = true) Authentication authentication)  {
-        Token authToken = (Token) authentication;
+    public ResponseEntity<List<Scheme>> getSchemesForUser(@RequestParam String token, @PathVariable String username, @Parameter(hidden = true) Authentication authentication) throws CisException {
+        Token authToken = getAuthToken(authentication);
         logger.info("Request received for - username :: {} - authenticateResponseDto :: {}", username,authToken.getAuthenticateResponseDto());
         return ResponseEntity.ok(schemeService.getSchemesForUser(authToken.getAuthenticateResponseDto(),username));
     }
 
     @Operation(summary = "getSchemes")
     @GetMapping("/schemes")
-    public ResponseEntity<List<SchemeIdBase>> getSchemes(@RequestParam String token) throws CisException {
+    public ResponseEntity<List<SchemeIdBase>> getSchemes(@RequestParam(required = false) String token, @Parameter(hidden = true) Authentication authentication) throws CisException {
+        getAuthToken(authentication);
+        if (token == null || token.isBlank()) {
+            throw new CisException(org.springframework.http.HttpStatus.BAD_REQUEST, "Required request parameter 'token' is not present");
+        }
         logger.info("Request received for getSchemes() - No Params");
         return ResponseEntity.ok(schemeService.getSchemes());
     }
 
     @Operation(summary = "getScheme")
     @GetMapping("/schemes/{schemeName}")
-    public ResponseEntity<SchemeIdBase> getScheme(@RequestParam String token, @PathVariable String schemeName) throws CisException {
+    public ResponseEntity<SchemeIdBase> getScheme(@RequestParam(required = false) String token, @PathVariable String schemeName, @Parameter(hidden = true) Authentication authentication) throws CisException {
+        getAuthToken(authentication);
+        if (token == null || token.isBlank()) {
+            throw new CisException(org.springframework.http.HttpStatus.BAD_REQUEST, "Required request parameter 'token' is not present");
+        }
         logger.info("Request received for - schemeName :: {}", schemeName);
         return ResponseEntity.ok(schemeService.getScheme(schemeName));
     }
@@ -63,7 +76,7 @@ public class SchemeController {
     @Operation(summary = "updateScheme")
     @PutMapping("/schemes/{schemeName}")
     public ResponseEntity<String> updateScheme(@PathVariable SchemeName schemeName, @RequestParam String schemeSeq,@Parameter(hidden = true) Authentication authentication) throws CisException {
-        Token authToken = (Token) authentication;
+        Token authToken = getAuthToken(authentication);
         logger.info("Request received for - schemeName :: {} - schemeSeq :: {} - authenticateResponseDto :: {}", schemeName,schemeSeq,authToken.getAuthenticateResponseDto().toString());
         return ResponseEntity.ok(schemeService.updateScheme(authToken.getAuthenticateResponseDto(),schemeName,schemeSeq));
     }

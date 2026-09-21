@@ -12,8 +12,8 @@ import org.snomed.cis.service.AuthorizationService;
 import org.snomed.cis.service.NamespaceService;
 import org.snomed.cis.service.SchemeService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -41,24 +41,15 @@ class AuthorizationControllerMockMvcTest {
 
     @Autowired
     private MockMvc mockMvc;
-    @MockBean
-    private Token mockToken;
 
-    @MockBean
+    @MockitoBean
     private AuthorizationService authorizationService;
 
-    @MockBean
+    @MockitoBean
     private NamespaceService namespaceService;
 
-    @MockBean
+    @MockitoBean
     private SchemeService schemeService;
-
-    @BeforeEach
-    void setUp() {
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(mockToken);
-        SecurityContextHolder.setContext(context);
-    }
 
     @Test
     void testGetUserGroups_success() throws Exception {
@@ -90,7 +81,7 @@ class AuthorizationControllerMockMvcTest {
     void testGetUserGroups_userNotFound_shouldReturnInternalServerError() throws Exception {
         CisException exception = new CisException(HttpStatus.INTERNAL_SERVER_ERROR, "User not found");
 
-        when(authorizationService.getUserGroups("dummy-token","user")).thenThrow(exception);
+        when(authorizationService.getUserGroups("dummy-token","invalidUser")).thenThrow(exception);
 
         mockMvc.perform(get("/users/invalidUser/groups").param("token", "dummy-token")).andExpect(status().isInternalServerError());
     }

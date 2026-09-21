@@ -1,6 +1,5 @@
 package org.snomed.cis.util;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.cis.exception.CisException;
@@ -13,6 +12,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class ImsRequestManager {
@@ -64,22 +64,23 @@ public class ImsRequestManager {
                     + "&maxResults=" + maxResults
                     + "&startAt=" + startAt;
 
-            ResponseEntity<JsonNode> response = restTemplate.exchange(
+            ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     withAuth(token),
-                    JsonNode.class
+                    new ParameterizedTypeReference<>() {}
             );
 
-            JsonNode body = response.getBody();
-            if (body == null || !body.isArray()) {
+            List<Map<String, Object>> body = response.getBody();
+            if (body == null) {
                 return Collections.emptyList();
             }
 
             List<String> usernames = new ArrayList<>();
-            for (JsonNode userNode : body) {
-                if (userNode.has("username")) {
-                    usernames.add(userNode.get("username").asText());
+            for (Map<String, Object> userMap : body) {
+                Object username = userMap.get("username");
+                if (username != null) {
+                    usernames.add(username.toString());
                 }
             }
             return usernames;
@@ -90,3 +91,4 @@ public class ImsRequestManager {
         }
     }
 }
+

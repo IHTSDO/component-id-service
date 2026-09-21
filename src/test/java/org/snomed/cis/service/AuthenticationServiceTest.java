@@ -19,8 +19,7 @@ import org.springframework.http.ResponseEntity;
 import java.lang.reflect.Field;
 import java.util.List;
 
-import static org.junit.Assert.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;

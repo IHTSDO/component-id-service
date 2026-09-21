@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 public class BackendJobService {
     private static final Logger logger = LoggerFactory.getLogger(BackendJobService.class);
     public static String AVAILABLE = "Available";
+    public static final String PARTITION_ID = "partitionId";
 
     @Autowired
     SchemeIdService schemeIdService;
@@ -507,7 +508,7 @@ public class BackendJobService {
                     schemeIdRecord.setStatus(newStatus);
                     schemeIdRecord.setAuthor(author);
                     schemeIdRecord.setSoftware(software);
-                    schemeIdRecord.setExpirationDate((record.has("expirationDate")) ? (LocalDateTime) record.get("expirationDate") : null);
+                    schemeIdRecord.setExpirationDate(parseExpirationDate(record));
                     schemeIdRecord.setComment(comment);
                     schemeIdRecord.setJobId(record.getInt("jobId"));
                     schemeIdRecord.setModified_at(LocalDateTime.now());
@@ -559,12 +560,7 @@ public class BackendJobService {
             var schemeIdRecord = getSchemeId(scheme, newSchemeId, systemId);
 
             var newStatus = stateMachine.getNewStatus(schemeIdRecord.getStatus(), action);
-            LocalDateTime expirationDateTime = null;
-                if(record.has("expirationDate") && !record.get("expirationDate").equals(null) && !record.get("expirationDate").equals("null") && !record.get("expirationDate").equals("")) {
-                    String str = record.getString("expirationDate");
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                    expirationDateTime = LocalDate.parse(str, formatter).atStartOfDay();
-                }
+            LocalDateTime expirationDateTime = parseExpirationDate(record);
             if (newStatus != null) {
                 String comment = null;
                 String software = null;
@@ -647,12 +643,7 @@ public class BackendJobService {
             if (schemeList.size() > 0) {
                 var newStatus = stateMachine.getNewStatus(schemeList.get(0).getStatus(), generationData.getString("action"));
                 if (!newStatus.isBlank()) {
-                    LocalDateTime expirationDateTime = null;
-                    if (generationData.has("expirationDate") && !generationData.getString("expirationDate").equalsIgnoreCase("null") && generationData.get("expirationDate") != null) {
-                        String str = generationData.getString("expirationDate");
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                        expirationDateTime = LocalDate.parse(str, formatter).atStartOfDay();
-                    }
+                    LocalDateTime expirationDateTime = parseExpirationDate(generationData);
                     schemeList.get(0).setSystemId(generationData.getString("systemId"));
                     schemeList.get(0).setStatus(newStatus);
                     schemeList.get(0).setAuthor(generationData.getString("author"));
@@ -793,13 +784,7 @@ public class BackendJobService {
                                 newSchemeId = SNOMEDID.getNextId(previousCode);
                             else
                                 newSchemeId = CTV3ID.getNextId(previousCode);
-                            LocalDateTime expirationDateTime = null;
-                                if(record.has("expirationDate") && !record.get("expirationDate").equals(null) && !record.get("expirationDate").equals("null") && !record.get("expirationDate").equals(""))
-                                {
-                                    String str = record.getString("expirationDate");
-                                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                                    expirationDateTime = LocalDate.parse(str, formatter).atStartOfDay();
-                                }
+                            LocalDateTime expirationDateTime = parseExpirationDate(record);
                             String comment = null;
                             String software = null;
                             String author = null;
@@ -973,6 +958,7 @@ public class BackendJobService {
                             {
                                 author = record.getString("author");
                             }
+                            LocalDateTime expirationDateTime = parseExpirationDate(record);
                             Sctid sctidInsert = Sctid.builder()
                                     .sctid(sid)
                                     .sequence(sctIdHelper.getSequence(sid))
@@ -983,7 +969,7 @@ public class BackendJobService {
                                     .status(newStatus)
                                     .author(author)
                                     .software(software)
-                                    .expirationDate(null != record.get("expirationDate") ? (LocalDateTime) record.get("expirationDate") : null)
+                                    .expirationDate(expirationDateTime)
                                     .comment(comment)
                                     .jobId(record.getInt("jobId"))
                                     .created_at(createAt)
@@ -1034,10 +1020,7 @@ public class BackendJobService {
 
         var newSCTId = computeSctId(generationData, sequence);
         var action = stateMachine.actions.get("generate");
-        String systemId = null;
-        if (generationData.get("systemId") == null && !generationData.get("systemId").toString().isEmpty()) {
-            systemId = (String) generationData.get("systemId");
-        }
+        String systemId = extractSystemId(generationData);
         Sctid sctIdRecord = getSctid(newSCTId, systemId);
         if (sctIdRecord == null) {
             throw new CisException(HttpStatus.BAD_REQUEST, "SCTID record not found");
@@ -1045,17 +1028,39 @@ public class BackendJobService {
 
         var newStatus = stateMachine.getNewStatus(sctIdRecord.getStatus(), action);
         if (newStatus != null) {
-            sctIdRecord.setStatus(newStatus);
-            sctIdRecord.setAuthor((String) generationData.get("author"));
-            sctIdRecord.setSoftware((String) generationData.get("software"));
-            sctIdRecord.setExpirationDate((LocalDateTime) generationData.get("expirationDate"));
-            sctIdRecord.setComment((String) generationData.get("comment"));
-            sctIdRecord.setJobId((Integer) generationData.get("jobId"));
-            sctidRepository.save(sctIdRecord);
+            updateAndSaveSctIdRecord(sctIdRecord, generationData, newStatus);
         } else {
             setNewSCTIdRecord(generationData, thisPartition);
         }
         return sctIdRecord;
+    }
+
+    private String extractSystemId(JSONObject generationData) {
+        if (generationData != null && generationData.has("systemId") && !generationData.isNull("systemId")) {
+            String systemId = generationData.get("systemId").toString();
+            if (!systemId.isEmpty()) {
+                return systemId;
+            }
+        }
+        return null;
+    }
+
+    private String getOptString(JSONObject json, String key) {
+        return (json != null && json.has(key) && !json.isNull(key)) ? json.getString(key) : null;
+    }
+
+    private Integer getOptInteger(JSONObject json, String key) {
+        return (json != null && json.has(key) && !json.isNull(key)) ? json.getInt(key) : null;
+    }
+
+    private void updateAndSaveSctIdRecord(Sctid sctIdRecord, JSONObject generationData, String newStatus) {
+        sctIdRecord.setStatus(newStatus);
+        sctIdRecord.setAuthor(getOptString(generationData, "author"));
+        sctIdRecord.setSoftware(getOptString(generationData, "software"));
+        sctIdRecord.setExpirationDate(parseExpirationDate(generationData));
+        sctIdRecord.setComment(getOptString(generationData, "comment"));
+        sctIdRecord.setJobId(getOptInteger(generationData, "jobId"));
+        sctidRepository.save(sctIdRecord);
     }
 
     Sctid getSctid(String newSCTId, String systemId) {
@@ -1081,25 +1086,32 @@ public class BackendJobService {
         Sctid sctOutput = new Sctid();
         List<Sctid> sctList = new ArrayList<>();
         Map<String, Object> queryObject = new HashMap<>();
-        if (null != generationData.get("namespace") && null != generationData.get("partitionId") && !(generationData.get("partitionId").toString().isEmpty())) {
+        if (generationData.has("namespace") && !generationData.isNull("namespace") && generationData.has(PARTITION_ID) && !generationData.isNull(PARTITION_ID) && !(generationData.get(PARTITION_ID).toString().isEmpty())) {
             queryObject.put("namespace", generationData.get("namespace"));
-            queryObject.put("partitionId", "'" + generationData.get("partitionId") + "'");
+            queryObject.put(PARTITION_ID, "'" + generationData.get(PARTITION_ID) + "'");
             queryObject.put("status", "'" + stateMachine.statuses.get("available") + "'");
             sctList = sctidService.findSctWithIndexAndLimit(queryObject, "1", null);
             if (sctList.size() > 0) {
                 var newStatus = stateMachine.getNewStatus(sctList.get(0).getStatus(), stateMachine.actions.get("generate"));
                 if (!newStatus.isBlank()) {
-                    if (null != generationData.get("systemId") && !generationData.get("systemId").toString().isEmpty()) {
+                    if (generationData.has("systemId") && !generationData.isNull("systemId") && !generationData.get("systemId").toString().isEmpty()) {
                         sctList.get(0).setSystemId(String.valueOf(generationData.get("systemId")));
                     }
                     sctList.get(0).setStatus(newStatus);
-                    sctList.get(0).setAuthor((String) generationData.get("author"));
-                    sctList.get(0).setSoftware((String) generationData.get("software"));
+                    sctList.get(0).setAuthor(generationData.has("author") && !generationData.isNull("author") ? generationData.getString("author") : null);
+                    sctList.get(0).setSoftware(generationData.has("software") && !generationData.isNull("software") ? generationData.getString("software") : null);
                     //Doubt - need to be clarified- there is no ExpirationDate in Request body.
-                    sctList.get(0).setExpirationDate(null != generationData.get("expirationDate") ? (LocalDateTime) generationData.get("expirationDate") : null);
-                    sctList.get(0).setComment((String) generationData.get("comment"));
+                    sctList.get(0).setExpirationDate(parseExpirationDate(generationData));
+                    sctList.get(0).setComment(generationData.has("comment") && !generationData.isNull("comment") ? generationData.getString("comment") : null);
                     sctList.get(0).setJobId(null);
-                    sctList.get(0).setModified_at(null != generationData.get("modified_at") ? (LocalDateTime) generationData.get("modified_at") : LocalDateTime.parse(""));
+                    LocalDateTime modifiedAt = LocalDateTime.now();
+                    if (generationData.has("modified_at") && !generationData.isNull("modified_at")) {
+                        Object modObj = generationData.get("modified_at");
+                        if (modObj instanceof LocalDateTime ldt) {
+                            modifiedAt = ldt;
+                        }
+                    }
+                    sctList.get(0).setModified_at(modifiedAt);
                     sctOutput = sctidRepository.save(sctList.get(0));
                 } else {
                     return null;
@@ -1139,7 +1151,7 @@ public class BackendJobService {
         List<Sctid> insertedRecords = new ArrayList<>();
         Map<String, Object> obj = new HashMap<String, Object>();
         obj.put("namespace", record.get("namespace"));
-        obj.put("partitionId", record.get("partitionId"));
+        obj.put(PARTITION_ID, record.get(PARTITION_ID));
         var newStatus = stateMachine.getNewStatus(stateMachine.statuses.get("available"), record.getString("action"));
         Set<String> sysIdInChunk = new HashSet<String>();
         int insertedCount = 0;
@@ -1192,7 +1204,7 @@ public class BackendJobService {
                         // PL TO DO
                         Optional<Partitions> part = null;
                         try {
-                            part = partitionsRepository.findByNamespacePartition((Integer) record.get("namespace"), (String) record.get("partitionId"));
+                            part = partitionsRepository.findByNamespacePartition((Integer) record.get("namespace"), (String) record.get(PARTITION_ID));
                         } catch (Exception e) {
                             System.out.println("error:" + e.getMessage());
                         }
@@ -1200,7 +1212,7 @@ public class BackendJobService {
                             seq = part.get().getSequence();
                         }
                         if (seq == null || !(part.isPresent())) {
-                            throw new CisException(HttpStatus.BAD_REQUEST, "Partition not found for partitionId:" + (String) record.get("partitionId") + " and namespace:" + (Integer) record.get("namespace"));
+                            throw new CisException(HttpStatus.BAD_REQUEST, "Partition not found for partitionId:" + (String) record.get(PARTITION_ID) + " and namespace:" + record.get("namespace"));
                         }
 
                         List<String> validSctids = new ArrayList<>();
@@ -1250,15 +1262,10 @@ public class BackendJobService {
                             String newSctid = validSctids.get(k);
                             int idSeq = validSequences.get(k);
 
-                            LocalDateTime expirationDateTime = null;
+                            LocalDateTime expirationDateTime = parseExpirationDate(record);
                             String comment = null;
                             String software = null;
                             String author = null;
-                                if(record.has("expirationDate") && !record.get("expirationDate").equals(null) && !record.get("expirationDate").equals("null") && !record.get("expirationDate").equals("")) {
-                                    String str = record.getString("expirationDate");
-                                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                                    expirationDateTime = LocalDate.parse(str, formatter).atStartOfDay();
-                                }
                             if(record.has("comment") && !record.get("comment").equals(null) && !record.get("comment").equals("null") && !record.get("comment").equals(""))
                             {
                                 comment = record.getString("comment");
@@ -1273,7 +1280,7 @@ public class BackendJobService {
                             }
                             Sctid rec = Sctid.builder().sctid(newSctid).sequence(idSeq).
                                     namespace(record.getInt("namespace")).
-                                    partitionId(record.getString("partitionId")).
+                                    partitionId(record.getString(PARTITION_ID)).
                                     checkDigit(sctIdHelper.getCheckDigit(newSctid)).
                                     systemId(systemId).
                                     status(newStatus).
@@ -1363,7 +1370,7 @@ int updateJobIdscheme(List<SchemeId> existingSystemId, String scheme, Integer jo
         if (tmpNsp.equalsIgnoreCase("0")) {
             tmpNsp = "";
         }
-        var base = seq + tmpNsp + record.get("partitionId");
+        var base = seq + tmpNsp + record.get(PARTITION_ID);
         var SCTId = base + sctIdHelper.verhoeffCompute(base);
         return SCTId;
 
@@ -1411,6 +1418,22 @@ int updateJobIdscheme(List<SchemeId> existingSystemId, String scheme, Integer jo
             }
         }
         return "success";
+    }
+
+    private LocalDateTime parseExpirationDate(JSONObject recordJson) {
+        if (recordJson == null || !recordJson.has("expirationDate") || recordJson.isNull("expirationDate")) {
+            return null;
+        }
+        Object val = recordJson.get("expirationDate");
+        if (val == null || val.equals("null") || val.equals("")) {
+            return null;
+        }
+        if (val instanceof LocalDateTime ldt) {
+            return ldt;
+        }
+        String str = val.toString();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        return LocalDate.parse(str, formatter).atStartOfDay();
     }
 
 }

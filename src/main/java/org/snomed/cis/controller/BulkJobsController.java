@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.snomed.cis.domain.BulkJob;
 import org.snomed.cis.dto.CleanUpServiceResponse;
 import org.snomed.cis.exception.CisException;
+import org.snomed.cis.security.AuthUtils;
 import org.snomed.cis.security.Token;
 import org.snomed.cis.service.AuthorizationService;
 import org.snomed.cis.service.BulkJobService;
@@ -43,10 +44,15 @@ public class BulkJobsController {
            // @ApiResponse(code = 400, message = "Invalid filter config", response = RestApiError.class),
            // @ApiResponse(code = 404, message = "Branch not found", response = RestApiError.class)
     })
+    private Token getAuthToken(Authentication authentication) throws CisException {
+        return AuthUtils.getAuthToken(authentication);
+    }
+
     @GetMapping("/bulk/jobs")
     public ResponseEntity<List<BulkJob>> getJobs(@RequestParam String token, @Parameter(hidden = true) Authentication authentication) throws CisException {
         logger.info("Request received - getJobs");
-        authorizationService.validateAdmin((Token) authentication);
+        Token authToken = getAuthToken(authentication);
+        authorizationService.validateAdmin(authToken);
         return ResponseEntity.ok(bulkJobService.getJobs());
     }
 
@@ -54,13 +60,15 @@ public class BulkJobsController {
     @GetMapping("/bulk/jobs/{jobId}")
     public ResponseEntity<BulkJob> getJob(@RequestParam String token, @PathVariable Integer jobId, @Parameter(hidden = true) Authentication authentication) throws CisException {
         logger.info("Request received - jobId :: {}", jobId);
+        getAuthToken(authentication);
         return ResponseEntity.ok(bulkJobService.getJob(jobId));
     }
 
     @Operation(summary = "getJobRecords")
     @GetMapping("/bulk/jobs/{jobId}/records")
-    public ResponseEntity<List<Object>> getJobRecords(@RequestParam String token, @PathVariable Integer jobId, @Parameter(hidden = true) Authentication authentication) {
+    public ResponseEntity<List<Object>> getJobRecords(@RequestParam String token, @PathVariable Integer jobId, @Parameter(hidden = true) Authentication authentication) throws CisException {
         logger.info("Request received for - jobId :: {}", jobId);
+        getAuthToken(authentication);
         return ResponseEntity.ok(bulkJobService.getJobRecords(jobId));
     }
 
@@ -68,7 +76,7 @@ public class BulkJobsController {
     @GetMapping("/bulk/jobs/cleanupExpired")
     public ResponseEntity<List<CleanUpServiceResponse>> cleanUpExpiredIds(@RequestParam String token, @Parameter(hidden = true) Authentication authentication) throws CisException {
         logger.info("Request received - authentication :: {}", authentication);
-        Token authToken = (Token)authentication;
+        Token authToken = getAuthToken(authentication);
         return ResponseEntity.ok(bulkJobService.cleanUpExpiredIds(authToken.getAuthenticateResponseDto()));
     }
 }

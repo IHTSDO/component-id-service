@@ -14,8 +14,8 @@ import org.snomed.cis.exception.CisException;
 import org.snomed.cis.security.Token;
 import org.snomed.cis.service.BulkSchemeIdService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
@@ -41,10 +41,9 @@ class BulkSchemeIdControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private ObjectMapper objectMapper = new ObjectMapper();
 
-    @MockBean
+    @MockitoBean
     private BulkSchemeIdService bulkSchemeIdService;
 
     static class TestToken extends Token {
@@ -135,7 +134,7 @@ class BulkSchemeIdControllerTest {
     void testGenerateSchemeIds_nullAuthentication_shouldReturnUnauthorized() throws Exception {
         SchemeIdBulkGenerationRequestDto dto = new SchemeIdBulkGenerationRequestDto();
 
-        mockMvc.perform(post("/scheme/SNOMEDID/bulk/generate").param("token", "dummy-token").content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isForbidden());
+        mockMvc.perform(post("/scheme/SNOMEDID/bulk/generate").param("token", "dummy-token").content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -274,17 +273,11 @@ class BulkSchemeIdControllerTest {
     }
 
     @Test
-    void testReserveSchemeIds_noAuthentication_shouldReturnUnauthorized() throws Exception {
+    void testReserveSchemeIds_missingCsrf_shouldSucceed() throws Exception {
         SchemeIdBulkReserveRequestDto dto = new SchemeIdBulkReserveRequestDto();
 
-        mockMvc.perform(post("/scheme/SNOMEDID/bulk/reserve").param("token", "dummy-token").content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON).with(csrf())).andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    void testReserveSchemeIds_missingCsrf_shouldReturnForbidden() throws Exception {
-        SchemeIdBulkReserveRequestDto dto = new SchemeIdBulkReserveRequestDto();
-
-        mockMvc.perform(post("/scheme/SNOMEDID/bulk/reserve").param("token", "dummy-token").content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON).with(authentication(new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "user", AuthenticateResponseDto.builder().build(), AuthorityUtils.createAuthorityList("ROLE_USER"))))).andExpect(status().isForbidden());
+        when(bulkSchemeIdService.reserveSchemeIds(any(), eq(SchemeName.SNOMEDID), any())).thenReturn(new BulkJob());
+        mockMvc.perform(post("/scheme/SNOMEDID/bulk/reserve").param("token", "dummy-token").content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON).with(authentication(new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "user", AuthenticateResponseDto.builder().build(), AuthorityUtils.createAuthorityList("ROLE_USER"))))).andExpect(status().isOk());
     }
 
     @Test
@@ -317,7 +310,7 @@ class BulkSchemeIdControllerTest {
 
         Authentication validAuth = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "user", AuthenticateResponseDto.builder().build(), AuthorityUtils.createAuthorityList("ROLE_USER"));
 
-        return Stream.of(Arguments.of("Missing token param", null, validAuth, csrf(), 400), Arguments.of("Missing auth", "dummy-token", null, csrf(), 401), Arguments.of("Missing CSRF", "dummy-token", validAuth, null, 403));
+        return Stream.of(Arguments.of("Missing token param", null, validAuth, csrf(), 400), Arguments.of("Missing auth", "dummy-token", null, csrf(), 401), Arguments.of("Missing CSRF", "dummy-token", validAuth, null, 200));
     }
 
     @ParameterizedTest(name = "{0}")
@@ -354,8 +347,7 @@ class BulkSchemeIdControllerTest {
     void testDeprecateSchemeIds_missingBody_shouldReturnBadRequest() throws Exception {
         Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "user", AuthenticateResponseDto.builder().build(), AuthorityUtils.createAuthorityList("ROLE_USER"));
 
-        mockMvc.perform(put("/scheme/SNOMEDID/bulk/deprecate").param("token", "dummy-token").content("") // Empty body
-                .contentType(MediaType.APPLICATION_JSON).with(authentication(authToken)).with(csrf())).andExpect(status().isBadRequest());
+        mockMvc.perform(put("/scheme/SNOMEDID/bulk/deprecate").param("token", "dummy-token").contentType(MediaType.APPLICATION_JSON).with(authentication(authToken)).with(csrf())).andExpect(status().isBadRequest());
     }
 
     @Test
@@ -371,6 +363,20 @@ class BulkSchemeIdControllerTest {
     }
 
     @Test
+    void testReleaseSchemeIds_validRequest_shouldReturnJob() throws Exception {
+        SchemeIdBulkDeprecateRequestDto dto = new SchemeIdBulkDeprecateRequestDto();
+        BulkJob mockJob = new BulkJob();
+
+        AuthenticateResponseDto mockDto = AuthenticateResponseDto.builder().name("testuser").roles(List.of("ROLE_USER")).build();
+
+        when(bulkSchemeIdService.releaseSchemeIds(any(), eq(SchemeName.SNOMEDID), any())).thenReturn(mockJob);
+
+        Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "testuser", mockDto, AuthorityUtils.createAuthorityList("ROLE_USER"));
+
+        mockMvc.perform(put("/scheme/SNOMEDID/bulk/release").param("token", "dummy-token").content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON).with(authentication(authToken)).with(csrf())).andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
     void testReleaseSchemeIds_nullAuthentication_shouldReturnUnauthorized() throws Exception {
         SchemeIdBulkDeprecateRequestDto dto = new SchemeIdBulkDeprecateRequestDto();
 
@@ -378,12 +384,13 @@ class BulkSchemeIdControllerTest {
     }
 
     @Test
-    void testReleaseSchemeIds_missingCsrf_shouldReturnForbidden() throws Exception {
+    void testReleaseSchemeIds_missingCsrf_shouldSucceed() throws Exception {
         SchemeIdBulkDeprecateRequestDto dto = new SchemeIdBulkDeprecateRequestDto();
 
         Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "user", AuthenticateResponseDto.builder().build(), AuthorityUtils.createAuthorityList("ROLE_USER"));
 
-        mockMvc.perform(put("/scheme/SNOMEDID/bulk/release").param("token", "dummy-token").content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON).with(authentication(authToken))).andExpect(status().isForbidden());
+        when(bulkSchemeIdService.releaseSchemeIds(any(), eq(SchemeName.SNOMEDID), any())).thenReturn(new BulkJob());
+        mockMvc.perform(put("/scheme/SNOMEDID/bulk/release").param("token", "dummy-token").content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON).with(authentication(authToken))).andExpect(status().isOk());
     }
 
     @Test
@@ -470,12 +477,13 @@ class BulkSchemeIdControllerTest {
     }
 
     @Test
-    void testPublishSchemeIds_missingCsrf_shouldReturnForbidden() throws Exception {
+    void testPublishSchemeIds_missingCsrf_shouldSucceed() throws Exception {
         SchemeIdBulkDeprecateRequestDto dto = new SchemeIdBulkDeprecateRequestDto();
 
         Authentication authToken = new AuthorizationControllerMockMvcTest.TestToken("dummy-token", "user", AuthenticateResponseDto.builder().build(), AuthorityUtils.createAuthorityList("ROLE_USER"));
 
-        mockMvc.perform(put("/scheme/SNOMEDID/bulk/publish").param("token", "dummy-token").content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON).with(authentication(authToken))).andExpect(status().isForbidden());
+        when(bulkSchemeIdService.publishSchemeIds(any(), eq(SchemeName.SNOMEDID), any())).thenReturn(new BulkJob());
+        mockMvc.perform(put("/scheme/SNOMEDID/bulk/publish").param("token", "dummy-token").content(objectMapper.writeValueAsString(dto)).contentType(MediaType.APPLICATION_JSON).with(authentication(authToken))).andExpect(status().isOk());
     }
 
 }

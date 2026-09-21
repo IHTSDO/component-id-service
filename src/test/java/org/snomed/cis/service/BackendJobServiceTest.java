@@ -59,8 +59,6 @@ class BackendJobServiceTest {
     @Mock
     private SctidRepository sctidRepository;
     @Mock
-    private SctidRepositoryTest sctidRepositorys;
-    @Mock
     SchemeIdBase schemeIdBase;
 
     @Mock
@@ -135,10 +133,11 @@ class BackendJobServiceTest {
     @Test
     void testGenerateSctids_ExistingSystemIds() throws Exception {
         List<String> existing = List.of("SYS001");
+        when(sctidRepository.getSystemIdByNamespace(anyList(), anyInt())).thenReturn(existing);
         when(sctidRepository.saveAll(anyList())).thenReturn(Collections.emptyList());
-        doNothing().when(sctidRepositorys).updateJobId(existing, 123);
         String result = backendJobService.generateSctids(recordss);
         assertEquals("success", result);
+        verify(sctidRepository).updateJobIdInSctid(123, existing);
     }
 
     @Test
@@ -1065,5 +1064,75 @@ class BackendJobServiceTest {
         String result = backendJobService.generateSchemeIdSmallRequest(records);
         assertEquals("success", result);
         verify(schemeIdRepository).save(existingSchemeId);
+    }
+
+    @Test
+    void testRegisterSctids_withoutExpirationDate_success() throws Exception {
+        stateMachine = mock(StateMachine.class);
+        Map<String, String> statuses = new HashMap<>();
+        statuses.put("available", "Available");
+        Map<String, String> actions = new HashMap<>();
+        actions.put("register", "register");
+        stateMachine.statuses = statuses;
+        stateMachine.actions = actions;
+        ReflectionTestUtils.setField(backendJobService, "stateMachine", stateMachine);
+
+        JSONObject record = new JSONObject();
+        record.put("jobId", 101);
+        record.put("namespace", 100001);
+        record.put("comment", "Registration comment");
+        record.put("software", "ServiceApp");
+        record.put("author", "author1");
+
+        JSONArray recordsArray = new JSONArray();
+        JSONObject rec1 = new JSONObject();
+        rec1.put("sctid", "100001101");
+        rec1.put("systemId", "SYS-001");
+        recordsArray.put(rec1);
+        record.put("records", recordsArray);
+
+        when(stateMachine.getNewStatus("Available", "register")).thenReturn("Assigned");
+        when(sctidRepository.findBySctidIn(anyList())).thenReturn(Collections.emptyList());
+        when(sctIdHelper.getSequence("100001101")).thenReturn(100001L);
+        when(sctIdHelper.getCheckDigit("100001101")).thenReturn(1);
+        when(sctidRepository.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
+
+        String result = backendJobService.registerSctids(record);
+        assertEquals("success", result);
+        verify(sctidRepository).saveAll(anyList());
+    }
+
+    @Test
+    void testRegisterSctids_withExpirationDate_success() throws Exception {
+        stateMachine = mock(StateMachine.class);
+        Map<String, String> statuses = new HashMap<>();
+        statuses.put("available", "Available");
+        Map<String, String> actions = new HashMap<>();
+        actions.put("register", "register");
+        stateMachine.statuses = statuses;
+        stateMachine.actions = actions;
+        ReflectionTestUtils.setField(backendJobService, "stateMachine", stateMachine);
+
+        JSONObject record = new JSONObject();
+        record.put("jobId", 102);
+        record.put("namespace", 100001);
+        record.put("expirationDate", "2026-12-31");
+
+        JSONArray recordsArray = new JSONArray();
+        JSONObject rec1 = new JSONObject();
+        rec1.put("sctid", "100001102");
+        rec1.put("systemId", "SYS-002");
+        recordsArray.put(rec1);
+        record.put("records", recordsArray);
+
+        when(stateMachine.getNewStatus("Available", "register")).thenReturn("Assigned");
+        when(sctidRepository.findBySctidIn(anyList())).thenReturn(Collections.emptyList());
+        when(sctIdHelper.getSequence("100001102")).thenReturn(100001L);
+        when(sctIdHelper.getCheckDigit("100001102")).thenReturn(2);
+        when(sctidRepository.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
+
+        String result = backendJobService.registerSctids(record);
+        assertEquals("success", result);
+        verify(sctidRepository).saveAll(anyList());
     }
 }

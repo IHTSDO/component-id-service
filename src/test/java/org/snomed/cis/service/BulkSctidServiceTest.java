@@ -25,8 +25,6 @@ import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
 import java.util.*;
-
-import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.*;
@@ -38,7 +36,7 @@ import java.util.List;
 
 import org.mockito.*;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 class BulkSctidServiceTest {

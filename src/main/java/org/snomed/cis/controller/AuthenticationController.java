@@ -2,8 +2,6 @@ package org.snomed.cis.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URLEncodedUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.cis.dto.*;
@@ -25,8 +23,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 @Tag(name = "Authentication" , description = "Authentication Controller")
 @RestController
@@ -44,22 +42,43 @@ public class AuthenticationController {
     @Operation(summary = "loginUI")
     @PostMapping(path = "/loginUI", consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE})
     public ResponseEntity<LoginResponseDto> loginUI(HttpServletRequest httpRequest) throws CisException {
-        String formStr = "";
+        String formStr = readFormData(httpRequest);
+        LoginRequestDto loginRequestDto = parseLoginRequest(formStr);
+        ValidationUtil.validateLoginRequestDto(loginRequestDto);
+        return authenticationService.login(loginRequestDto, httpRequest);
+    }
+
+    private String readFormData(HttpServletRequest httpRequest) throws CisException {
         try {
-            formStr = new String(httpRequest.getInputStream().readAllBytes());
+            return new String(httpRequest.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new CisException(HttpStatus.BAD_REQUEST, "invalid form data submitted");
         }
-        List<NameValuePair> formEntityList = URLEncodedUtils.parse(formStr, StandardCharsets.UTF_8);
+    }
+
+    private LoginRequestDto parseLoginRequest(String formStr) {
         LoginRequestDto loginRequestDto = new LoginRequestDto();
-        for (NameValuePair entry : formEntityList) {
-            if ("username".equalsIgnoreCase(entry.getName()))
-                loginRequestDto.setUsername(entry.getValue());
-            else if ("password".equalsIgnoreCase(entry.getName()))
-                loginRequestDto.setPassword(entry.getValue());
+        if (formStr.isBlank()) {
+            return loginRequestDto;
         }
-        ValidationUtil.validateLoginRequestDto(loginRequestDto);
-        return authenticationService.login(loginRequestDto, httpRequest);
+        for (String pair : formStr.split("&")) {
+            parseFormPair(pair, loginRequestDto);
+        }
+        return loginRequestDto;
+    }
+
+    private void parseFormPair(String pair, LoginRequestDto loginRequestDto) {
+        String[] parts = pair.split("=", 2);
+        if (parts.length == 0) {
+            return;
+        }
+        String key = URLDecoder.decode(parts[0], StandardCharsets.UTF_8);
+        String value = parts.length > 1 ? URLDecoder.decode(parts[1], StandardCharsets.UTF_8) : "";
+        if ("username".equalsIgnoreCase(key)) {
+            loginRequestDto.setUsername(value);
+        } else if ("password".equalsIgnoreCase(key)) {
+            loginRequestDto.setPassword(value);
+        }
     }
 
     @Operation(summary = "logout")

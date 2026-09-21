@@ -1,15 +1,12 @@
 package org.snomed.cis.exception;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.http.HttpStatus;
 
-@Getter
-@Setter
 public class CisException extends Exception {
 
-    private HttpStatus status;
+    private static final long serialVersionUID = 1L;
 
+    private HttpStatus status;
     private String errorMessage;
 
     public CisException(HttpStatus status, String errorMessage) {
@@ -18,4 +15,21 @@ public class CisException extends Exception {
         this.errorMessage = errorMessage;
     }
 
+    public HttpStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(HttpStatus status) {
+        this.status = status;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+
 }
+

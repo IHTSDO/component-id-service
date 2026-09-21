@@ -60,7 +60,7 @@ public class SecurityConfig {
 
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity httpSecurity) {
         httpSecurity
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(HttpMethod.GET, "/sct/namespaces").permitAll()
@@ -71,7 +71,6 @@ public class SecurityConfig {
                 .cors(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable);
         return httpSecurity.build();
-
     }
 
     @Bean
