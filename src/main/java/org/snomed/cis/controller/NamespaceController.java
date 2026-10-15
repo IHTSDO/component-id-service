@@ -35,7 +35,7 @@ public class NamespaceController {
 
 
     @Operation(summary = "getNamespacesForUser")
-    @GetMapping("/users/{username}/namespaces/")
+    @GetMapping("/users/{username}/namespaces")
     public ResponseEntity<List<Namespace>> getNamespacesForUser(@RequestParam String token, @PathVariable String username, @Parameter(hidden = true) Authentication authentication) throws CisException {
         getAuthToken(authentication);
         logger.info("Request received for - username :: {}", username);

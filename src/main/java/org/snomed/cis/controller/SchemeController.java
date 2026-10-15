@@ -42,7 +42,7 @@ public class SchemeController {
         return AuthUtils.getAuthToken(authentication);
     }
 
-    @GetMapping("/users/{username}/schemes/")
+    @GetMapping("/users/{username}/schemes")
     public ResponseEntity<List<Scheme>> getSchemesForUser(@RequestParam String token, @PathVariable String username, @Parameter(hidden = true) Authentication authentication) throws CisException {
         Token authToken = getAuthToken(authentication);
         logger.info("Request received for - username :: {} - authenticateResponseDto :: {}", username,authToken.getAuthenticateResponseDto());
